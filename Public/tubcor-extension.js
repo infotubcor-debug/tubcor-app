@@ -1,7 +1,9 @@
 /* ================================================================
-   TUBCOR — Extension v1.0
+   TUBCOR — Extension v1.1
    Agrega sin tocar el core:
+     - $/kWh configurable en Costos de Insumos
      - Ayuda memoria (Ingeniería)
+     - Gastos fijos mensuales con historial y KPIs
      - Evolución del PE con datos reales (Producción)
    ================================================================ */
 (function(){
@@ -12,8 +14,39 @@ function N(v){ const x = parseFloat(v); return Number.isFinite(x) ? x : 0; }
 function money(v){ return N(v).toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:2}); }
 function esc(v){ return String(v ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function getState(){ try { return STATE; } catch(e) { return null; } }
+function saveState(keys){ try { return save(keys); } catch(e){ return Promise.resolve(); } }
+function toastMsg(m, t){ try { toast(m, t); } catch(e){ alert(m); } }
 
-/* ================= AYUDA MEMORIA ================= */
+function mesActualKey(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+/* ============ $/kWh CONFIGURABLE ============ */
+function inyectarKwh(){
+  const costoDiv = $id('precioCP')?.parentElement?.parentElement;
+  if (!costoDiv || $id('costoKwhExt')) return;
+  const row = document.createElement('div');
+  row.id = 'costoKwhExt';
+  row.innerHTML = `<label>Energía ($/kWh)</label>
+    <input id="costoKwh" type="number" value="${N(getState()?.config?.costoKwh) || 520}" step="1"
+           oninput="window.tubcorGuardarKwh()"/>`;
+  costoDiv.appendChild(row);
+}
+window.tubcorGuardarKwh = function(){
+  const st = getState(); if (!st) return;
+  st.config = st.config || {};
+  st.config.costoKwh = N($id('costoKwh').value);
+  saveState(['config']);
+  try { recalcular(); } catch(_){}
+};
+function cargarKwhGuardado(){
+  const st = getState(); if (!st || !$id('costoKwh')) return;
+  const v = N(st.config?.costoKwh) || 520;
+  if ($id('costoKwh').value !== String(v)) $id('costoKwh').value = v;
+}
+
+/* ============ AYUDA MEMORIA ============ */
 function inyectarAyuda(){
   const ing = $id('tab-ingenieria');
   if (!ing || $id('ayudaMemoriaExt')) return;
@@ -47,7 +80,7 @@ function inyectarAyuda(){
 
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px">
           <div style="font-weight:800;color:#0f172a;margin-bottom:4px">Adhesivo tapa ($/kg)</div>
-          <div style="color:#475569">Precio del adhesivo usado solo en la faja exterior (tapa). Romial recomienda <b>vinílico o dextrina</b> para mejor terminación. Suele ser más caro que el MD50.</div>
+          <div style="color:#475569">Precio del adhesivo usado solo en la faja exterior (tapa). Romial recomienda <b>vinílico o dextrina</b>. Suele ser más caro que el MD50.</div>
         </div>
 
         <div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px">
@@ -74,7 +107,6 @@ function inyectarAyuda(){
     </div>`;
   ing.appendChild(div);
 }
-
 window.tubcorToggleAyuda = function(){
   const c = $id('ayudaContenidoExt');
   const ch = $id('ayudaChevronExt');
@@ -84,7 +116,158 @@ window.tubcorToggleAyuda = function(){
   if (ch) ch.textContent = abierto ? '＋' : '−';
 };
 
-/* ================= EVOLUCIÓN PE REAL ================= */
+/* ============ GASTOS FIJOS POR MES ============ */
+const CAMPOS_GF = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro'];
+
+function leerGFUI(){
+  const out = {};
+  CAMPOS_GF.forEach(id => { const el = $id(id); if (el) out[id] = N(el.value); });
+  const p = $id('prodMensual'); if (p) out.prodMensual = N(p.value);
+  return out;
+}
+function escribirGFUI(datos){
+  if (!datos) return;
+  CAMPOS_GF.forEach(id => { const el = $id(id); if (el) el.value = datos[id] || 0; });
+  const p = $id('prodMensual'); if (p && datos.prodMensual != null) p.value = datos.prodMensual;
+}
+function totalGFUI(){
+  return CAMPOS_GF.reduce((s,id)=>{ const el = $id(id); return s + (el ? N(el.value) : 0); }, 0);
+}
+
+function inyectarPanelGF(){
+  const panel = $id('gfTotal')?.closest('.card') || $id('gfTotal')?.parentElement?.parentElement?.parentElement;
+  if (!panel || $id('panelGFExt')) return;
+  const div = document.createElement('div');
+  div.id = 'panelGFExt';
+  div.style = 'margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0';
+  div.innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">
+      <div class="kpi"><div class="k-label">Mes seleccionado</div><div class="k-value text-[13px]" id="gfMesActualExt">$0</div></div>
+      <div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>
+      <div class="kpi"><div class="k-label">Total año</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+      <div><label>Mes que estás cargando</label>
+        <input id="gfMesExt" type="month" oninput="window.tubcorCargarMesGF()"/>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-primary" style="width:100%" type="button" onclick="window.tubcorGuardarMesGF()">
+          💾 Guardar / actualizar este mes
+        </button>
+      </div>
+    </div>
+    <div id="gfEstadoExt" style="font-size:10px;color:#64748b;text-align:center;min-height:14px"></div>
+    <div style="margin-top:12px">
+      <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">
+        Historial de gastos fijos guardados
+      </div>
+      <div style="max-height:220px;overflow:auto">
+        <table>
+          <thead><tr><th>Mes</th><th class="num">Total</th><th style="width:140px">Acciones</th></tr></thead>
+          <tbody id="gfHistExt"></tbody>
+        </table>
+      </div>
+    </div>`;
+  panel.appendChild(div);
+}
+
+window.tubcorGuardarMesGF = async function(){
+  const st = getState(); if (!st) return;
+  const mes = $id('gfMesExt').value || mesActualKey();
+  st.config = st.config || {};
+  st.config.gastosFijosHistorial = st.config.gastosFijosHistorial || {};
+  const existente = st.config.gastosFijosHistorial[mes];
+  if (existente && !confirm('Ya hay gastos guardados para ' + mes + '. ¿Sobrescribir?')) return;
+  const datos = leerGFUI();
+  datos.total = totalGFUI();
+  datos.guardado = new Date().toISOString();
+  st.config.gastosFijosHistorial[mes] = datos;
+  await saveState(['config']);
+  renderHistGF();
+  renderKPIsGF();
+  renderEvolucion();
+  toastMsg('Gastos fijos de ' + mes + ' guardados', 'ok');
+};
+
+window.tubcorCargarMesGF = function(){
+  const st = getState(); if (!st) return;
+  const mes = $id('gfMesExt').value;
+  if (!mes) return;
+  const hist = st.config?.gastosFijosHistorial || {};
+  const datos = hist[mes];
+  if (datos){
+    escribirGFUI(datos);
+    $id('gfEstadoExt').textContent = '✓ Datos cargados desde el historial';
+    $id('gfEstadoExt').style.color = '#15803d';
+  } else {
+    $id('gfEstadoExt').textContent = 'Sin datos para este mes. Cargá los valores y guardá.';
+    $id('gfEstadoExt').style.color = '#64748b';
+  }
+  try { recalcular(); } catch(_){}
+  renderKPIsGF();
+};
+
+window.tubcorEliminarMesGF = async function(mes){
+  if (!confirm('¿Eliminar los gastos fijos guardados de ' + mes + '?')) return;
+  const st = getState(); if (!st || !st.config?.gastosFijosHistorial) return;
+  delete st.config.gastosFijosHistorial[mes];
+  await saveState(['config']);
+  renderHistGF();
+  renderKPIsGF();
+  renderEvolucion();
+  toastMsg('Mes eliminado', 'ok');
+};
+
+function renderHistGF(){
+  const tb = $id('gfHistExt');
+  if (!tb) return;
+  const st = getState(); if (!st) return;
+  const hist = st.config?.gastosFijosHistorial || {};
+  const meses = Object.keys(hist).sort().reverse();
+  if (!meses.length){
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay meses guardados.</td></tr>';
+    return;
+  }
+  tb.innerHTML = meses.map(mes => `<tr>
+    <td><b>${esc(mes)}</b></td>
+    <td class="num">${money(hist[mes].total || 0)}</td>
+    <td>
+      <button class="btn btn-secondary btn-sm" type="button" onclick="$id('gfMesExt').value='${mes}';window.tubcorCargarMesGF()">Cargar</button>
+      <button class="btn btn-danger btn-sm" type="button" onclick="window.tubcorEliminarMesGF('${mes}')">🗑</button>
+    </td>
+  </tr>`).join('');
+}
+
+function renderKPIsGF(){
+  const st = getState(); if (!st) return;
+  const anio = new Date().getFullYear();
+  const hist = st.config?.gastosFijosHistorial || {};
+  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
+  const totalAnio = meses.reduce((s,m) => s + (hist[m].total || 0), 0);
+  const promedio = meses.length ? totalAnio / meses.length : 0;
+  const mes = $id('gfMesExt')?.value || mesActualKey();
+  const totalMes = (hist[mes] && hist[mes].total) || totalGFUI();
+  if ($id('gfMesActualExt')) $id('gfMesActualExt').textContent = money(totalMes);
+  if ($id('gfPromAnioExt')) $id('gfPromAnioExt').textContent = money(promedio);
+  if ($id('gfTotalAnioExt')) $id('gfTotalAnioExt').textContent = money(totalAnio);
+}
+
+function cargarMesActualAuto(){
+  const st = getState(); if (!st || !$id('gfMesExt')) return;
+  const mes = mesActualKey();
+  if (!$id('gfMesExt').value) $id('gfMesExt').value = mes;
+  const hist = st.config?.gastosFijosHistorial || {};
+  if (hist[mes]){
+    escribirGFUI(hist[mes]);
+    $id('gfEstadoExt').textContent = '✓ Gastos del mes actual cargados del historial';
+    $id('gfEstadoExt').style.color = '#15803d';
+    try { recalcular(); } catch(_){}
+  }
+  renderHistGF();
+  renderKPIsGF();
+}
+
+/* ============ EVOLUCIÓN PE REAL ============ */
 function inyectarEvolucion(){
   const prod = $id('tab-produccion');
   if (!prod || $id('evolucionPEExt')) return;
@@ -132,23 +315,17 @@ function renderEvolucion(){
   const anio = new Date().getFullYear();
   const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
 
-  // Costos actuales de Ingeniería
   const r = st.resultados || {};
   const costoVarKg = (r.pesoLoteKg && r.costoVariableTotal) ? (r.costoVariableTotal / r.pesoLoteKg) : 0;
   const precioVentaKg = (r.pesoLoteKg && r.precioTotalSinIva) ? (r.precioTotalSinIva / r.pesoLoteKg) : 0;
   const contribKg = Math.max(0, precioVentaKg - costoVarKg);
 
-  // GF mensual desde los inputs actuales (referencia)
-  const gfMensual = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro']
-    .reduce((s,id)=>{ const el = $id(id); return s + (el ? N(el.value) : 0); }, 0);
-
-  // Historial de GF guardados por mes (si la extension lo agregó antes)
-  const gfHist = (st.config && st.config.gastosFijosHistorial) || {};
+  const gfHist = st.config?.gastosFijosHistorial || {};
+  const gfActualUI = totalGFUI();
 
   let kgTotalAnio = 0, gfTotalAnio = 0;
   const filas = [];
-  const hoy = new Date();
-  const mesActual = hoy.getMonth() + 1;
+  const mesActual = new Date().getMonth() + 1;
 
   for (let m = 1; m <= 12; m++){
     const mesKey = anio + '-' + String(m).padStart(2,'0');
@@ -157,31 +334,42 @@ function renderEvolucion(){
     prodMes.forEach(p => {
       (p.items || []).forEach(it => { kgMes += (it.papelKg || 0) + (it.adhSecoKg || 0); });
     });
-    const gfMes = (gfHist[mesKey] && gfHist[mesKey].total) || gfMensual;
+
+    // GF del mes: si hay guardado, usar ese. Si no, el del UI actual (para el mes actual).
+    let gfMes = 0;
+    if (gfHist[mesKey]) gfMes = gfHist[mesKey].total || 0;
+    else if (m === mesActual) gfMes = gfActualUI;
+
     const peKg = contribKg > 0 ? (gfMes / contribKg) : 0;
     const avance = peKg > 0 ? (kgMes / peKg) * 100 : 0;
 
     let estado = '—', color = '#94a3b8';
-    if (kgMes > 0){
+    if (kgMes > 0 && gfMes > 0){
       if (avance >= 100){ estado = '✓ Superado'; color = '#15803d'; }
       else if (avance >= 70){ estado = '▲ Cerca'; color = '#0369a1'; }
       else if (avance >= 40){ estado = '● Medio'; color = '#d97706'; }
       else { estado = '▼ Lejos'; color = '#b91c1c'; }
     }
 
-    filas.push({ nombre: nombres[m-1], kgMes, gfMes, peKg, avance, estado, color, tieneDatos: kgMes > 0 || m <= mesActual });
-    kgTotalAnio += kgMes;
-    gfTotalAnio += (kgMes > 0 || m <= mesActual) ? gfMes : 0;
+    const visible = kgMes > 0 || gfHist[mesKey] || m === mesActual;
+    if (visible){
+      filas.push({ nombre: nombres[m-1], kgMes, gfMes, peKg, avance, estado, color });
+    }
+
+    if (kgMes > 0 || gfHist[mesKey]){
+      kgTotalAnio += kgMes;
+      gfTotalAnio += gfMes;
+    }
   }
 
-  tb.innerHTML = filas.map(f => `<tr>
+  tb.innerHTML = filas.length ? filas.map(f => `<tr>
     <td><b>${f.nombre}</b></td>
     <td class="num">${f.kgMes > 0 ? f.kgMes.toFixed(1) : '—'}</td>
-    <td class="num">${f.tieneDatos ? money(f.gfMes) : '—'}</td>
+    <td class="num">${f.gfMes > 0 ? money(f.gfMes) : '—'}</td>
     <td class="num">${f.peKg > 0 ? f.peKg.toFixed(1) : '—'}</td>
     <td class="num" style="font-weight:700">${f.avance > 0 ? f.avance.toFixed(1)+' %' : '—'}</td>
     <td style="color:${f.color};font-weight:700">${f.estado}</td>
-  </tr>`).join('');
+  </tr>`).join('') : '<tr><td colspan="6" class="empty">Sin datos de producción o gastos fijos para este año.</td></tr>';
 
   const peAnio = contribKg > 0 ? (gfTotalAnio / contribKg) : 0;
   const avanceAnio = peAnio > 0 ? (kgTotalAnio / peAnio) * 100 : 0;
@@ -196,23 +384,30 @@ function renderEvolucion(){
   }
 }
 
-/* ================= INYECCIÓN DINÁMICA ================= */
+/* ============ INYECCIÓN DINÁMICA ============ */
 async function boot(){
   for (let i = 0; i < 100; i++){
     if ($id('tab-ingenieria') && getState()) break;
     await new Promise(r => setTimeout(r, 150));
   }
+  inyectarKwh();
   inyectarAyuda();
+  inyectarPanelGF();
   inyectarEvolucion();
+  cargarKwhGuardado();
+  cargarMesActualAuto();
 
-  // Hookear switchTab para re-inyectar al cambiar de pestaña
+  // Hookear switchTab
   const orig = window.switchTab;
   if (typeof orig === 'function' && !orig.__extHooked){
     const wrapped = function(name){
       const r = orig.apply(this, arguments);
       setTimeout(() => {
+        inyectarKwh();
         inyectarAyuda();
+        inyectarPanelGF();
         inyectarEvolucion();
+        cargarKwhGuardado();
         if (name === 'produccion') renderEvolucion();
       }, 60);
       return r;
@@ -221,9 +416,11 @@ async function boot(){
     window.switchTab = wrapped;
   }
 
-  // Re-inyectar periódicamente por si el DOM se regenera
+  // Re-inyectar periódicamente
   setInterval(() => {
+    inyectarKwh();
     inyectarAyuda();
+    inyectarPanelGF();
     inyectarEvolucion();
     renderEvolucion();
   }, 3000);
