@@ -52,14 +52,29 @@ app.post('/api/auth/login', async (req, res) => {
     if (!username || !password) return res.status(400).json({ error: 'Datos incompletos' });
 
     const { data: user, error } = await supabase
-        .from('users')
-        .select('*')
-        .eq('username', username)
-        .single();
+    .from('users')
+    .select('*')
+    .eq('username', username)
+    .single();
 
-    if (error || !user || !verificarPassword(password, user.salt, user.hash)) {
-        return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
-    }
+console.log('=== DEBUG LOGIN ===');
+console.log('username recibido:', JSON.stringify(username));
+console.log('error de supabase:', error ? JSON.stringify(error) : 'ninguno');
+console.log('user encontrado:', user ? 'si' : 'no');
+if (user) {
+    console.log('user.salt:', JSON.stringify(user.salt));
+    console.log('user.hash length:', user.hash ? user.hash.length : 0);
+    console.log('user.hash primeros 20:', user.hash ? user.hash.substring(0, 20) : 'N/A');
+    const testHash = crypto.scryptSync(password, user.salt, 64).toString('hex');
+    console.log('hash calculado primeros 20:', testHash.substring(0, 20));
+    console.log('hash calculado length:', testHash.length);
+    console.log('coinciden:', testHash === user.hash);
+}
+console.log('===================');
+
+if (error || !user || !verificarPassword(password, user.salt, user.hash)) {
+    return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
+}
 
     const token = nuevoToken();
     const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 días
