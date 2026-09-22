@@ -1,4 +1,4 @@
-require('dotenv').config();
+const express = require('express');
 const express = require('express');
 const crypto = require('crypto');
 const { createClient } = require('@supabase/supabase-js');
