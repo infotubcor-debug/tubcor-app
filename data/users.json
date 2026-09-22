@@ -1,9 +1,0 @@
-{
-  "admin": {
-    "username": "admin",
-    "salt": "9edcf2995b2c4a22b7e0c6c0d9e5ab32",
-    "hash": "2c36c9963d5e2c8d5e535ce5273be3beab89a81d67c714c02a6718f56d5ceab6022ca4a8b2bdb09ba0009c2b1a4ecc9125ce906cd6a1740e26a9113573fa88a4",
-    "mustChangePassword": true,
-    "createdAt": "2026-09-22T13:00:52.823Z"
-  }
-}
