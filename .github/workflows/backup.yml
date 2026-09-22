@@ -1,0 +1,45 @@
+name: Backup Supabase
+
+on:
+  schedule:
+    # Corre todos los lunes a las 6 AM UTC (3 AM hora Argentina)
+    - cron: '0 6 * * 1'
+  workflow_dispatch:
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Descargar backup desde Supabase
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          FECHA=$(date +%Y-%m-%d)
+          mkdir -p backups
+
+          curl -s "${SUPABASE_URL}/rest/v1/state?select=*" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -o "backups/state-${FECHA}.json"
+
+          curl -s "${SUPABASE_URL}/rest/v1/users?select=username,must_change_password,created_at" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}" \
+            -o "backups/users-${FECHA}.json"
+
+          echo "Backup del ${FECHA} generado:"
+          ls -lh backups/
+
+          find backups/ -name "*.json" -mtime +90 -delete
+
+      - name: Guardar backup en el repo
+        run: |
+          git config user.name "TUBCOR Bot"
+          git config user.email "bot@tubcor.local"
+          git add backups/
+          git diff --staged --quiet || git commit -m "Backup automatico $(date +%Y-%m-%d)"
+          git push
