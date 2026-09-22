@@ -417,6 +417,7 @@ table tbody tr:hover{background:#f8fafc}
       <div id="presPreview" style="display:none">
         <div class="flex justify-end gap-2 mb-2">
           <button class="btn btn-secondary btn-sm" onclick="editarPresupuesto()"><i class="fa-solid fa-pen"></i> Editar</button>
+          <button class="btn btn-secondary btn-sm" onclick="editarObsPresupuesto()"><i class="fa-solid fa-comment"></i> Observaciones</button>
           <button class="btn btn-primary btn-sm" onclick="descargarPresupuestoPDF()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
           <button class="btn btn-danger btn-sm" onclick="eliminarPresupuesto()"><i class="fa-solid fa-trash"></i> Eliminar</button>
         </div>
@@ -1540,15 +1541,7 @@ function editarPresupuesto(){
   save(['presupuestos']); renderPreviewPresupuesto();
   toast('Presupuesto actualizado','ok');
 }
-function editarObsOF(){
-  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
-  if (!p) return;
-  const v = prompt('Observaciones de planta para la OF:', p.observacionesOF||'');
-  if (v===null) return;
-  p.observacionesOF = v.trim();
-  save(['presupuestos']); renderPreviewOF();
-  toast('Observaciones guardadas','ok');
-}
+
 function eliminarPresupuesto(){
   const id = STATE.config.ultimoPresupuestoId; if (!id) return;
   confirmar('¿Eliminar este presupuesto?').then(ok=>{
@@ -3126,6 +3119,31 @@ function agregarHeaderUsuario(){
     <button class="btn btn-secondary btn-sm" onclick="cerrarSesion()" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
   `;
   header.parentElement.appendChild(wrap);
+}
+
+
+/* ============ Editar observaciones del presupuesto ============ */
+function editarObsPresupuesto(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return toast('Seleccioná un presupuesto','err');
+  const v = prompt('Observaciones para el presupuesto (aparecerán al final del PDF):', p.observacionesPresupuesto || '');
+  if (v === null) return;
+  p.observacionesPresupuesto = v.trim();
+  save(['presupuestos']);
+  renderPreviewPresupuesto();
+  toast('Observaciones guardadas', 'ok');
+}
+
+/* ============ Editar observaciones de la OF ============ */
+function editarObsOF(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return toast('Seleccioná una OF','err');
+  const v = prompt('Observaciones de planta para la OF (aparecerán al final del PDF):', p.observacionesOF || '');
+  if (v === null) return;
+  p.observacionesOF = v.trim();
+  save(['presupuestos']);
+  renderPreviewOF();
+  toast('Observaciones guardadas', 'ok');
 }
 
 document.addEventListener('DOMContentLoaded', iniciarAuth);
