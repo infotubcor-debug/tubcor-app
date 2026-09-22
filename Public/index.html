@@ -1,0 +1,2927 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>TUBCOR · Sistema Integral de Gestión</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<style>
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{font-family:'Inter',sans-serif;font-size:13px;background:#f1f5f9;color:#1e293b}
+input,select,textarea,button{font-family:inherit;font-size:13px}
+input,select,textarea{padding:6px 9px;border:1px solid #cbd5e1;border-radius:6px;width:100%;background:#fff;line-height:1.3}
+input:focus,select:focus,textarea:focus{outline:none;border-color:#16a34a;box-shadow:0 0 0 3px rgba(22,163,74,.12)}
+input[readonly]{background:#f8fafc;color:#475569}
+label{display:block;font-size:10.5px;font-weight:700;color:#475569;margin-bottom:3px;text-transform:uppercase;letter-spacing:.35px}
+table{border-collapse:collapse;width:100%}
+table th,table td{padding:6px 8px;text-align:center;border-bottom:1px solid #e2e8f0;font-size:12px;vertical-align:middle}
+table th{background:#f8fafc;font-weight:700;color:#334155;font-size:10.5px;text-transform:uppercase;letter-spacing:.4px}
+table tbody tr:hover{background:#f8fafc}
+.num{font-variant-numeric:tabular-nums}
+.card{background:#fff;border:1px solid #e2e8f0;border-radius:10px;padding:12px}
+.card-tight{padding:10px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:7px 12px;border-radius:7px;font-weight:700;font-size:12px;cursor:pointer;border:1px solid transparent;transition:.12s;white-space:nowrap}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn-primary{background:#16a34a;color:#fff}
+.btn-primary:hover{background:#15803d}
+.btn-secondary{background:#f1f5f9;color:#334155;border-color:#cbd5e1}
+.btn-secondary:hover{background:#e2e8f0}
+.btn-danger{background:#fef2f2;color:#b91c1c;border-color:#fecaca}
+.btn-danger:hover{background:#fee2e2}
+.btn-sm{padding:4px 9px;font-size:11px;border-radius:6px}
+.tabs{display:flex;gap:4px;flex-wrap:wrap}
+.tab{padding:7px 13px;border-radius:7px;font-size:12.5px;font-weight:600;color:#475569;background:transparent;border:1px solid transparent;cursor:pointer;display:inline-flex;align-items:center;gap:6px;white-space:nowrap}
+.tab:hover{background:#f1f5f9}
+.tab.active{background:#16a34a;color:#fff;box-shadow:0 2px 6px rgba(22,163,74,.25)}
+.section{display:none}
+.section.active{display:block}
+.kpi{background:#fff;border:1px solid #e2e8f0;border-radius:9px;padding:9px 10px;text-align:center}
+.kpi .k-label{font-size:9.5px;color:#64748b;font-weight:600;text-transform:uppercase;letter-spacing:.4px}
+.kpi .k-value{font-size:16px;font-weight:800;color:#0f172a;margin-top:2px;line-height:1.1}
+.badge{display:inline-block;padding:2px 8px;border-radius:999px;font-size:10px;font-weight:700}
+.badge-green{background:#dcfce7;color:#166534}
+.badge-amber{background:#fef3c7;color:#92400e}
+.badge-red{background:#fee2e2;color:#991b1b}
+.badge-blue{background:#dbeafe;color:#1e40af}
+.badge-gray{background:#f1f5f9;color:#475569}
+.empty{text-align:center;color:#94a3b8;padding:18px;font-size:12px}
+.hint{font-size:10px;color:#64748b;line-height:1.35;margin-top:3px;display:block;text-align:center}
+.toast{position:fixed;bottom:18px;right:18px;background:#0f172a;color:#fff;padding:10px 16px;border-radius:8px;font-size:12.5px;font-weight:600;box-shadow:0 8px 24px rgba(15,23,42,.25);opacity:0;transform:translateY(8px);transition:.2s;z-index:9999;pointer-events:none;max-width:340px}
+.toast.show{opacity:1;transform:translateY(0)}
+.toast.ok{background:#16a34a}
+.toast.err{background:#b91c1c}
+.modal-bg{position:fixed;inset:0;background:rgba(15,23,42,.75);display:flex;align-items:center;justify-content:center;padding:16px;z-index:1000;backdrop-filter:blur(3px)}
+.modal{background:#fff;border-radius:12px;padding:18px;width:100%;max-width:520px;box-shadow:0 20px 50px rgba(0,0,0,.3)}
+.paper{background:#fff;width:794px;max-width:100%;padding:24px 26px;color:#1e293b;font-family:Arial,Helvetica,sans-serif;font-size:11px;line-height:1.35}
+.paper-header{display:flex;justify-content:space-between;align-items:flex-start;gap:18px;padding-bottom:10px;border-bottom:2px solid #16a34a}
+.paper-header .brand{display:flex;gap:10px;align-items:center}
+.paper-header .brand img{width:130px;height:auto;display:block}
+.paper-header .brand .info{font-size:9.5px;color:#475569;line-height:1.4;text-align:left}
+.paper-header .brand .info strong{display:block;font-size:14px;color:#0f172a;margin-bottom:2px}
+.paper-header .meta{text-align:right;min-width:200px}
+.paper-header .meta .kicker{font-size:8.5px;font-weight:700;letter-spacing:1.5px;color:#16a34a}
+.paper-header .meta .title{font-size:19px;font-weight:800;color:#0f172a;line-height:1}
+.paper-header .meta .num{font-size:12px;font-weight:700;color:#334155;margin-top:5px}
+.paper-header .meta .date{font-size:9.5px;color:#64748b;margin-top:3px}
+.paper-client{display:grid;grid-template-columns:1.3fr 1fr 1fr;margin-top:12px;border:1px solid #cbd5e1;border-radius:4px;overflow:hidden}
+.paper-client>div{padding:6px 9px;border-right:1px solid #cbd5e1;border-bottom:1px solid #cbd5e1;text-align:left}
+.paper-client>div:nth-child(3n){border-right:none}
+.paper-client>div:nth-last-child(-n+3){border-bottom:none}
+.paper-client .lbl{font-size:8px;font-weight:700;color:#64748b;text-transform:uppercase;letter-spacing:.4px}
+.paper-client .val{font-size:10.5px;font-weight:700;color:#0f172a}
+.paper-section{font-size:9.5px;font-weight:800;color:#16a34a;text-transform:uppercase;letter-spacing:.8px;margin:12px 0 5px;padding-bottom:3px;border-bottom:1px solid #cbd5e1;text-align:left}
+.paper-table{width:100%;border-collapse:collapse;font-size:10px}
+.paper-table th{background:#f1f5f9;padding:5px 7px;text-align:center;font-size:8.5px;text-transform:uppercase;color:#334155;font-weight:800;border:1px solid #cbd5e1}
+.paper-table td{padding:6px 7px;border:1px solid #e2e8f0;text-align:center;font-size:10px;vertical-align:middle}
+.paper-table td.left{text-align:left}
+.paper-table td.right{text-align:right;font-weight:700}
+.paper-totals{display:flex;justify-content:flex-end;margin-top:8px}
+.paper-totals .box{width:240px}
+.paper-totals .row{display:flex;justify-content:space-between;padding:3px 0;font-size:10.5px}
+.paper-totals .row.grand{border-top:2px solid #16a34a;padding-top:6px;margin-top:3px;font-size:13px;font-weight:800}
+.paper-footer{margin-top:14px;padding-top:6px;border-top:1px solid #cbd5e1;text-align:center;font-size:8.5px;color:#64748b}
+.paper-obs{margin-top:10px;padding:7px 10px;background:#f8fafc;border-left:3px solid #16a34a;font-size:10px;color:#475569;text-align:left}
+@media(max-width:768px){
+  body{font-size:13px}
+  table th,table td{padding:5px 6px;font-size:11px}
+  .paper{padding:14px}
+  .paper-client{grid-template-columns:1fr}
+  .paper-client>div{border-right:none}
+}
+</style>
+</head>
+<body>
+
+<header class="bg-white border-b border-slate-200 sticky top-0 z-40 shadow-sm">
+  <div class="max-w-[1600px] mx-auto px-4 py-2.5 flex items-center gap-4 flex-wrap">
+    <div class="flex items-center gap-2.5">
+      <div class="w-9 h-9 rounded-lg text-white flex items-center justify-center" style="background:#16a34a"><i class="fa-solid fa-industry"></i></div>
+      <div>
+        <div class="font-extrabold text-[15px] leading-tight text-slate-900">TUBCOR <span class="text-[10px] font-bold px-2 py-0.5 rounded-full ml-1" style="background:#dcfce7;color:#166534">Planta Córdoba</span></div>
+        <div class="text-[10.5px] text-slate-500">Sistema Integral de Gestión · Tubos de cartón</div>
+      </div>
+    </div>
+    <nav class="tabs ml-auto">
+      <button class="tab active" data-tab="ingenieria"><i class="fa-solid fa-calculator"></i> Ingeniería</button>
+      <button class="tab" data-tab="calibrador"><i class="fa-solid fa-scale-balanced"></i> Calibrador</button>
+      <button class="tab" data-tab="clientes"><i class="fa-solid fa-address-book"></i> Clientes</button>
+      <button class="tab" data-tab="presupuestos"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuestos</button>
+      <button class="tab" data-tab="of"><i class="fa-solid fa-clipboard-list"></i> OF</button>
+      <button class="tab" data-tab="produccion"><i class="fa-solid fa-boxes-stacked"></i> Producción</button>
+      <button class="tab" data-tab="finanzas"><i class="fa-solid fa-money-bill-transfer"></i> Finanzas</button>
+      <button class="tab" data-tab="empleados"><i class="fa-solid fa-users"></i> Empleados</button>
+    </nav>
+  </div>
+</header>
+
+<main class="max-w-[1600px] mx-auto p-4 space-y-4">
+
+<section class="section active" id="tab-ingenieria">
+  <div class="grid grid-cols-1 xl:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-ruler-combined" style="color:#16a34a"></i> 1. Cliente y geometría</div>
+      </div>
+      <div style="display:grid;gap:8px">
+        <div>
+          <label>Cliente (desde maestro)</label>
+          <select id="ingCliente"><option value="">— Seleccionar cliente —</option></select>
+          <a class="hint" style="color:#15803d;text-decoration:underline;cursor:pointer" onclick="switchTab('clientes')">Administrar clientes</a>
+        </div>
+        <div class="grid grid-cols-3 gap-2">
+          <div><label>Ø Interno (mm)</label><input id="ingDiam" type="number" value="76" step="0.1" oninput="recalcular()"/></div>
+          <div><label>Longitud (mm)</label><input id="ingLong" type="number" value="1200" step="1" oninput="recalcular()"/></div>
+          <div><label>Cantidad</label><input id="ingCant" type="number" value="1000" step="1" oninput="recalcular()"/></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label>Tipo paquete</label>
+            <select id="ingPaquete" onchange="recalcular()">
+              <option value="19">19 un.</option>
+              <option value="37" selected>37 un. (Hexagonal)</option>
+              <option value="61">61 un.</option>
+              <option value="1">Sin empaquetar</option>
+            </select>
+          </div>
+          <div><label>Margen utilidad (%)</label><input id="ingMargen" type="number" value="35" step="1" min="0" max="90" oninput="recalcular()"/></div>
+        </div>
+      </div>
+      <div class="flex items-center justify-between mt-3 mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-layer-group" style="color:#16a34a"></i> 2. Fajas de cartón</div>
+      </div>
+      <div style="display:grid;gap:8px">
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal (interior)</div>
+          <div><label>Ancho (mm)</label><input id="ingPrincAncho" type="number" value="50" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingPrincGram" type="number" value="150" oninput="recalcular()"/></div>
+          <div><label>Color</label><select id="ingPrincColor"><option>Marrón</option><option>Blanco</option></select></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Fajas de relleno (intermedias)</div>
+          <div><label>Cantidad</label><input id="ingRellCant" type="number" value="3" oninput="recalcular()"/></div>
+          <div><label>Ancho (mm)</label><input id="ingRellAncho" type="number" value="52" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingRellGram" type="number" value="250" oninput="recalcular()"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja de tapa (exterior)</div>
+          <div><label>Ancho (mm)</label><input id="ingTapaAncho" type="number" value="50" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingTapaGram" type="number" value="180" oninput="recalcular()"/></div>
+          <div><label>Color</label><select id="ingTapaColor"><option>Marrón</option><option>Blanco</option></select></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-coins" style="color:#16a34a"></i> 3. Costos de insumos</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label>Cartón principal ($/kg)</label><input id="precioCP" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div><label>Cartón relleno ($/kg)</label><input id="precioCR" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div><label>Cartón tapa ($/kg)</label><input id="precioCT" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div><label>Flete ($/kg transportado)</label><input id="precioFlete" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div class="col-span-2"><label>Desperdicio compra (%)</label><input id="ingDesperdicio" type="number" value="10" step="1" oninput="recalcular()"/></div>
+      </div>
+      <div class="flex items-center justify-between mt-3 mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-droplet" style="color:#16a34a"></i> 3b. Adhesivo MD50</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label>MD50 ($/kg pasta)</label><input id="precioAdh" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div><label>Sólidos MD50 (%)</label><input id="solidosAdh" type="number" value="41" step="1" min="10" max="90" oninput="recalcular()"/></div>
+        <div><label>% MD50 seco / papel</label><input id="pctAdhSeco" type="number" value="15" step="0.5" min="0" max="50" oninput="recalcular()"/></div>
+        <div><label>Adhesivo tapa ($/kg)</label><input id="precioAdhTapa" type="number" value="0" step="1" oninput="recalcular()"/></div>
+        <div class="col-span-2"><label>% adhesivo tapa seco / papel tapa</label><input id="pctAdhTapa" type="number" value="8" step="0.5" min="0" max="40" oninput="recalcular()"/></div>
+      </div>
+      <div class="card-tight mt-2" style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:8px">
+        <div class="text-[10px] font-bold uppercase text-center" style="color:#1e40af">Ficha técnica MD50 · Romial</div>
+        <div class="text-[10px] leading-relaxed text-center" style="color:#1e40af">
+          Base almidón · Sólidos <b>40–44%</b> · pH 7–8 · Uso en caliente.<br/>
+          Para tapa exterior se recomienda <b>vinílico o dextrina</b>.
+        </div>
+      </div>
+      <div class="flex items-center justify-between mt-3 mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-building-columns" style="color:#16a34a"></i> 4. Gastos fijos mensuales</div>
+      </div>
+      <div class="grid grid-cols-2 gap-2">
+        <div><label>Alquiler</label><input id="gfAlq" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Expensas</label><input id="gfExp" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Contadora</label><input id="gfCon" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Sueldos</label><input id="gfSue" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>ARCA</label><input id="gfArca" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Rentas</label><input id="gfRen" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Municipalidad</label><input id="gfMun" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Préstamo</label><input id="gfPre" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>EPEC (luz)</label><input id="gfEpec" type="number" value="0" oninput="recalcular()"/></div>
+        <div><label>Prosegur</label><input id="gfPro" type="number" value="0" oninput="recalcular()"/></div>
+      </div>
+      <div class="grid grid-cols-2 gap-2 mt-2">
+        <div><label>Producción mensual (kg de tubo)</label><input id="prodMensual" type="number" value="12000" oninput="recalcular()"/></div>
+        <div style="text-align:right">
+          <div class="text-[10px] text-slate-500 font-bold uppercase">Total fijos</div>
+          <div id="gfTotal" class="text-[16px] font-extrabold text-slate-900">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-chart-pie" style="color:#16a34a"></i> 5. Resultados</div>
+        <span class="badge badge-blue" id="factorBadge">× 1.000</span>
+      </div>
+      <div class="grid grid-cols-3 gap-2">
+        <div class="kpi"><div class="k-label">Espesor teórico</div><div class="k-value text-[13px]" id="rEsp">—</div></div>
+        <div class="kpi"><div class="k-label">Peso unitario</div><div class="k-value text-[13px]" id="rPesoU">—</div></div>
+        <div class="kpi"><div class="k-label">Peso lote</div><div class="k-value text-[13px]" id="rPesoL">—</div></div>
+        <div class="kpi"><div class="k-label">Costo variable u.</div><div class="k-value text-[13px]" id="rCostoVU">—</div></div>
+        <div class="kpi"><div class="k-label">Gastos fijos / u.</div><div class="k-value text-[13px]" id="rCostoFU">—</div></div>
+        <div class="kpi"><div class="k-label">Costo total u.</div><div class="k-value text-[13px]" id="rCostoU">—</div></div>
+        <div class="kpi"><div class="k-label">Costo total / kg</div><div class="k-value text-[13px]" id="rCostoKg">—</div></div>
+        <div class="kpi col-span-2"><div class="k-label">Precio venta / kg</div><div class="k-value text-[13px]" id="rPrecioKg" style="color:#15803d">—</div></div>
+        <div class="kpi col-span-3"><div class="k-label">Precio de venta unitario neto sugerido</div><div class="k-value text-[18px]" id="rPrecioU" style="color:#15803d">—</div></div>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-2 text-center">Consumos calculados</div>
+        <table>
+          <thead><tr><th>Componente</th><th class="num">Seco incorporado</th><th class="num">A comprar</th></tr></thead>
+          <tbody id="rConsumos"></tbody>
+        </table>
+      </div>
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-2 text-center">Punto de equilibrio</div>
+        <div class="grid grid-cols-3 gap-2">
+          <div class="kpi"><div class="k-label">Tubos</div><div class="k-value text-[14px]" id="rPETubos">—</div></div>
+          <div class="kpi"><div class="k-label">kg</div><div class="k-value text-[14px]" id="rPEKg">—</div></div>
+          <div class="kpi"><div class="k-label">Ventas</div><div class="k-value text-[14px]" id="rPEVen">—</div></div>
+        </div>
+      </div>
+      <div class="flex gap-2 mt-3">
+        <button class="btn btn-secondary flex-1" onclick="agregarItemPendiente()"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
+        <button class="btn btn-primary flex-1" onclick="generarPresupuesto()"><i class="fa-solid fa-file-invoice"></i> Generar presupuesto</button>
+      </div>
+      <div class="mt-2 text-center"><button class="btn btn-secondary btn-sm" onclick="nuevoPedido()">↺ Nuevo pedido</button></div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-list-check" style="color:#16a34a"></i> Tubos cargados para el próximo presupuesto</div>
+      <span class="badge badge-gray" id="pendCount">0 items</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th style="width:40px">#</th>
+          <th>Cliente</th>
+          <th>Medidas (mm)</th>
+          <th>Fajas (mm / g/m²)</th>
+          <th>Cantidad</th>
+          <th>Peso unit (g)</th>
+          <th>Precio unit</th>
+          <th>Total</th>
+          <th style="width:50px"></th>
+        </tr>
+      </thead>
+      <tbody id="pendList"><tr><td colspan="9" class="empty">No hay tubos cargados. Agregá uno desde Ingeniería.</td></tr></tbody>
+    </table>
+    <div class="mt-2">
+      <label>Observaciones para el presupuesto</label>
+      <textarea id="obsPresupuesto" rows="2" placeholder="Observaciones que aparecerán al final del presupuesto..."></textarea>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-calibrador">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-weight-scale" style="color:#16a34a"></i> Registro de pesaje real</div>
+      <div style="display:grid;gap:8px">
+        <div><label>Referencia / Lote</label><input id="calRef" value="Tubo Lote #01"/></div>
+        <div class="grid grid-cols-3 gap-2">
+          <div><label>Ø Int (mm)</label><input id="calDiam" type="number" value="76" oninput="calPrevia()"/></div>
+          <div><label>Long (mm)</label><input id="calLong" type="number" value="1200" oninput="calPrevia()"/></div>
+          <div><label>Cantidad</label><input id="calCant" type="number" value="1" min="1"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal</div>
+          <div><label>Ancho</label><input id="calPA" type="number" value="50" oninput="calPrevia()"/></div>
+          <div><label>Gramaje</label><input id="calPG" type="number" value="150" oninput="calPrevia()"/></div>
+          <div><label>Color</label><select id="calPC"><option>Marrón</option><option>Blanco</option></select></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno</div>
+          <div><label>Cant.</label><input id="calRC" type="number" value="3" oninput="calPrevia()"/></div>
+          <div><label>Ancho</label><input id="calRA" type="number" value="52" oninput="calPrevia()"/></div>
+          <div><label>Gramaje</label><input id="calRG" type="number" value="250" oninput="calPrevia()"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Tapa</div>
+          <div><label>Ancho</label><input id="calTA" type="number" value="50" oninput="calPrevia()"/></div>
+          <div><label>Gramaje</label><input id="calTG" type="number" value="180" oninput="calPrevia()"/></div>
+          <div><label>Color</label><select id="calTC"><option>Marrón</option><option>Blanco</option></select></div>
+        </div>
+        <div class="grid grid-cols-2 gap-2">
+          <div><label>Espesor real (mm)</label><input id="calEspR" type="number" step="0.01" value=""/></div>
+          <div><label>Peso real (g)</label><input id="calPeso" type="number" step="0.1" value=""/></div>
+        </div>
+        <button class="btn btn-primary w-full" onclick="registrarPesaje()"><i class="fa-solid fa-plus"></i> Registrar pesaje</button>
+      </div>
+    </div>
+    <div class="card lg:col-span-2">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-flask" style="color:#16a34a"></i> Cálculo previo (papel + adhesivo)</div>
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-3">
+        <div class="kpi"><div class="k-label">Papel teórico</div><div class="k-value text-[14px]" id="calPapel">—</div></div>
+        <div class="kpi"><div class="k-label">Adhesivo seco</div><div class="k-value text-[14px]" id="calAdh">—</div></div>
+        <div class="kpi"><div class="k-label">Total teórico</div><div class="k-value text-[14px]" id="calTeorico">—</div></div>
+        <div class="kpi"><div class="k-label">Espesor teórico</div><div class="k-value text-[14px]" id="calEspT">—</div></div>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-3">
+        <div class="card-tight" style="background:#f8fafc">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-1 text-center">Factor de proceso calibrado</div>
+          <div style="display:flex;align-items:center;gap:8px;justify-content:center">
+            <input id="calFactor" type="number" step="0.001" value="1.000" readonly style="font-size:18px;font-weight:800;color:#15803d;background:transparent;border:0;padding:0;width:100px;text-align:center"/>
+            <span class="text-[11px] text-slate-500">× (papel + adhesivo seco)</span>
+          </div>
+          <div class="hint" id="calFactorInfo">Sin historial. Cargá el primer pesaje real.</div>
+        </div>
+        <div class="card-tight" style="background:#f8fafc">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-1 text-center">Desvío promedio</div>
+          <div class="text-[18px] font-extrabold text-center" id="calDesvio">0.00 %</div>
+          <div class="hint">Sobre todos los pesajes registrados.</div>
+        </div>
+      </div>
+      <div class="overflow-auto" style="max-height:420px">
+        <table>
+          <thead>
+            <tr><th>Referencia</th><th>Medidas</th><th>Fajas</th><th>Peso real</th><th>Peso teórico</th><th>Desvío</th><th style="width:50px"></th></tr>
+          </thead>
+          <tbody id="calLista"><tr><td colspan="7" class="empty">Sin pesajes registrados.</td></tr></tbody>
+        </table>
+      </div>
+      <div class="flex justify-end mt-2"><button class="btn btn-danger btn-sm" onclick="limpiarPesajes()">Limpiar historial de balanza</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-clientes">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Clientes</div>
+        <button class="btn btn-primary btn-sm" onclick="nuevoCliente()"><i class="fa-solid fa-plus"></i> Nuevo</button>
+      </div>
+      <input id="cliBuscar" placeholder="Buscar..." oninput="renderClientes()" class="mb-2"/>
+      <div id="cliLista" style="max-height:520px;overflow:auto;display:grid;gap:6px"></div>
+    </div>
+    <div class="card lg:col-span-2">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200" id="cliFormTitle">Nuevo cliente</div>
+      <input type="hidden" id="cliId"/>
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+        <div class="sm:col-span-2"><label>Razón social *</label><input id="cliRazon"/></div>
+        <div><label>CUIT</label><input id="cliCuit"/></div>
+        <div><label>Condición IVA</label>
+          <select id="cliIva"><option value="">—</option><option>Responsable Inscripto</option><option>Monotributista</option><option>Exento</option><option>Consumidor Final</option><option>No Responsable</option></select>
+        </div>
+        <div class="sm:col-span-2"><label>Domicilio</label><input id="cliDom"/></div>
+        <div><label>Localidad</label><input id="cliLoc"/></div>
+        <div><label>Provincia</label><input id="cliProv" value="Córdoba"/></div>
+        <div><label>Código postal</label><input id="cliCp"/></div>
+        <div><label>Contacto</label><input id="cliCont"/></div>
+        <div><label>Teléfono</label><input id="cliTel"/></div>
+        <div><label>Email</label><input id="cliEmail" type="email"/></div>
+        <div class="sm:col-span-2"><label>Condición de pago</label><input id="cliPago" placeholder="Ej. Cuenta corriente 30 días"/></div>
+        <div class="sm:col-span-2"><label>Observaciones</label><textarea id="cliObs" rows="2"></textarea></div>
+      </div>
+      <div class="flex justify-end gap-2 mt-3">
+        <button class="btn btn-danger" id="cliEliminar" onclick="eliminarCliente()" style="display:none">Eliminar</button>
+        <button class="btn btn-secondary" onclick="nuevoCliente()">Limpiar</button>
+        <button class="btn btn-primary" onclick="guardarCliente()">Guardar</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-presupuestos">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Presupuestos</div>
+        <span class="badge badge-gray" id="presCount">0</span>
+      </div>
+      <div id="presLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
+    </div>
+    <div class="card lg:col-span-2">
+      <div id="presVacio" class="empty">Seleccioná un presupuesto de la lista o generá uno nuevo desde Ingeniería.</div>
+      <div id="presPreview" style="display:none">
+        <div class="flex justify-end gap-2 mb-2">
+          <button class="btn btn-secondary btn-sm" onclick="editarPresupuesto()"><i class="fa-solid fa-pen"></i> Editar</button>
+          <button class="btn btn-primary btn-sm" onclick="descargarPresupuestoPDF()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+          <button class="btn btn-danger btn-sm" onclick="eliminarPresupuesto()"><i class="fa-solid fa-trash"></i> Eliminar</button>
+        </div>
+        <div id="presPaper" style="max-height:75vh;overflow:auto;background:#e2e8f0;padding:14px;border-radius:8px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-of">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Órdenes de fabricación</div>
+        <span class="badge badge-gray" id="ofCount">0</span>
+      </div>
+      <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
+    </div>
+    <div class="card lg:col-span-2">
+      <div id="ofVacio" class="empty">Seleccioná una orden de la lista.</div>
+      <div id="ofPreview" style="display:none">
+        <div class="flex justify-end gap-2 mb-2">
+          <button class="btn btn-secondary btn-sm" onclick="editarObsOF()"><i class="fa-solid fa-pen"></i> Observaciones</button>
+          <button class="btn btn-primary btn-sm" onclick="descargarOrdenPDF()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
+        </div>
+        <div id="ofPaper" style="max-height:75vh;overflow:auto;background:#e2e8f0;padding:14px;border-radius:8px"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-produccion">
+  <div class="card">
+    <div class="flex items-center justify-between mb-2">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-boxes-stacked" style="color:#16a34a"></i> Registro de producción mensual</div>
+      <div class="text-[11px] text-slate-500">Los kg de cartón a comprar se calculan sobre los tubos efectivamente fabricados.</div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+      <div><label>Fecha</label><input id="prFecha" type="date"/></div>
+      <div><label>Presupuesto / OF</label><select id="prOF"></select></div>
+      <div><label>Cantidad fabricada</label><input id="prCant" type="number" value="0"/></div>
+      <div><label>Peso real promedio (g/u)</label><input id="prPeso" type="number" step="0.1" value="0"/></div>
+      <div class="flex items-end"><button class="btn btn-primary w-full" onclick="registrarProduccion()"><i class="fa-solid fa-plus"></i> Registrar</button></div>
+    </div>
+    <div class="grid grid-cols-2 md:grid-cols-6 gap-2 mb-3">
+      <div class="kpi"><div class="k-label">Tubos del mes</div><div class="k-value" id="pmTubos">0</div></div>
+      <div class="kpi"><div class="k-label">kg de tubos</div><div class="k-value" id="pmKgTubo">0</div></div>
+      <div class="kpi"><div class="k-label">kg cartón</div><div class="k-value" id="pmCarton">0</div></div>
+      <div class="kpi"><div class="k-label">kg adhesivo seco</div><div class="k-value" id="pmAdh">0</div></div>
+      <div class="kpi"><div class="k-label">Comprar pasta MD50</div><div class="k-value" id="pmCompP">0</div></div>
+      <div class="kpi"><div class="k-label">Costo fijo / kg</div><div class="k-value" id="pmCFKg">0</div></div>
+    </div>
+    <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-2 text-center">Necesidad de compra por formato (con merma)</div>
+    <table>
+      <thead><tr><th>Componente</th><th>kg a producir</th><th>% merma</th><th>kg a comprar</th></tr></thead>
+      <tbody id="prCompra"><tr><td colspan="4" class="empty">Sin producción registrada.</td></tr></tbody>
+    </table>
+    <div class="mt-3 text-[11px] font-extrabold text-slate-700 uppercase mb-2 text-center">Historial de producción</div>
+    <table>
+      <thead><tr><th>Fecha</th><th>OF / Presupuesto</th><th>Cantidad</th><th>Peso u.</th><th>kg totales</th><th style="width:50px"></th></tr></thead>
+      <tbody id="prHist"><tr><td colspan="6" class="empty">Sin registros.</td></tr></tbody>
+    </table>
+  </div>
+</section>
+
+<section class="section" id="tab-finanzas">
+  <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+    <div class="kpi"><div class="k-label">Saldo total en bancos</div><div class="k-value" id="finSaldoTotal">$0</div></div>
+    <div class="kpi"><div class="k-label">eCheqs en cartera</div><div class="k-value" id="finEcheqCartera">$0</div></div>
+    <div class="kpi"><div class="k-label">Cuentas por cobrar</div><div class="k-value" id="finPorCobrar">$0</div></div>
+    <div class="kpi"><div class="k-label">Cuentas por pagar</div><div class="k-value" id="finPorPagar">$0</div></div>
+  </div>
+  <div class="tabs mb-3" id="finSubTabs">
+    <button class="tab active" data-fintab="bancos"><i class="fa-solid fa-building-columns"></i> Bancos</button>
+    <button class="tab" data-fintab="echeqs"><i class="fa-solid fa-money-check-dollar"></i> eCheqs</button>
+    <button class="tab" data-fintab="cobrar"><i class="fa-solid fa-hand-holding-dollar"></i> Por cobrar</button>
+    <button class="tab" data-fintab="pagar"><i class="fa-solid fa-file-invoice"></i> Por pagar</button>
+    <button class="tab" data-fintab="conciliacion"><i class="fa-solid fa-scale-balanced"></i> Conciliación</button>
+  </div>
+
+  <div class="fin-sub" id="finsub-bancos">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div class="card">
+        <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+          <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Cuentas bancarias</div>
+          <button class="btn btn-primary btn-sm" onclick="nuevaCuenta()"><i class="fa-solid fa-plus"></i> Nueva</button>
+        </div>
+        <div id="finCuentasLista" style="display:grid;gap:6px"></div>
+      </div>
+      <div class="card lg:col-span-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Registrar movimiento</div>
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2">
+          <div><label>Cuenta *</label><select id="bancoMovCuenta"></select></div>
+          <div><label>Fecha *</label><input id="bancoMovFecha" type="date"/></div>
+          <div><label>Tipo *</label>
+            <select id="bancoMovTipo">
+              <option value="ingreso">Ingreso</option>
+              <option value="egreso">Egreso</option>
+              <option value="ajuste">Ajuste / comisión / impuesto</option>
+            </select>
+          </div>
+          <div><label>Importe *</label><input id="bancoMovImporte" type="number" step="0.01"/></div>
+          <div class="md:col-span-2"><label>Concepto *</label><input id="bancoMovConcepto"/></div>
+        </div>
+        <button class="btn btn-primary w-full mt-3" onclick="guardarMovimientoBanco()"><i class="fa-solid fa-floppy-disk"></i> Registrar movimiento</button>
+      </div>
+    </div>
+    <div class="card mt-3">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Movimientos bancarios</div>
+        <select id="finBancoFiltro" onchange="renderFinBancos()" style="width:auto;font-size:11px;padding:4px 8px"><option value="">Todas las cuentas</option></select>
+      </div>
+      <div style="max-height:500px;overflow:auto">
+        <table>
+          <thead><tr><th>Fecha</th><th>Cuenta</th><th>Tipo</th><th>Concepto</th><th>Importe</th><th>Conciliado</th><th style="width:40px"></th></tr></thead>
+          <tbody id="finMovLista"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-sub" id="finsub-echeqs" style="display:none">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div class="card">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Registrar eCheq</div>
+        <div class="grid grid-cols-1 gap-2">
+          <div><label>N° / ID *</label><input id="ecNumero"/></div>
+          <div><label>Banco emisor *</label><input id="ecBanco"/></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label>Importe *</label><input id="ecImporte" type="number" step="0.01"/></div>
+            <div><label>Emisión</label><input id="ecEmision" type="date"/></div>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label>Vencimiento *</label><input id="ecVencimiento" type="date"/></div>
+            <div><label>CUIT emisor</label><input id="ecCuit"/></div>
+          </div>
+          <div><label>Concepto / cliente</label><input id="ecConcepto"/></div>
+        </div>
+        <button class="btn btn-primary w-full mt-3" onclick="guardarEcheq()"><i class="fa-solid fa-plus"></i> Agregar a cartera</button>
+      </div>
+      <div class="card lg:col-span-2">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+          <div class="kpi"><div class="k-label">En cartera</div><div class="k-value text-[14px]" id="ecTotalCartera">$0</div></div>
+          <div class="kpi"><div class="k-label">Depositados</div><div class="k-value text-[14px]" id="ecTotalDepos">$0</div></div>
+          <div class="kpi"><div class="k-label">Acreditados</div><div class="k-value text-[14px]" id="ecTotalAcr">$0</div></div>
+          <div class="kpi"><div class="k-label">Endosados</div><div class="k-value text-[14px]" id="ecTotalEnd">$0</div></div>
+        </div>
+        <div class="overflow-auto" style="max-height:500px">
+          <table>
+            <thead><tr><th>N°</th><th>Banco</th><th>Emisor</th><th>Vence</th><th>Importe</th><th>Estado</th><th style="width:220px">Acción</th></tr></thead>
+            <tbody id="ecLista"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-sub" id="finsub-cobrar" style="display:none">
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-2 mb-3">
+      <div class="kpi"><div class="k-label">Total por cobrar</div><div class="k-value" id="cobTotal">$0</div></div>
+      <div class="kpi"><div class="k-label">Vencido +30 días</div><div class="k-value" id="cobVencido" style="color:#b91c1c">$0</div></div>
+      <div class="kpi"><div class="k-label">Facturado último mes</div><div class="k-value" id="cobMes">$0</div></div>
+      <div class="kpi"><div class="k-label">Documentos con saldo</div><div class="k-value" id="cobClientes">0</div></div>
+    </div>
+    <div class="card">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Saldos por documento</div>
+      <div style="max-height:600px;overflow:auto">
+        <table>
+          <thead><tr><th>Documento</th><th>Cliente</th><th>Fecha</th><th>Total</th><th>Cobrado</th><th>Pendiente</th><th style="width:180px">Acción</th></tr></thead>
+          <tbody id="cobLista"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-sub" id="finsub-pagar" style="display:none">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+      <div class="card">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Nueva obligación</div>
+        <div class="grid grid-cols-1 gap-2">
+          <div><label>Proveedor *</label><input id="pgProveedor" list="provList"/><datalist id="provList"></datalist></div>
+          <div><label>Concepto *</label><input id="pgConcepto"/></div>
+          <div class="grid grid-cols-2 gap-2">
+            <div><label>Importe *</label><input id="pgImporte" type="number" step="0.01"/></div>
+            <div><label>Vencimiento</label><input id="pgVenc" type="date"/></div>
+          </div>
+        </div>
+        <button class="btn btn-primary w-full mt-3" onclick="guardarObligacion()"><i class="fa-solid fa-plus"></i> Agregar</button>
+      </div>
+      <div class="card lg:col-span-2">
+        <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-3">
+          <div class="kpi"><div class="k-label">Total por pagar</div><div class="k-value text-[14px]" id="pgTotal">$0</div></div>
+          <div class="kpi"><div class="k-label">Vencido</div><div class="k-value text-[14px]" id="pgVencido" style="color:#b91c1c">$0</div></div>
+          <div class="kpi"><div class="k-label">Pagado este mes</div><div class="k-value text-[14px]" id="pgPagMes">$0</div></div>
+        </div>
+        <div style="max-height:500px;overflow:auto">
+          <table>
+            <thead><tr><th>Proveedor</th><th>Concepto</th><th>Vencimiento</th><th>Importe</th><th>Pagado</th><th>Pendiente</th><th style="width:150px">Acción</th></tr></thead>
+            <tbody id="pgLista"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="fin-sub" id="finsub-conciliacion" style="display:none">
+    <div class="card">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Comparación saldo calculado vs saldo real</div>
+      <div class="text-[11px] text-slate-500 mb-3 text-center">Una vez por semana mirá el home banking, anotá el saldo real de cada cuenta y presioná "Actualizar saldo real".</div>
+      <table>
+        <thead><tr><th>Cuenta</th><th>Saldo calculado</th><th>Saldo real</th><th>Diferencia</th><th>Última conciliación</th><th style="width:180px">Acción</th></tr></thead>
+        <tbody id="concLista"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="card mt-3">
+    <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">Resumen de ingresos y egresos del período</div>
+    <div class="grid grid-cols-3 gap-2 mb-3">
+      <div class="kpi"><div class="k-label">Ingresos</div><div class="k-value" id="finIng" style="color:#15803d">$0</div></div>
+      <div class="kpi"><div class="k-label">Egresos</div><div class="k-value" id="finEgr" style="color:#b91c1c">$0</div></div>
+      <div class="kpi"><div class="k-label">Neto</div><div class="k-value" id="finNeto">$0</div></div>
+    </div>
+    <div class="grid grid-cols-3 gap-2">
+      <div><label>Año</label><select id="finAnio" onchange="renderFinanzas()"></select></div>
+      <div><label>Mes</label><select id="finMes" onchange="renderFinanzas()"></select></div>
+      <div class="flex items-end"><button class="btn btn-secondary w-full" onclick="renderFinanzas()"><i class="fa-solid fa-refresh"></i> Actualizar</button></div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-empleados">
+  <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
+    <div class="card">
+      <div class="flex items-center justify-between mb-2">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Empleados</div>
+        <button class="btn btn-primary btn-sm" onclick="nuevoEmpleado()"><i class="fa-solid fa-plus"></i> Nuevo</button>
+      </div>
+      <div id="empLista" style="max-height:640px;overflow:auto;display:grid;gap:6px"></div>
+    </div>
+    <div class="lg:col-span-2 space-y-3">
+      <div class="card">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200" id="empFormTitle">Nuevo empleado</div>
+        <input type="hidden" id="empId"/>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div class="sm:col-span-2"><label>Nombre y apellido *</label><input id="empNombre"/></div>
+          <div><label>DNI</label><input id="empDni"/></div>
+          <div><label>CUIL</label><input id="empCuil"/></div>
+          <div><label>Fecha de nacimiento</label><input id="empNac" type="date"/></div>
+          <div><label>Teléfono</label><input id="empTel"/></div>
+          <div><label>Fecha de ingreso</label><input id="empIng" type="date"/></div>
+          <div><label>Puesto</label><input id="empPuesto"/></div>
+          <div><label>Sueldo básico</label><input id="empSueldo" type="number" step="0.01"/></div>
+          <div class="sm:col-span-3"><label>Domicilio</label><input id="empDom"/></div>
+          <div class="sm:col-span-3"><label>Observaciones</label><input id="empObs"/></div>
+        </div>
+        <div class="flex justify-end gap-2 mt-3">
+          <button class="btn btn-danger" id="empEliminar" onclick="eliminarEmpleado()" style="display:none">Eliminar</button>
+          <button class="btn btn-primary" onclick="guardarEmpleado()">Guardar</button>
+        </div>
+      </div>
+
+      <div id="empLaboralWrap" style="display:none">
+        <div class="card">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-200">
+            <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-chart-column" style="color:#16a34a"></i> Dashboard laboral</div>
+            <div class="grid grid-cols-2 gap-2">
+              <select id="dashAnio" onchange="renderDashEmpleado()" style="width:auto;font-size:11px;padding:4px 8px"><option value="all">Todos los años</option></select>
+              <select id="dashPeriodo" onchange="renderDashEmpleado()" style="width:auto;font-size:11px;padding:4px 8px"><option value="all">Todos los períodos</option></select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-4 gap-2" id="empDash"></div>
+          <div class="mt-3" id="empDashDetalle"></div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-file-invoice-dollar" style="color:#16a34a"></i> Registrar recibo de sueldo</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div><label>Período *</label><select id="recPeriodo"></select></div>
+            <div><label>Fecha *</label><input id="recFecha" type="date"/></div>
+            <div><label>Neto *</label><input id="recNeto" type="number" step="0.01"/></div>
+            <div><label>Bruto</label><input id="recBruto" type="number" step="0.01"/></div>
+            <div><label>Descuentos</label><input id="recDesc" type="number" step="0.01"/></div>
+            <div><label>Costo empleador</label><input id="recCosto" type="number" step="0.01"/></div>
+            <div class="sm:col-span-3"><label>Archivo del recibo (opcional)</label><input id="recArchivo" type="file" accept="application/pdf,image/*"/></div>
+          </div>
+          <button class="btn btn-primary w-full mt-3" onclick="guardarRecibo()"><i class="fa-solid fa-floppy-disk"></i> Guardar recibo</button>
+        </div>
+
+        <div class="card mt-3">
+          <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-money-bill-transfer" style="color:#16a34a"></i> Registrar transferencia al empleado</div>
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
+            <div><label>Liquidación que paga *</label><select id="pagoRecibo"></select></div>
+            <div><label>Fecha *</label><input id="pagoFecha" type="date"/></div>
+            <div><label>Importe *</label><input id="pagoImporte" type="number" step="0.01"/></div>
+            <div><label>Cuenta bancaria *</label><select id="pagoCuenta"></select></div>
+            <div class="sm:col-span-2"><label>Concepto</label><input id="pagoConcepto"/></div>
+            <div class="sm:col-span-3"><label>Comprobante (opcional)</label><input id="pagoArchivo" type="file" accept="application/pdf,image/*"/></div>
+          </div>
+          <button class="btn btn-primary w-full mt-3" onclick="guardarPagoEmpleado()"><i class="fa-solid fa-floppy-disk"></i> Registrar transferencia</button>
+        </div>
+
+        <div class="card mt-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 mb-2 pb-2 border-b border-slate-200">
+            <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-clock" style="color:#16a34a"></i> Horas extras — Control quincenal</div>
+            <div class="grid grid-cols-3 gap-2">
+              <select id="heAnio" onchange="renderHorasExtras()" style="width:auto;font-size:11px;padding:4px 8px"></select>
+              <select id="heMes" onchange="renderHorasExtras()" style="width:auto;font-size:11px;padding:4px 8px"></select>
+              <select id="heQuincena" onchange="renderHorasExtras()" style="width:auto;font-size:11px;padding:4px 8px"><option value="1">1ª quincena</option><option value="2">2ª quincena</option></select>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mb-3">
+            <div class="kpi"><div class="k-label">Horas al 50%</div><div class="k-value text-[14px]" id="heTotal50">0</div></div>
+            <div class="kpi"><div class="k-label">Horas al 100%</div><div class="k-value text-[14px]" id="heTotal100">0</div></div>
+            <div class="kpi"><div class="k-label">Total horas</div><div class="k-value text-[14px]" id="heTotal">0</div></div>
+          </div>
+          <div class="grid grid-cols-2 md:grid-cols-5 gap-2 mb-3">
+            <div><label>Fecha</label><input id="heFecha" type="date"/></div>
+            <div><label>Tipo</label><select id="heTipo"><option value="50">50%</option><option value="100">100%</option></select></div>
+            <div><label>Horas</label><input id="heHoras" type="number" step="0.25" min="0"/></div>
+            <div class="md:col-span-2"><label>Observación</label><input id="heObs"/></div>
+          </div>
+          <button class="btn btn-primary w-full" onclick="agregarHoraExtra()"><i class="fa-solid fa-plus"></i> Agregar hora extra</button>
+          <div class="mt-3 overflow-auto" style="max-height:260px">
+            <table>
+              <thead><tr><th>Fecha</th><th>Tipo</th><th>Horas</th><th>Observación</th><th style="width:40px"></th></tr></thead>
+              <tbody id="heLista"></tbody>
+            </table>
+          </div>
+        </div>
+
+        <div class="card mt-3">
+          <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-folder-tree" style="color:#16a34a"></i> Carpeta personal del empleado</div>
+          <div class="grid grid-cols-3 gap-2">
+            <div class="border border-slate-200 rounded-lg p-3 text-center">
+              <div class="text-[11px] font-bold text-slate-800">📁 Recibos de sueldo</div>
+              <div class="text-[10px] text-slate-500 mb-2"><span id="cntRecibos">0</span> documentos</div>
+              <button class="btn btn-secondary btn-sm w-full" onclick="abrirCarpeta('recibos')">Abrir carpeta</button>
+            </div>
+            <div class="border border-slate-200 rounded-lg p-3 text-center">
+              <div class="text-[11px] font-bold text-slate-800">📁 Transferencias</div>
+              <div class="text-[10px] text-slate-500 mb-2"><span id="cntPagos">0</span> documentos</div>
+              <button class="btn btn-secondary btn-sm w-full" onclick="abrirCarpeta('pagos')">Abrir carpeta</button>
+            </div>
+            <div class="border border-slate-200 rounded-lg p-3 text-center">
+              <div class="text-[11px] font-bold text-slate-800">📁 Otros documentos</div>
+              <div class="text-[10px] text-slate-500 mb-2"><span id="cntOtros">0</span> documentos</div>
+              <button class="btn btn-secondary btn-sm w-full" onclick="abrirCarpeta('otros')">Abrir carpeta</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+/* =========================================================
+   TUBCOR — CORE + LOGIN + SYNC
+   ========================================================= */
+const DENSIDAD_CARTON = 720;
+const LS = {
+  clientes:'clientes', presupuestos:'presupuestos', pendientes:'pendientes', pesajes:'pesajes',
+  produccion:'produccion', bancos:'bancos', movBancos:'movBancos', echeqs:'echeqs',
+  obligaciones:'obligaciones', empleados:'empleados', recibos:'recibos',
+  pagosEmpleado:'pagosEmpleado', horasExtras:'horasExtras', archivosEmpleado:'archivosEmpleado',
+  config:'config'
+};
+
+let STATE = {
+  clientes:[], presupuestos:[], pendientes:[], pesajes:[], produccion:[],
+  bancos:[], movBancos:[], echeqs:[], obligaciones:[],
+  empleados:[], recibos:[], pagosEmpleado:[], horasExtras:[], archivosEmpleado:[],
+  config:{ factorProceso:1.000, ultimoPresupuestoId:null, clienteSeleccionadoId:null, empleadoSeleccionadoId:null }
+};
+
+const $ = id => document.getElementById(id);
+const $$ = sel => document.querySelectorAll(sel);
+const N = v => { const x = parseFloat(v); return Number.isFinite(x) ? x : 0; };
+const money = v => N(v).toLocaleString('es-AR',{style:'currency',currency:'ARS',maximumFractionDigits:2});
+const esc = v => String(v ?? '').replace(/[&<>"']/g,c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today = () => new Date().toISOString().slice(0,10);
+const uid = p => p + '_' + Date.now() + '_' + Math.random().toString(36).slice(2,8);
+const formatoFecha = f => { if (!f) return '—'; const m = String(f).match(/^(\d{4})-(\d{2})-(\d{2})/); return m ? `${m[3]}/${m[2]}/${m[1]}` : f; };
+
+/* ========== Auth + Sync ========== */
+let SESSION_TOKEN = localStorage.getItem('tubcor_session') || '';
+let CURRENT_VERSION = -1;
+let savingLocally = false;
+
+async function load(){
+  const r = await fetch('/api/state', { headers: { 'Authorization': 'Bearer ' + SESSION_TOKEN } });
+  if (r.status === 401){ localStorage.removeItem('tubcor_session'); SESSION_TOKEN=''; throw new Error('unauthorized'); }
+  if (!r.ok) throw new Error('Error ' + r.status);
+  const data = await r.json();
+  Object.keys(LS).forEach(k => {
+    STATE[k] = data.state[k] !== undefined ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
+  });
+  CURRENT_VERSION = data.version;
+}
+
+async function save(keys){
+  if (!SESSION_TOKEN) return;
+  savingLocally = true;
+  try {
+    const blob = {};
+    Object.keys(LS).forEach(k => blob[k] = STATE[k]);
+    const r = await fetch('/api/state', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SESSION_TOKEN },
+      body: JSON.stringify({ state: blob })
+    });
+    if (r.status === 401){ localStorage.removeItem('tubcor_session'); SESSION_TOKEN=''; location.reload(); return; }
+    if (r.ok){ const data = await r.json(); CURRENT_VERSION = data.version; }
+  } catch(e){ console.error('Error guardando:', e); }
+  finally { setTimeout(()=>{ savingLocally = false; }, 1500); }
+}
+
+async function checkForUpdates(){
+  if (!SESSION_TOKEN || savingLocally) return;
+  try {
+    const r = await fetch('/api/version', { headers: { 'Authorization': 'Bearer ' + SESSION_TOKEN } });
+    if (!r.ok) return;
+    const { version } = await r.json();
+    if (version !== CURRENT_VERSION){
+      await load();
+      rerenderAll();
+      const s = document.getElementById('syncStatus');
+      if (s) s.textContent = '↻ ' + new Date().toLocaleTimeString();
+    }
+  } catch(_){}
+}
+
+function rerenderAll(){
+  try{ renderPendientes(); }catch(_){}
+  try{ renderPresupuestos(); }catch(_){}
+  try{ renderOF(); }catch(_){}
+  try{ renderProduccion(); }catch(_){}
+  try{ renderClientes(); }catch(_){}
+  try{ cargarSelectoresClientes(); }catch(_){}
+  try{ renderFinanzas(); }catch(_){}
+  try{ renderFinBancos(); }catch(_){}
+  try{ renderFinEcheqs(); }catch(_){}
+  try{ renderFinCobrar(); }catch(_){}
+  try{ renderFinPagar(); }catch(_){}
+  try{ renderFinConciliacion(); }catch(_){}
+  try{ cargarSelectoresBancos(); }catch(_){}
+  try{ renderEmpleados(); }catch(_){}
+  try{ renderCalibrador(); }catch(_){}
+  try{ recalcular(); }catch(_){}
+  try{ calPrevia(); }catch(_){}
+  if (STATE.config.empleadoSeleccionadoId){
+    try{ seleccionarEmpleado(STATE.config.empleadoSeleccionadoId); }catch(_){}
+  }
+}
+
+/* ========== Utilidades ========== */
+function toast(msg, type=''){
+  const t = $('toast');
+  t.className = 'toast ' + (type==='ok'?'ok':type==='err'?'err':'');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(()=>t.classList.remove('show'),2400);
+}
+function confirmar(titulo){
+  return new Promise(resolve=>{
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.innerHTML = `<div class="modal">
+      <div style="font-size:14px;font-weight:800;color:#0f172a;margin-bottom:8px">${esc(titulo)}</div>
+      <div style="font-size:12px;color:#475569;margin-bottom:14px">Esta acción no se puede deshacer. Escribí <b>ELIMINAR</b> para confirmar.</div>
+      <input id="confirmarTxt" placeholder="ELIMINAR"/>
+      <div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">
+        <button class="btn btn-secondary" id="confirmarNo">Cancelar</button>
+        <button class="btn btn-danger" id="confirmarSi">Eliminar</button>
+      </div>
+    </div>`;
+    document.body.appendChild(bg);
+    const done = ok => { bg.remove(); resolve(ok); };
+    bg.querySelector('#confirmarNo').onclick = ()=>done(false);
+    bg.querySelector('#confirmarSi').onclick = ()=>{
+      const v = bg.querySelector('#confirmarTxt').value.trim();
+      if (v !== 'ELIMINAR') return toast('Escribí exactamente ELIMINAR','err');
+      done(true);
+    };
+    setTimeout(()=>bg.querySelector('#confirmarTxt').focus(),50);
+  });
+}
+
+/* ========== Modelo físico ========== */
+function modeloFisico({diametroInterno, longitud, capas}){
+  const Di = N(diametroInterno), L = N(longitud);
+  if (!(Di>0) || !(L>0) || !capas.length) return {papel:0, espesor:0, detalle:[]};
+  let d = Di, espesorTotal = 0, papel = 0;
+  const detalle = [];
+  capas.forEach(c=>{
+    const g = N(c.gramaje); if (!(g>0)) return;
+    const reps = Math.max(1, parseInt(c.cantidad)||1);
+    for (let i=0;i<reps;i++){
+      const t = g / DENSIDAD_CARTON;
+      const dMedio = d + t;
+      const circ = Math.PI * dMedio / 1000;
+      const Lm = L / 1000;
+      const masa = circ * Lm * g;
+      papel += masa;
+      detalle.push({tipo:c.tipo, gramaje:g, masa});
+      d += 2*t; espesorTotal += t;
+    }
+  });
+  return {papel, espesor:espesorTotal, detalle};
+}
+function capasDesdeIngenieria(){
+  const capas = [];
+  capas.push({tipo:'Principal', gramaje:N($('ingPrincGram').value), cantidad:1});
+  const cr = Math.max(0, parseInt($('ingRellCant').value)||0);
+  if (cr>0) capas.push({tipo:'Relleno', gramaje:N($('ingRellGram').value), cantidad:cr});
+  capas.push({tipo:'Tapa', gramaje:N($('ingTapaGram').value), cantidad:1});
+  return capas.filter(c=>c.gramaje>0);
+}
+
+/* ========== Ingeniería ========== */
+function recalcular(){
+  const fp = N(STATE.config.factorProceso)>0 ? N(STATE.config.factorProceso) : 1;
+  $('factorBadge').textContent = '× ' + fp.toFixed(3);
+  const diam = N($('ingDiam').value), long = N($('ingLong').value), cant = Math.max(1, parseInt($('ingCant').value)||1);
+  const capas = capasDesdeIngenieria();
+  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
+  const pctAdhSeco = N($('pctAdhSeco').value)/100;
+  const pctAdhTapa = N($('pctAdhTapa').value)/100;
+  const m = modeloFisico({diametroInterno:diam, longitud:long, capas});
+  let gPrinc=0, gRell=0, gTapa=0;
+  m.detalle.forEach(x=>{
+    if (x.tipo==='Principal') gPrinc += x.masa;
+    else if (x.tipo==='Relleno') gRell += x.masa;
+    else if (x.tipo==='Tapa') gTapa += x.masa;
+  });
+  const papelTotal = gPrinc + gRell + gTapa;
+  const adhSecoInterno = (gPrinc + gRell) * pctAdhSeco;
+  const adhSecoTapa = gTapa * pctAdhTapa;
+  const adhSecoTotal = adhSecoInterno + adhSecoTapa;
+  const pastaHumedaInterno = adhSecoInterno / solidos;
+  const pastaHumedaTapa = adhSecoTapa;
+  const pastaTotal = pastaHumedaInterno + pastaHumedaTapa;
+  const pesoUnitG = (papelTotal + adhSecoTotal) * fp;
+  const pesoUnitKg = pesoUnitG / 1000;
+  const pesoLoteKg = pesoUnitKg * cant;
+  const cp=N($('precioCP').value), cr=N($('precioCR').value), ct=N($('precioCT').value);
+  const ca=N($('precioAdh').value), cat=N($('precioAdhTapa').value), cf=N($('precioFlete').value);
+  const merma = N($('ingDesperdicio').value)/100;
+  const compraPrinc = (gPrinc/1000)*cant*(1+merma);
+  const compraRell = (gRell/1000)*cant*(1+merma);
+  const compraTapa = (gTapa/1000)*cant*(1+merma);
+  const compraPastaInt = (pastaHumedaInterno/1000)*cant*(1+merma);
+  const compraPastaTapa = (pastaHumedaTapa/1000)*cant*(1+merma);
+  const costoCarton = compraPrinc*cp + compraRell*cr + compraTapa*ct;
+  const costoAdhInt = compraPastaInt*ca;
+  const costoAdhTapa = compraPastaTapa*cat;
+  const costoFlete = (compraPrinc+compraRell+compraTapa+compraPastaInt+compraPastaTapa)*cf;
+  const metrosLineales = (long/1000)*cant;
+  const horasProd = metrosLineales/25;
+  const kwh = (15.75+5.22)*horasProd + (long<750 ? 2.2*(metrosLineales/30) : 0);
+  const costoEnergia = kwh*160;
+  const costoVariableTotal = costoCarton + costoAdhInt + costoAdhTapa + costoFlete + costoEnergia;
+  const costoVariableUnit = costoVariableTotal / cant;
+  const gf = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro']
+    .reduce((s,id)=>s+N($(id).value),0);
+  $('gfTotal').textContent = money(gf);
+  const prodKgMes = N($('prodMensual').value) || 1;
+  const gfPorKg = gf / prodKgMes;
+  const gfProrateado = gfPorKg * pesoLoteKg;
+  const gfUnit = gfProrateado / cant;
+  const costoTotalLote = costoVariableTotal + gfProrateado;
+  const costoTotalUnit = costoTotalLote / cant;
+  const costoTotalKg = costoTotalLote / (pesoLoteKg || 1);
+  const margen = Math.min(0.95, Math.max(0, N($('ingMargen').value)/100));
+  const precioTotalSinIva = costoTotalLote / (1 - margen);
+  const precioUnitSinIva = precioTotalSinIva / cant;
+  const precioKg = precioTotalSinIva / (pesoLoteKg || 1);
+  const contribUnit = precioUnitSinIva - costoVariableUnit;
+  const peTubos = contribUnit>0 ? Math.ceil(gf / contribUnit) : Infinity;
+  const peKg = contribUnit>0 ? peTubos*pesoUnitKg : Infinity;
+  const peVentas = contribUnit>0 ? peTubos*precioUnitSinIva : Infinity;
+  STATE.resultados = {
+    diam, long, cant, capas,
+    espesor: m.espesor*fp,
+    pesoUnitG, pesoUnitKg, pesoLoteKg,
+    papelTotalG:papelTotal, adhSecoG:adhSecoTotal, pastaTotalG:pastaTotal, solidos,
+    gPrinc, gRell, gTapa,
+    adhSecoInternoG:adhSecoInterno, adhSecoTapaG:adhSecoTapa,
+    pastaHumedaInternoG:pastaHumedaInterno, pastaHumedaTapaG:pastaHumedaTapa,
+    compraPrinc, compraRell, compraTapa, compraPastaInt, compraPastaTapa,
+    costoVariableTotal, costoVariableUnit,
+    gfProrateado, gfUnit, gfPorKg,
+    costoTotalLote, costoTotalUnit, costoTotalKg,
+    precioTotalSinIva, precioUnitSinIva, precioKg, margen,
+    peTubos, peKg, peVentas, gf, prodKgMes,
+    requiereCNC: long<750, metrosLineales
+  };
+  $('rEsp').textContent = (m.espesor*fp).toFixed(2)+' mm';
+  $('rPesoU').textContent = pesoUnitG.toFixed(1)+' g';
+  $('rPesoL').textContent = pesoLoteKg.toFixed(2)+' kg';
+  $('rCostoVU').textContent = money(costoVariableUnit);
+  $('rCostoFU').textContent = money(gfUnit);
+  $('rCostoU').textContent = money(costoTotalUnit);
+  $('rCostoKg').textContent = money(costoTotalKg);
+  $('rPrecioKg').textContent = money(precioKg);
+  $('rPrecioU').textContent = money(precioUnitSinIva);
+  $('rPETubos').textContent = isFinite(peTubos) ? peTubos.toLocaleString('es-AR') : '—';
+  $('rPEKg').textContent = isFinite(peKg) ? peKg.toFixed(1) : '—';
+  $('rPEVen').textContent = isFinite(peVentas) ? money(peVentas) : '—';
+  const rows = [
+    ['Papel principal ('+$('ingPrincAncho').value+' / '+$('ingPrincGram').value+')', gPrinc/1000*cant, compraPrinc],
+    ['Papel relleno ('+$('ingRellAncho').value+' / '+$('ingRellGram').value+') × '+$('ingRellCant').value, gRell/1000*cant, compraRell],
+    ['Papel tapa ('+$('ingTapaAncho').value+' / '+$('ingTapaGram').value+')', gTapa/1000*cant, compraTapa],
+    ['MD50 seco incorporado', adhSecoInterno*cant/1000, compraPastaInt],
+    ['Adhesivo tapa seco', adhSecoTapa*cant/1000, compraPastaTapa]
+  ];
+  $('rConsumos').innerHTML = rows.map(r=>`<tr>
+    <td>${esc(r[0])}</td>
+    <td class="num">${r[1].toFixed(2)}</td>
+    <td class="num">${r[2].toFixed(2)}</td>
+  </tr>`).join('') + `<tr style="background:#f0fdf4">
+    <td><b>Totales</b></td>
+    <td class="num"><b>${((papelTotal+adhSecoTotal)*cant/1000).toFixed(2)} kg</b></td>
+    <td class="num"><b>${(compraPrinc+compraRell+compraTapa+compraPastaInt+compraPastaTapa).toFixed(2)} kg</b></td>
+  </tr>`;
+}
+
+/* ========== Calibrador ========== */
+function calPrevia(){
+  const capas = [
+    {gramaje:N($('calPG').value), cantidad:1, tipo:'Principal'},
+    {gramaje:N($('calRG').value), cantidad:Math.max(0,parseInt($('calRC').value)||0), tipo:'Relleno'},
+    {gramaje:N($('calTG').value), cantidad:1, tipo:'Tapa'}
+  ].filter(c=>c.gramaje>0 && c.cantidad>0);
+  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
+  const pctInt = N($('pctAdhSeco').value)/100;
+  const pctTap = N($('pctAdhTapa').value)/100;
+  const m = modeloFisico({diametroInterno:N($('calDiam').value), longitud:N($('calLong').value), capas});
+  let gP=0, gR=0, gT=0;
+  m.detalle.forEach(x=>{
+    if (x.tipo==='Principal') gP += x.masa;
+    else if (x.tipo==='Relleno') gR += x.masa;
+    else if (x.tipo==='Tapa') gT += x.masa;
+  });
+  const papel = gP + gR + gT;
+  const adhSeco = (gP+gR)*pctInt + gT*pctTap;
+  $('calPapel').textContent = papel.toFixed(1)+' g';
+  $('calAdh').textContent = adhSeco.toFixed(1)+' g seco';
+  $('calTeorico').textContent = (papel+adhSeco).toFixed(1)+' g';
+  $('calEspT').textContent = m.espesor.toFixed(2)+' mm';
+}
+function recalcularFactorProceso(){
+  if (!STATE.pesajes.length){
+    STATE.config.factorProceso = 1;
+    $('calFactor').value = '1.000';
+    $('calFactorInfo').textContent = 'Sin historial. Cargá el primer pesaje real.';
+    return;
+  }
+  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
+  const pctInt = N($('pctAdhSeco').value)/100;
+  const pctTap = N($('pctAdhTapa').value)/100;
+  const ratios = STATE.pesajes.map(p=>{
+    const capas = [
+      {gramaje:p.pg, cantidad:1, tipo:'Principal'},
+      {gramaje:p.rg, cantidad:p.rc||0, tipo:'Relleno'},
+      {gramaje:p.tg, cantidad:1, tipo:'Tapa'}
+    ].filter(c=>c.gramaje>0 && c.cantidad>0);
+    const m = modeloFisico({diametroInterno:p.diametro, longitud:p.longitud, capas});
+    let gP=0, gR=0, gT=0;
+    m.detalle.forEach(x=>{
+      if (x.tipo==='Principal') gP += x.masa;
+      else if (x.tipo==='Relleno') gR += x.masa;
+      else if (x.tipo==='Tapa') gT += x.masa;
+    });
+    const papel = gP+gR+gT;
+    const adhSeco = (gP+gR)*pctInt + gT*pctTap;
+    const tb = papel + adhSeco;
+    return tb>0 ? p.pesoReal / tb : null;
+  }).filter(v=>Number.isFinite(v) && v>0);
+  if (!ratios.length) return;
+  ratios.sort((a,b)=>a-b);
+  let muestra = ratios;
+  if (ratios.length >= 5){
+    const cut = Math.max(1, Math.floor(ratios.length*0.10));
+    muestra = ratios.slice(cut, ratios.length-cut);
+  }
+  const f = muestra.reduce((s,x)=>s+x,0)/muestra.length;
+  STATE.config.factorProceso = Math.min(1.80, Math.max(0.50, f));
+  $('calFactor').value = STATE.config.factorProceso.toFixed(3);
+  $('calFactorInfo').textContent = `Basado en ${ratios.length} pesaje(s) histórico(s).`;
+  save(['config']);
+}
+function registrarPesaje(){
+  const pesoReal = N($('calPeso').value);
+  if (!(pesoReal>0)) return toast('Ingresá el peso real medido','err');
+  const capas = [
+    {gramaje:N($('calPG').value), cantidad:1},
+    {gramaje:N($('calRG').value), cantidad:Math.max(0,parseInt($('calRC').value)||0)},
+    {gramaje:N($('calTG').value), cantidad:1}
+  ];
+  if (!capas.some(c=>c.gramaje>0)) return toast('Faltan gramajes de fajas','err');
+  STATE.pesajes.push({
+    id: uid('peso'), fecha: today(),
+    referencia: $('calRef').value || 'Sin referencia',
+    diametro: N($('calDiam').value), longitud: N($('calLong').value),
+    cantidad: Math.max(1, parseInt($('calCant').value)||1),
+    espesorReal: N($('calEspR').value), pesoReal,
+    pg:N($('calPG').value), pa:N($('calPA').value), pc:$('calPC').value,
+    rc:Math.max(0,parseInt($('calRC').value)||0), ra:N($('calRA').value), rg:N($('calRG').value),
+    tg:N($('calTG').value), ta:N($('calTA').value), tc:$('calTC').value
+  });
+  save(['pesajes']);
+  $('calPeso').value = ''; $('calEspR').value = '';
+  recalcularFactorProceso(); renderCalibrador(); recalcular();
+  toast('Pesaje registrado · factor recalibrado','ok');
+}
+function eliminarPesaje(id){
+  confirmar('¿Eliminar este pesaje?').then(ok=>{
+    if (!ok) return;
+    STATE.pesajes = STATE.pesajes.filter(p=>p.id!==id);
+    save(['pesajes']); recalcularFactorProceso(); renderCalibrador(); recalcular();
+    toast('Pesaje eliminado','ok');
+  });
+}
+function limpiarPesajes(){
+  confirmar('¿Eliminar todo el historial de balanza?').then(ok=>{
+    if (!ok) return;
+    STATE.pesajes = []; save(['pesajes']); recalcularFactorProceso(); renderCalibrador(); recalcular();
+    toast('Historial borrado','ok');
+  });
+}
+function renderCalibrador(){
+  const list = STATE.pesajes.slice().reverse();
+  const tb = $('calLista');
+  if (!list.length){
+    tb.innerHTML = '<tr><td colspan="7" class="empty">Sin pesajes registrados.</td></tr>';
+    $('calDesvio').textContent = '0.00 %';
+    return;
+  }
+  const pctInt = N($('pctAdhSeco').value)/100;
+  const pctTap = N($('pctAdhTapa').value)/100;
+  let suma = 0;
+  tb.innerHTML = list.map(p=>{
+    const capas = [
+      {gramaje:p.pg, cantidad:1, tipo:'Principal'},
+      {gramaje:p.rg, cantidad:p.rc||0, tipo:'Relleno'},
+      {gramaje:p.tg, cantidad:1, tipo:'Tapa'}
+    ].filter(c=>c.gramaje>0 && c.cantidad>0);
+    const m = modeloFisico({diametroInterno:p.diametro, longitud:p.longitud, capas});
+    let gP=0, gR=0, gT=0;
+    m.detalle.forEach(x=>{
+      if (x.tipo==='Principal') gP += x.masa;
+      else if (x.tipo==='Relleno') gR += x.masa;
+      else if (x.tipo==='Tapa') gT += x.masa;
+    });
+    const papel = gP+gR+gT;
+    const adhSeco = (gP+gR)*pctInt + gT*pctTap;
+    const teorico = (papel + adhSeco) * STATE.config.factorProceso;
+    const desv = p.pesoReal>0 ? ((teorico-p.pesoReal)/p.pesoReal)*100 : 0;
+    suma += Math.abs(desv);
+    return `<tr>
+      <td><b>${esc(p.referencia)}</b><div class="hint">${esc(p.fecha)}</div></td>
+      <td>Ø${p.diametro} × ${p.longitud}</td>
+      <td><div class="hint">P: ${p.pa}/${p.pg}<br>R: ${p.rc}× ${p.ra}/${p.rg}<br>T: ${p.ta}/${p.tg}</div></td>
+      <td>${p.pesoReal.toFixed(1)} g</td>
+      <td>${teorico.toFixed(1)} g</td>
+      <td style="color:${Math.abs(desv)>3?'#d97706':'#15803d'};font-weight:700">${desv>0?'+':''}${desv.toFixed(2)}%</td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminarPesaje('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('');
+  $('calDesvio').textContent = (suma/list.length).toFixed(2)+' %';
+}
+
+/* ========== Clientes ========== */
+function renderClientes(){
+  const q = ($('cliBuscar').value||'').toLowerCase().trim();
+  const list = STATE.clientes.filter(c=>!q || (c.razonSocial+' '+(c.cuit||'')+' '+(c.localidad||'')).toLowerCase().includes(q));
+  $('cliLista').innerHTML = list.length ? list.map(c=>`
+    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.clienteSeleccionadoId===c.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="cargarCliente('${c.id}')">
+      <div style="font-weight:700;font-size:12.5px">${esc(c.razonSocial)}</div>
+      <div style="font-size:10.5px;color:#64748b">${esc(c.cuit||'Sin CUIT')} · ${esc(c.localidad||'')}</div>
+    </div>`).join('') : '<div class="empty">Sin clientes cargados.</div>';
+}
+function nuevoCliente(){
+  STATE.config.clienteSeleccionadoId = null;
+  ['cliId','cliRazon','cliCuit','cliDom','cliLoc','cliCont','cliTel','cliEmail','cliPago','cliObs','cliCp'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  $('cliProv').value='Córdoba'; $('cliIva').value='';
+  $('cliFormTitle').textContent='Nuevo cliente';
+  $('cliEliminar').style.display='none';
+  renderClientes();
+}
+function cargarCliente(id){
+  const c = STATE.clientes.find(x=>x.id===id); if (!c) return;
+  STATE.config.clienteSeleccionadoId = id;
+  $('cliId').value=c.id; $('cliRazon').value=c.razonSocial||''; $('cliCuit').value=c.cuit||'';
+  $('cliIva').value=c.condicionIVA||''; $('cliDom').value=c.domicilio||''; $('cliLoc').value=c.localidad||'';
+  $('cliProv').value=c.provincia||'Córdoba'; $('cliCp').value=c.cp||''; $('cliCont').value=c.contacto||'';
+  $('cliTel').value=c.telefono||''; $('cliEmail').value=c.email||''; $('cliPago').value=c.condicionPago||'';
+  $('cliObs').value=c.observaciones||'';
+  $('cliFormTitle').textContent='Editar cliente';
+  $('cliEliminar').style.display='inline-flex';
+  renderClientes();
+}
+function guardarCliente(){
+  const razon = $('cliRazon').value.trim();
+  if (!razon) return toast('Ingresá la razón social','err');
+  const id = $('cliId').value || uid('cli');
+  const data = {
+    id, razonSocial: razon,
+    cuit: $('cliCuit').value.trim(), condicionIVA: $('cliIva').value,
+    domicilio: $('cliDom').value.trim(), localidad: $('cliLoc').value.trim(),
+    provincia: $('cliProv').value.trim(), cp: $('cliCp').value.trim(),
+    contacto: $('cliCont').value.trim(), telefono: $('cliTel').value.trim(),
+    email: $('cliEmail').value.trim(), condicionPago: $('cliPago').value.trim(),
+    observaciones: $('cliObs').value.trim()
+  };
+  const i = STATE.clientes.findIndex(c=>c.id===id);
+  if (i<0) STATE.clientes.push(data); else STATE.clientes[i]=data;
+  STATE.config.clienteSeleccionadoId = id;
+  save(['clientes','config']); renderClientes(); cargarSelectoresClientes();
+  toast('Cliente guardado','ok');
+}
+function eliminarCliente(){
+  const id = $('cliId').value; if (!id) return;
+  confirmar('¿Eliminar este cliente?').then(ok=>{
+    if (!ok) return;
+    STATE.clientes = STATE.clientes.filter(c=>c.id!==id);
+    save(['clientes']); nuevoCliente(); cargarSelectoresClientes();
+    toast('Cliente eliminado','ok');
+  });
+}
+function cargarSelectoresClientes(){
+  const sel = $('ingCliente'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar cliente —</option>' +
+    STATE.clientes.map(c=>`<option value="${c.id}">${esc(c.razonSocial)}${c.cuit?' · '+esc(c.cuit):''}</option>`).join('');
+  if (cur && STATE.clientes.some(c=>c.id===cur)) sel.value = cur;
+}
+
+/* ========== Pendientes / Presupuestos / OF ========== */
+function agregarItemPendiente(){
+  const cliId = $('ingCliente').value;
+  if (!cliId) return toast('Seleccioná un cliente primero','err');
+  const cli = STATE.clientes.find(c=>c.id===cliId);
+  const r = STATE.resultados;
+  if (!r || !r.pesoUnitKg) return toast('Revisá los datos del tubo','err');
+  const item = {
+    itemId: uid('it'),
+    clienteId: cli.id, clienteRazonSocial: cli.razonSocial,
+    clienteCUIT: cli.cuit, clienteCondicionIVA: cli.condicionIVA,
+    clienteDomicilio: cli.domicilio, clienteLocalidad: cli.localidad,
+    clienteContacto: cli.contacto, clienteTelefono: cli.telefono,
+    clienteEmail: cli.email, condicionPago: cli.condicionPago || '',
+    diametro: r.diam, longitud: r.long, cantidad: r.cant,
+    espesor: r.espesor, tipoPaquete: parseInt($('ingPaquete').value)||37,
+    anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), colorPrinc: $('ingPrincColor').value,
+    cantRelleno: Math.max(0, parseInt($('ingRellCant').value)||0),
+    anchoRell: N($('ingRellAncho').value), gramajeRell: N($('ingRellGram').value),
+    anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), colorTapa: $('ingTapaColor').value,
+    pesoUnitG: r.pesoUnitG, pesoUnitKg: r.pesoUnitKg, pesoLoteKg: r.pesoLoteKg,
+    papelKg: r.papelTotalG/1000, adhSecoKg: r.adhSecoG/1000, pastaTotalKg: r.pastaTotalG/1000,
+    kgPrinc: r.gPrinc, kgRell: r.gRell, kgTapa: r.gTapa,
+    costoVariableTotal: r.costoVariableTotal, costoVariableUnit: r.costoVariableUnit,
+    gfProrateado: r.gfProrateado, gfUnit: r.gfUnit,
+    costoTotalUnit: r.costoTotalUnit,
+    precioVentaTotal: r.precioTotalSinIva, precioVentaUnitario: r.precioUnitSinIva,
+    precioVentaKg: r.precioKg, margen: r.margen, requiereCNC: r.requiereCNC
+  };
+  if (STATE.pendientes.length && STATE.pendientes[0].clienteId !== cliId) return toast('Todos los items deben ser del mismo cliente','err');
+  STATE.pendientes.push(item);
+  save(['pendientes']); renderPendientes();
+  toast('Tubo agregado a la lista','ok');
+}
+function eliminarPendiente(id){
+  STATE.pendientes = STATE.pendientes.filter(x=>x.itemId!==id);
+  save(['pendientes']); renderPendientes();
+}
+function renderPendientes(){
+  const list = STATE.pendientes;
+  $('pendCount').textContent = list.length + ' item' + (list.length===1?'':'s');
+  if (!list.length){
+    $('pendList').innerHTML = '<tr><td colspan="9" class="empty">No hay tubos cargados.</td></tr>';
+    return;
+  }
+  $('pendList').innerHTML = list.map((x,i)=>`<tr>
+    <td>${i+1}</td>
+    <td>${esc(x.clienteRazonSocial||'')}</td>
+    <td>Ø${x.diametro} × ${x.longitud}</td>
+    <td><div class="hint">P: ${x.anchoPrinc}/${x.gramajePrinc} · R: ${x.cantRelleno}×${x.anchoRell}/${x.gramajeRell} · T: ${x.anchoTapa}/${x.gramajeTapa}</div></td>
+    <td>${x.cantidad.toLocaleString('es-AR')}</td>
+    <td>${(x.pesoUnitG).toFixed(1)} g</td>
+    <td>${money(x.precioVentaUnitario)}</td>
+    <td>${money(x.precioVentaTotal)}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="eliminarPendiente('${x.itemId}')"><i class="fa-solid fa-xmark"></i></button></td>
+  </tr>`).join('');
+}
+function nuevoPedido(){
+  if (!STATE.pendientes.length) return;
+  confirmar('¿Comenzar un nuevo pedido? Se vaciará la lista actual.').then(ok=>{
+    if (!ok) return;
+    STATE.pendientes = []; save(['pendientes']); renderPendientes();
+    toast('Nuevo pedido iniciado','ok');
+  });
+}
+function generarPresupuesto(){
+  if (!STATE.pendientes.length) return toast('Agregá al menos un tubo','err');
+  const first = STATE.pendientes[0];
+  const anio = new Date().getFullYear();
+  const usadosPres = STATE.presupuestos.map(p=>Number((p.numero||'').match(/(\d+)$/)?.[1]||0));
+  const usadosOF = STATE.presupuestos.map(p=>Number((p.ordenNumero||'').match(/(\d+)$/)?.[1]||0));
+  const numPres = 'PRES-'+anio+'-'+String(Math.max(0,...usadosPres)+1).padStart(4,'0');
+  const numOF = 'OF-'+anio+'-'+String(Math.max(0,...usadosOF)+1).padStart(4,'0');
+  const pres = {
+    id: uid('pres'), numero: numPres, ordenNumero: numOF,
+    fecha: today(), validezDias: 10, estado: 'Generado',
+    clienteId: first.clienteId, clienteRazonSocial: first.clienteRazonSocial,
+    clienteCUIT: first.clienteCUIT, clienteCondicionIVA: first.clienteCondicionIVA,
+    clienteDomicilio: first.clienteDomicilio, clienteLocalidad: first.clienteLocalidad,
+    clienteContacto: first.clienteContacto, clienteTelefono: first.clienteTelefono,
+    clienteEmail: first.clienteEmail, condicionPago: first.condicionPago || '',
+    items: JSON.parse(JSON.stringify(STATE.pendientes)),
+    observacionesPresupuesto: $('obsPresupuesto').value.trim(),
+    observacionesOF: '', creado: new Date().toISOString()
+  };
+  STATE.presupuestos.push(pres);
+  STATE.pendientes = []; $('obsPresupuesto').value = '';
+  STATE.config.ultimoPresupuestoId = pres.id;
+  save(['presupuestos','pendientes','config']);
+  renderPendientes(); renderPresupuestos(); renderOF();
+  switchTab('presupuestos');
+  toast('Presupuesto '+numPres+' y OF '+numOF+' generados','ok');
+}
+function renderPresupuestos(){
+  const list = STATE.presupuestos.slice().reverse();
+  $('presCount').textContent = list.length;
+  if (!list.length){
+    $('presLista').innerHTML = '<div class="empty">Sin presupuestos generados.</div>';
+    $('presVacio').style.display = 'block';
+    $('presPreview').style.display = 'none';
+    return;
+  }
+  $('presLista').innerHTML = list.map(p=>`
+    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.ultimoPresupuestoId===p.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="seleccionarPresupuesto('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div style="font-weight:700;font-size:12.5px">${esc(p.numero)}</div>
+          <div style="font-size:10.5px;color:#64748b">${esc(p.clienteRazonSocial)} · ${esc(p.fecha)}</div>
+        </div>
+        <span class="badge badge-green">${p.items.length}</span>
+      </div>
+    </div>`).join('');
+  if (STATE.config.ultimoPresupuestoId) renderPreviewPresupuesto();
+}
+function seleccionarPresupuesto(id){
+  STATE.config.ultimoPresupuestoId = id; save(['config']); renderPresupuestos();
+}
+function renderPreviewPresupuesto(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p){ $('presVacio').style.display='block'; $('presPreview').style.display='none'; return; }
+  $('presVacio').style.display='none';
+  $('presPreview').style.display='block';
+  $('presPaper').innerHTML = renderPaperPresupuesto(p);
+}
+function renderPaperPresupuesto(p){
+  const items = p.items||[];
+  const subtotal = items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
+  const iva = subtotal*0.21;
+  const total = subtotal + iva;
+  return `<div class="paper">
+    <div class="paper-header">
+      <div class="brand">
+        <img src="tubcor-logo-membrete.jpg" alt="TUBCOR"/>
+        <div class="info">
+          <strong>TUBCOR S.A.S.</strong>
+          Fábrica de tubos de cartón<br/>
+          Camino Santa Bárbara 1448 · CP 5014<br/>
+          Córdoba, Argentina<br/>
+          CUIT 30-71853010-1 · IVA Resp. Inscripto
+        </div>
+      </div>
+      <div class="meta">
+        <div class="kicker">DOCUMENTO COMERCIAL</div>
+        <div class="title">PRESUPUESTO</div>
+        <div class="num">N° ${esc(p.numero)}</div>
+        <div class="date">Fecha: ${formatoFecha(p.fecha)} · Validez: ${p.validezDias||10} días</div>
+      </div>
+    </div>
+    <div class="paper-client">
+      <div><div class="lbl">Cliente</div><div class="val">${esc(p.clienteRazonSocial||'—')}</div></div>
+      <div><div class="lbl">CUIT</div><div class="val">${esc(p.clienteCUIT||'—')}</div></div>
+      <div><div class="lbl">Condición IVA</div><div class="val">${esc(p.clienteCondicionIVA||'—')}</div></div>
+      <div><div class="lbl">Domicilio</div><div class="val">${esc(p.clienteDomicilio||'—')}</div></div>
+      <div><div class="lbl">Localidad</div><div class="val">${esc(p.clienteLocalidad||'—')}</div></div>
+      <div><div class="lbl">Contacto</div><div class="val">${esc(p.clienteContacto||p.clienteTelefono||'—')}</div></div>
+    </div>
+    <div class="paper-section">Detalle de la propuesta</div>
+    <table class="paper-table">
+      <thead><tr><th style="width:12%">Cantidad</th><th>Producto / Especificación</th><th style="width:18%">P. Unitario neto</th><th style="width:20%">Subtotal neto</th></tr></thead>
+      <tbody>
+        ${items.map(x=>`<tr>
+          <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
+          <td class="left"><b>Tubo espiralado Ø${x.diametro} × ${x.longitud} mm</b><br/><span style="font-size:9px;color:#64748b;">Espesor ${N(x.espesor).toFixed(2)} mm</span></td>
+          <td class="right">${money(x.precioVentaUnitario)}</td>
+          <td class="right">${money(x.precioVentaTotal)}</td>
+        </tr>`).join('')}
+      </tbody>
+    </table>
+    <div class="paper-totals"><div class="box">
+      <div class="row"><span>Subtotal neto</span><b>${money(subtotal)}</b></div>
+      <div class="row"><span>IVA (21%)</span><b>${money(iva)}</b></div>
+      <div class="row grand"><span>TOTAL</span><span>${money(total)}</span></div>
+    </div></div>
+    ${p.observacionesPresupuesto?`<div class="paper-obs"><b>OBSERVACIONES</b><br/>${esc(p.observacionesPresupuesto).replace(/\n/g,'<br/>')}</div>`:''}
+    <div class="paper-footer">www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar</div>
+  </div>`;
+}
+function renderOF(){
+  const list = STATE.presupuestos.slice().reverse();
+  $('ofCount').textContent = list.length;
+  if (!list.length){
+    $('ofLista').innerHTML = '<div class="empty">Sin órdenes generadas.</div>';
+    $('ofVacio').style.display='block';
+    $('ofPreview').style.display='none';
+    return;
+  }
+  $('ofLista').innerHTML = list.map(p=>`
+    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.ultimoPresupuestoId===p.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="seleccionarOF('${p.id}')">
+      <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
+        <div>
+          <div style="font-weight:700;font-size:12.5px">${esc(p.ordenNumero)}</div>
+          <div style="font-size:10.5px;color:#64748b">${esc(p.numero)} · ${esc(p.clienteRazonSocial)}</div>
+        </div>
+        <span class="badge badge-blue">${p.items.length}</span>
+      </div>
+    </div>`).join('');
+  if (STATE.config.ultimoPresupuestoId) renderPreviewOF();
+}
+function seleccionarOF(id){
+  STATE.config.ultimoPresupuestoId = id; save(['config']); renderOF();
+}
+function renderPreviewOF(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p){ $('ofVacio').style.display='block'; $('ofPreview').style.display='none'; return; }
+  $('ofVacio').style.display='none';
+  $('ofPreview').style.display='block';
+  $('ofPaper').innerHTML = renderPaperOF(p);
+}
+function renderPaperOF(p){
+  const items = p.items||[];
+  return `<div class="paper">
+    <div class="paper-header">
+      <div class="brand">
+        <img src="tubcor-logo-membrete.jpg" alt="TUBCOR"/>
+        <div class="info">
+          <strong>TUBCOR S.A.S.</strong>
+          Fábrica de tubos de cartón<br/>
+          Camino Santa Bárbara 1448 · CP 5014<br/>
+          Córdoba, Argentina
+        </div>
+      </div>
+      <div class="meta">
+        <div class="kicker" style="color:#ea580c;">DOCUMENTO INTERNO</div>
+        <div class="title">ORDEN DE FABRICACIÓN</div>
+        <div class="num">N° ${esc(p.ordenNumero)}</div>
+        <div class="date">Presupuesto: ${esc(p.numero)} · Fecha: ${formatoFecha(p.fecha)}</div>
+      </div>
+    </div>
+    <div class="paper-client">
+      <div><div class="lbl">Cliente</div><div class="val">${esc(p.clienteRazonSocial||'—')}</div></div>
+      <div><div class="lbl">CUIT</div><div class="val">${esc(p.clienteCUIT||'—')}</div></div>
+      <div><div class="lbl">Condición IVA</div><div class="val">${esc(p.clienteCondicionIVA||'—')}</div></div>
+      <div><div class="lbl">Domicilio</div><div class="val">${esc(p.clienteDomicilio||'—')}</div></div>
+      <div><div class="lbl">Localidad</div><div class="val">${esc(p.clienteLocalidad||'—')}</div></div>
+      <div><div class="lbl">Contacto</div><div class="val">${esc(p.clienteContacto||p.clienteTelefono||'—')}</div></div>
+    </div>
+    <div class="paper-section">Especificaciones de fabricación</div>
+    <table class="paper-table">
+      <thead><tr><th style="width:12%">Cantidad</th><th>Medidas y proceso</th><th>Formato de fajas</th></tr></thead>
+      <tbody>
+        ${items.map(x=>{
+          const n = parseInt(x.tipoPaquete)||37;
+          const pack = n===37?'37 un. (Hexagonal)':n===19?'19 un.':n===61?'61 un.':n===1?'Sin empaquetar':n+' un.';
+          const corte = N(x.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
+          return `<tr>
+            <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
+            <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm</b><br/><span style="font-size:9px;color:#64748b;">Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
+            <td class="left" style="font-size:9.5px;">
+              <b>Principal:</b> ${x.anchoPrinc} mm / ${x.gramajePrinc} g/m²<br/>
+              <b>Relleno:</b> ${x.cantRelleno} × ${x.anchoRell} mm / ${x.gramajeRell} g/m²<br/>
+              <b>Tapa:</b> ${x.anchoTapa} mm / ${x.gramajeTapa} g/m²
+            </td>
+          </tr>`;
+        }).join('')}
+      </tbody>
+    </table>
+    ${p.observacionesOF?`<div class="paper-obs"><b>OBSERVACIONES DE PLANTA</b><br/>${esc(p.observacionesOF).replace(/\n/g,'<br/>')}</div>`:''}
+    <div class="paper-footer">TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar</div>
+  </div>`;
+}
+function editarPresupuesto(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return;
+  const razon = prompt('Cliente:', p.clienteRazonSocial); if (razon===null) return;
+  const pago = prompt('Condición de pago:', p.condicionPago||''); if (pago===null) return;
+  for (const it of p.items){
+    const cant = prompt(`Cantidad del tubo Ø${it.diametro} × ${it.longitud} (actual: ${it.cantidad}):`, it.cantidad);
+    if (cant===null) return;
+    const pu = prompt(`Precio unitario neto (actual: ${it.precioVentaUnitario.toFixed(2)}):`, it.precioVentaUnitario.toFixed(2));
+    if (pu===null) return;
+    it.cantidad = Math.max(1, parseInt(cant)||it.cantidad);
+    it.precioVentaUnitario = Math.max(0, N(pu));
+    it.precioVentaTotal = it.cantidad * it.precioVentaUnitario;
+  }
+  p.clienteRazonSocial = razon.trim()||p.clienteRazonSocial;
+  p.condicionPago = pago.trim();
+  save(['presupuestos']); renderPreviewPresupuesto();
+  toast('Presupuesto actualizado','ok');
+}
+function editarObsOF(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return;
+  const v = prompt('Observaciones de planta para la OF:', p.observacionesOF||'');
+  if (v===null) return;
+  p.observacionesOF = v.trim();
+  save(['presupuestos']); renderPreviewOF();
+  toast('Observaciones guardadas','ok');
+}
+function eliminarPresupuesto(){
+  const id = STATE.config.ultimoPresupuestoId; if (!id) return;
+  confirmar('¿Eliminar este presupuesto?').then(ok=>{
+    if (!ok) return;
+    STATE.presupuestos = STATE.presupuestos.filter(x=>x.id!==id);
+    if (STATE.config.ultimoPresupuestoId===id) STATE.config.ultimoPresupuestoId=null;
+    save(['presupuestos','config']); renderPresupuestos(); renderOF();
+    toast('Presupuesto eliminado','ok');
+  });
+}
+
+/* ========== PDFs ========== */
+function pdfPresupuesto(p){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p','mm','a4');
+  const W=210, M=15; let y=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(15,23,42);
+  doc.text('TUBCOR S.A.S.', M, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+  y+=5; doc.text('Fábrica de tubos de cartón', M, y);
+  y+=4; doc.text('Camino Santa Bárbara 1448 · CP 5014 · Córdoba, Argentina', M, y);
+  y+=4; doc.text('CUIT 30-71853010-1 · IVA Responsable Inscripto', M, y);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(22,163,74);
+  doc.text('DOCUMENTO COMERCIAL', W-M, 18, {align:'right'});
+  doc.setFontSize(18); doc.setTextColor(15,23,42);
+  doc.text('PRESUPUESTO', W-M, 26, {align:'right'});
+  doc.setFontSize(11); doc.setTextColor(51,65,85);
+  doc.text('N° ' + p.numero, W-M, 32, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+  doc.text('Fecha: ' + formatoFecha(p.fecha) + ' · Validez: ' + (p.validezDias||10) + ' días', W-M, 37, {align:'right'});
+  y=42; doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.line(M,y,W-M,y); y+=5;
+  const cliH=22, cw=(W-2*M)/3;
+  doc.setDrawColor(203,213,225); doc.setLineWidth(0.2);
+  doc.rect(M, y, W-2*M, cliH);
+  doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+  ['CLIENTE','CUIT','CONDICIÓN IVA'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+4.5));
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  [p.clienteRazonSocial||'—', p.clienteCUIT||'—', p.clienteCondicionIVA||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+13));
+  doc.setFillColor(248,250,252); doc.rect(M, y+13, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+  ['DOMICILIO','LOCALIDAD','CONTACTO'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+18));
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  [p.clienteDomicilio||'—', p.clienteLocalidad||'—', p.clienteContacto||p.clienteTelefono||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+21));
+  y += cliH + 6;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(22,163,74);
+  doc.text('DETALLE DE LA PROPUESTA', M, y); y+=2;
+  doc.setDrawColor(203,213,225); doc.line(M,y,W-M,y); y+=4;
+  const colW = [20, 85, 35, 40];
+  doc.setFillColor(241,245,249); doc.rect(M, y, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(51,65,85);
+  let x=M;
+  ['CANT.','PRODUCTO / ESPECIFICACIÓN','P. UNITARIO','SUBTOTAL'].forEach((h,i)=>{
+    const align = i===0?'center':i===1?'left':'right';
+    const tx = align==='left'?x+2:align==='right'?x+colW[i]-2:x+colW[i]/2;
+    doc.text(h, tx, y+4, {align});
+    x += colW[i];
+  });
+  y += 6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  p.items.forEach(it=>{
+    const rowH=9;
+    doc.setDrawColor(226,232,240); doc.line(M, y+rowH, W-M, y+rowH);
+    doc.setTextColor(15,23,42);
+    doc.text(String(it.cantidad.toLocaleString('es-AR')), M+colW[0]/2, y+5, {align:'center'});
+    doc.setFont('helvetica','bold');
+    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm', M+colW[0]+2, y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+    doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', M+colW[0]+2, y+8);
+    doc.setFontSize(9); doc.setTextColor(15,23,42);
+    doc.setFont('helvetica','bold');
+    doc.text(money(it.precioVentaUnitario), M+colW[0]+colW[1]+colW[2]-2, y+5, {align:'right'});
+    doc.text(money(it.precioVentaTotal), M+colW[0]+colW[1]+colW[2]+colW[3]-2, y+5, {align:'right'});
+    y += rowH;
+  });
+  const sub = p.items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
+  const iva = sub*0.21, tot = sub+iva;
+  y+=4;
+  const tx = W-M-70;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9);
+  doc.setTextColor(100,116,139); doc.text('Subtotal neto', tx, y);
+  doc.setTextColor(15,23,42); doc.text(money(sub), W-M, y, {align:'right'}); y+=5;
+  doc.setTextColor(100,116,139); doc.text('IVA (21%)', tx, y);
+  doc.setTextColor(15,23,42); doc.text(money(iva), W-M, y, {align:'right'}); y+=3;
+  doc.setDrawColor(22,163,74); doc.setLineWidth(0.4); doc.line(tx,y,W-M,y); y+=4;
+  doc.setFont('helvetica','bold'); doc.setFontSize(13); doc.setTextColor(15,23,42);
+  doc.text('TOTAL', tx, y); doc.text(money(tot), W-M, y, {align:'right'});
+  if (p.observacionesPresupuesto){
+    y += 10;
+    doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 14, 'F');
+    doc.setDrawColor(22,163,74); doc.setLineWidth(0.8); doc.line(M, y, M, y+14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(22,163,74);
+    doc.text('OBSERVACIONES', M+3, y+4);
+    doc.setFont('helvetica','normal'); doc.setTextColor(51,65,85);
+    const lines = doc.splitTextToSize(p.observacionesPresupuesto, W-2*M-6);
+    doc.text(lines.slice(0,3), M+3, y+9);
+  }
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(148,163,184);
+  doc.text('www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar', W/2, 285, {align:'center'});
+  doc.save(p.numero + '_TUBCOR.pdf');
+}
+function pdfOF(p){
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF('p','mm','a4');
+  const W=210, M=15; let y=18;
+  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(15,23,42);
+  doc.text('TUBCOR S.A.S.', M, y);
+  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
+  y+=5; doc.text('Fábrica de tubos de cartón', M, y);
+  y+=4; doc.text('Camino Santa Bárbara 1448 · CP 5014 · Córdoba, Argentina', M, y);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(234,88,12);
+  doc.text('DOCUMENTO INTERNO', W-M, 18, {align:'right'});
+  doc.setFontSize(16); doc.setTextColor(15,23,42);
+  doc.text('ORDEN DE FABRICACIÓN', W-M, 26, {align:'right'});
+  doc.setFontSize(11); doc.setTextColor(51,65,85);
+  doc.text('N° ' + p.ordenNumero, W-M, 32, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
+  doc.text('Presupuesto: ' + p.numero + ' · Fecha: ' + formatoFecha(p.fecha), W-M, 37, {align:'right'});
+  y=42; doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.line(M,y,W-M,y); y+=5;
+  const cliH=22, cw=(W-2*M)/3;
+  doc.setDrawColor(203,213,225); doc.rect(M, y, W-2*M, cliH);
+  doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+  ['CLIENTE','CUIT','CONDICIÓN IVA'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+4.5));
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  [p.clienteRazonSocial||'—', p.clienteCUIT||'—', p.clienteCondicionIVA||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+13));
+  doc.setFillColor(248,250,252); doc.rect(M, y+13, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+  ['DOMICILIO','LOCALIDAD','CONTACTO'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+18));
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  [p.clienteDomicilio||'—', p.clienteLocalidad||'—', p.clienteContacto||p.clienteTelefono||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+21));
+  y += cliH + 6;
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(22,163,74);
+  doc.text('ESPECIFICACIONES DE FABRICACIÓN', M, y); y+=2;
+  doc.setDrawColor(203,213,225); doc.line(M,y,W-M,y); y+=4;
+  const colW = [20, 90, 70];
+  doc.setFillColor(241,245,249); doc.rect(M, y, W-2*M, 6, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(51,65,85);
+  let xh=M;
+  ['CANT.','MEDIDAS Y PROCESO','FORMATO DE FAJAS'].forEach((h,i)=>{
+    doc.text(h, xh+colW[i]/2, y+4, {align:'center'});
+    xh += colW[i];
+  });
+  y += 6;
+  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
+  p.items.forEach(it=>{
+    const n = parseInt(it.tipoPaquete)||37;
+    const pack = n===37?'37 un. (Hexagonal)':n===19?'19 un.':n===61?'61 un.':n===1?'Sin empaquetar':n+' un.';
+    const corte = N(it.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
+    const rowH = 14;
+    let x = M;
+    doc.text(String(it.cantidad.toLocaleString('es-AR')), x+colW[0]/2, y+5, {align:'center'}); x += colW[0];
+    doc.setFont('helvetica','bold');
+    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x+2, y+4);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
+    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x+2, y+8);
+    doc.text('Empaquetado: '+pack, x+2, y+11);
+    doc.text(corte, x+2, y+14);
+    doc.setFontSize(8); doc.setTextColor(15,23,42);
+    x += colW[1];
+    doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x+2, y+4);
+    doc.text('Relleno: '+it.cantRelleno+' × '+it.anchoRell+' mm / '+it.gramajeRell+' g/m²', x+2, y+8);
+    doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x+2, y+12);
+    y += rowH + 2;
+    doc.setDrawColor(226,232,240); doc.line(M, y-2, W-M, y-2);
+  });
+  if (p.observacionesOF){
+    y += 6;
+    doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 14, 'F');
+    doc.setDrawColor(234,88,12); doc.setLineWidth(0.8); doc.line(M, y, M, y+14);
+    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(234,88,12);
+    doc.text('OBSERVACIONES DE PLANTA', M+3, y+4);
+    doc.setFont('helvetica','normal'); doc.setTextColor(51,65,85);
+    const lines = doc.splitTextToSize(p.observacionesOF, W-2*M-6);
+    doc.text(lines.slice(0,3), M+3, y+9);
+  }
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(148,163,184);
+  doc.text('TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar', W/2, 285, {align:'center'});
+  doc.save(p.ordenNumero + '_TUBCOR.pdf');
+}
+function descargarPresupuestoPDF(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return toast('Seleccioná un presupuesto','err');
+  try { pdfPresupuesto(p); } catch(e){ console.error(e); toast('Error al generar PDF','err'); }
+}
+function descargarOrdenPDF(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return toast('Seleccioná una OF','err');
+  try { pdfOF(p); } catch(e){ console.error(e); toast('Error al generar PDF','err'); }
+}
+
+/* ========== Producción ========== */
+function registrarProduccion(){
+  const f = $('prFecha').value || today();
+  const ofId = $('prOF').value;
+  const pres = STATE.presupuestos.find(x=>x.id===ofId);
+  if (!pres) return toast('Seleccioná una OF','err');
+  const cant = Math.max(0, parseInt($('prCant').value)||0);
+  if (!cant) return toast('Ingresá la cantidad fabricada','err');
+  const pesoProm = N($('prPeso').value);
+  const totalIt = pres.items.reduce((s,x)=>s+x.cantidad,0)||1;
+  const items = pres.items.map(it=>{
+    const ratio = cant/totalIt;
+    const cantFab = Math.round(it.cantidad * ratio);
+    const papelKg = it.papelKg * cantFab;
+    const adhSecoKg = it.adhSecoKg * cantFab;
+    const pastaKg = it.pastaTotalKg * cantFab;
+    const fP = it.gramajePrinc * (it.anchoPrinc||0);
+    const fR = (it.gramajeRell * (it.anchoRell||0)) * (it.cantRelleno||0);
+    const fT = it.gramajeTapa * (it.anchoTapa||0);
+    const sumF = fP + fR + fT || 1;
+    return {
+      itemId: it.itemId, diametro: it.diametro, longitud: it.longitud,
+      cantFab, papelKg, adhSecoKg, pastaKg,
+      kgPrinc: papelKg * (fP/sumF),
+      kgRell: papelKg * (fR/sumF),
+      kgTapa: papelKg * (fT/sumF),
+      anchoPrinc: it.anchoPrinc, gramajePrinc: it.gramajePrinc,
+      anchoRell: it.anchoRell, gramajeRell: it.gramajeRell, cantRelleno: it.cantRelleno,
+      anchoTapa: it.anchoTapa, gramajeTapa: it.gramajeTapa
+    };
+  });
+  STATE.produccion.push({
+    id: uid('prod'), fecha: f,
+    ofId: pres.id, ofNumero: pres.ordenNumero, presNumero: pres.numero,
+    cliente: pres.clienteRazonSocial,
+    cantidad: cant, pesoPromedio: pesoProm, items
+  });
+  save(['produccion']); renderProduccion();
+  toast('Producción registrada','ok');
+}
+function eliminarProduccion(id){
+  confirmar('¿Eliminar este registro de producción?').then(ok=>{
+    if (!ok) return;
+    STATE.produccion = STATE.produccion.filter(p=>p.id!==id);
+    save(['produccion']); renderProduccion();
+    toast('Registro eliminado','ok');
+  });
+}
+function renderProduccion(){
+  const sel = $('prOF'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Seleccionar OF —</option>' +
+    STATE.presupuestos.slice().reverse().map(p=>`<option value="${p.id}">${esc(p.ordenNumero)} · ${esc(p.clienteRazonSocial)}</option>`).join('');
+  if (cur && STATE.presupuestos.some(p=>p.id===cur)) sel.value = cur;
+  const mes = today().slice(0,7);
+  const mesProd = STATE.produccion.filter(p=>(p.fecha||'').slice(0,7)===mes);
+  let tubos=0, kgTubo=0, kgCarton=0, kgAdh=0, kgPasta=0;
+  const compraMap = new Map();
+  const merma = N($('ingDesperdicio').value)/100;
+  const desperdicio = 1+merma;
+  mesProd.forEach(p=>{
+    tubos += p.cantidad;
+    p.items.forEach(it=>{
+      kgTubo += it.papelKg + it.adhSecoKg;
+      kgCarton += it.papelKg;
+      kgAdh += it.adhSecoKg;
+      kgPasta += it.pastaKg;
+      const add = (k,v)=>compraMap.set(k,(compraMap.get(k)||0)+v);
+      add('Cartón principal '+it.anchoPrinc+'/'+it.gramajePrinc, it.kgPrinc);
+      add('Cartón relleno '+it.anchoRell+'/'+it.gramajeRell, it.kgRell);
+      add('Cartón tapa '+it.anchoTapa+'/'+it.gramajeTapa, it.kgTapa);
+      add('Pasta MD50', it.pastaKg);
+    });
+  });
+  const gfTotal = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro']
+    .reduce((s,id)=>s+N($(id).value),0);
+  const cfKg = kgTubo > 0 ? gfTotal / kgTubo : 0;
+  $('pmTubos').textContent = tubos.toLocaleString('es-AR');
+  $('pmKgTubo').textContent = kgTubo.toFixed(1);
+  $('pmCarton').textContent = kgCarton.toFixed(2);
+  $('pmAdh').textContent = kgAdh.toFixed(2);
+  $('pmCompP').textContent = kgPasta.toFixed(1);
+  $('pmCFKg').textContent = money(cfKg);
+  const arr = [...compraMap.entries()];
+  $('prCompra').innerHTML = arr.length
+    ? arr.map(([k,v])=>`<tr><td>${esc(k)}</td><td class="num">${v.toFixed(2)}</td><td class="num">${(merma*100).toFixed(0)} %</td><td class="num"><b>${(v*desperdicio).toFixed(2)}</b></td></tr>`).join('')
+    : '<tr><td colspan="4" class="empty">Sin producción registrada.</td></tr>';
+  const hist = STATE.produccion.slice().reverse();
+  $('prHist').innerHTML = hist.length ? hist.map(p=>`<tr>
+    <td>${esc(p.fecha)}</td>
+    <td>${esc(p.ofNumero)} · ${esc(p.cliente||'')}</td>
+    <td class="num">${p.cantidad.toLocaleString('es-AR')}</td>
+    <td class="num">${(p.pesoPromedio||0).toFixed(1)} g</td>
+    <td class="num">${(p.cantidad*(p.pesoPromedio||0)/1000).toFixed(2)} kg</td>
+    <td><button class="btn btn-danger btn-sm" onclick="eliminarProduccion('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('') : '<tr><td colspan="6" class="empty">Sin registros.</td></tr>';
+}
+
+/* ========== FINANZAS ========== */
+function saldoCuenta(cuentaId){
+  return STATE.movBancos.filter(m=>m.cuentaId===cuentaId).reduce((s,m)=>{
+    if (m.tipo==='ingreso') return s + N(m.importe);
+    if (m.tipo==='egreso' || m.tipo==='ajuste') return s - N(m.importe);
+    return s;
+  },0);
+}
+function totalEcheqPorEstado(estado){
+  return STATE.echeqs.filter(e=>e.estado===estado).reduce((s,e)=>s+N(e.importe),0);
+}
+function cobradoDocumento(presId){
+  const porBanco = STATE.movBancos.filter(m=>m.presupuestoId===presId && m.tipo==='ingreso').reduce((s,m)=>s+N(m.importe),0);
+  const porEcheq = STATE.echeqs.filter(e=>e.presupuestoId===presId && e.estado==='acreditado').reduce((s,e)=>s+N(e.importe),0);
+  return porBanco + porEcheq;
+}
+function nuevaCuenta(){
+  const nombre = prompt('Nombre de la cuenta (ej. Galicia CC $):');
+  if (!nombre || !nombre.trim()) return;
+  STATE.bancos.push({ id: uid('cta'), nombre: nombre.trim(), saldoReal: null, ultimaConciliacion: null });
+  save(['bancos']); cargarSelectoresBancos(); renderFinBancos(); llenarSelectCuentasPago();
+  toast('Cuenta agregada','ok');
+}
+function eliminarCuenta(id){
+  if (STATE.movBancos.some(m=>m.cuentaId===id)) return toast('No se puede eliminar: tiene movimientos','err');
+  confirmar('¿Eliminar esta cuenta?').then(ok=>{
+    if (!ok) return;
+    STATE.bancos = STATE.bancos.filter(b=>b.id!==id);
+    save(['bancos']); cargarSelectoresBancos(); renderFinBancos(); llenarSelectCuentasPago();
+    toast('Cuenta eliminada','ok');
+  });
+}
+function cargarSelectoresBancos(){
+  const s1 = $('bancoMovCuenta'), s2 = $('finBancoFiltro');
+  const html = STATE.bancos.map(b=>`<option value="${b.id}">${esc(b.nombre)}</option>`).join('');
+  if (s1) s1.innerHTML = '<option value="">— Seleccionar —</option>' + html;
+  if (s2) s2.innerHTML = '<option value="">Todas las cuentas</option>' + html;
+}
+function guardarMovimientoBanco(){
+  const cuentaId = $('bancoMovCuenta').value;
+  const fecha = $('bancoMovFecha').value || today();
+  const tipo = $('bancoMovTipo').value;
+  const importe = N($('bancoMovImporte').value);
+  const concepto = $('bancoMovConcepto').value.trim();
+  if (!cuentaId) return toast('Seleccioná una cuenta','err');
+  if (!(importe > 0)) return toast('Ingresá un importe','err');
+  if (!concepto) return toast('Ingresá un concepto','err');
+  STATE.movBancos.push({ id: uid('mb'), cuentaId, fecha, tipo, importe, concepto, presupuestoId: null, conciliado: false });
+  save(['movBancos']);
+  $('bancoMovImporte').value = ''; $('bancoMovConcepto').value = '';
+  renderFinBancos(); renderFinanzas();
+  toast('Movimiento registrado','ok');
+}
+function eliminarMovimientoBanco(id){
+  confirmar('¿Eliminar este movimiento?').then(ok=>{
+    if (!ok) return;
+    STATE.movBancos = STATE.movBancos.filter(m=>m.id!==id);
+    save(['movBancos']); renderFinBancos(); renderFinanzas();
+    toast('Movimiento eliminado','ok');
+  });
+}
+function toggleConciliado(id){
+  const m = STATE.movBancos.find(x=>x.id===id); if (!m) return;
+  m.conciliado = !m.conciliado; save(['movBancos']); renderFinBancos();
+}
+function renderFinBancos(){
+  const box = $('finCuentasLista');
+  if (box){
+    box.innerHTML = STATE.bancos.length ? STATE.bancos.map(b=>{
+      const s = saldoCuenta(b.id);
+      return `<div class="border border-slate-200 rounded-lg p-2 flex items-center justify-between gap-2">
+        <div><div style="font-weight:700;font-size:12.5px">${esc(b.nombre)}</div>
+        <div style="font-size:10.5px;color:#64748b">Saldo calculado</div>
+        <div style="font-size:16px;font-weight:800;color:${s>=0?'#15803d':'#b91c1c'}">${money(s)}</div></div>
+        <button class="btn btn-danger btn-sm" onclick="eliminarCuenta('${b.id}')"><i class="fa-solid fa-trash"></i></button>
+      </div>`;
+    }).join('') : '<div class="empty">Cargá tu primera cuenta.</div>';
+  }
+  const filtro = $('finBancoFiltro')?.value || '';
+  const tb = $('finMovLista'); if (!tb) return;
+  let list = STATE.movBancos.slice().reverse();
+  if (filtro) list = list.filter(m=>m.cuentaId===filtro);
+  list = list.slice(0, 200);
+  tb.innerHTML = list.length ? list.map(m=>{
+    const cta = STATE.bancos.find(b=>b.id===m.cuentaId);
+    const esEgr = m.tipo==='egreso' || m.tipo==='ajuste';
+    const signo = esEgr ? '−' : '+';
+    const color = esEgr ? '#b91c1c' : '#15803d';
+    return `<tr>
+      <td>${esc(m.fecha)}</td>
+      <td>${esc(cta ? cta.nombre : '—')}</td>
+      <td>${esc(m.tipo)}</td>
+      <td>${esc(m.concepto)}</td>
+      <td style="font-weight:700;color:${color}">${signo}${money(m.importe)}</td>
+      <td><input type="checkbox" ${m.conciliado?'checked':''} onchange="toggleConciliado('${m.id}')" style="width:auto"/></td>
+      <td><button class="btn btn-danger btn-sm" onclick="eliminarMovimientoBanco('${m.id}')"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Sin movimientos.</td></tr>';
+}
+function guardarEcheq(){
+  const numero = $('ecNumero').value.trim();
+  const banco = $('ecBanco').value.trim();
+  const importe = N($('ecImporte').value);
+  const emision = $('ecEmision').value || today();
+  const venc = $('ecVencimiento').value;
+  const cuit = $('ecCuit').value.trim();
+  const concepto = $('ecConcepto').value.trim();
+  if (!numero) return toast('Ingresá el N° de eCheq','err');
+  if (!banco) return toast('Ingresá el banco emisor','err');
+  if (!(importe > 0)) return toast('Ingresá el importe','err');
+  if (!venc) return toast('Ingresá el vencimiento','err');
+  if (STATE.echeqs.some(e=>e.numero===numero)) return toast('Ya existe un eCheq con ese número','err');
+  STATE.echeqs.push({
+    id: uid('ec'), numero, banco, importe, emision, vencimiento: venc,
+    cuit, concepto, estado: 'en_cartera',
+    fechaDeposito: null, cuentaDeposito: null,
+    fechaAcreditacion: null, cuentaAcreditacion: null,
+    endoso: null, presupuestoId: null
+  });
+  save(['echeqs']);
+  ['ecNumero','ecBanco','ecImporte','ecCuit','ecConcepto'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  renderFinEcheqs(); renderFinanzas();
+  toast('eCheq agregado a cartera','ok');
+}
+function depositarEcheq(id){
+  const e = STATE.echeqs.find(x=>x.id===id); if (!e) return;
+  if (!STATE.bancos.length) return toast('Primero cargá una cuenta bancaria','err');
+  const cuentas = STATE.bancos.map((b,i)=>`${i+1}. ${b.nombre}`).join('\n');
+  const resp = prompt(`¿En qué cuenta se deposita?\n\n${cuentas}\n\nIngresá el número:`, '1');
+  if (resp === null) return;
+  const idx = Number(resp)-1;
+  if (!Number.isInteger(idx) || idx < 0 || idx >= STATE.bancos.length) return toast('Número inválido','err');
+  e.estado = 'depositado';
+  e.fechaDeposito = prompt('Fecha de depósito (AAAA-MM-DD):', today()) || today();
+  e.cuentaDeposito = STATE.bancos[idx].id;
+  save(['echeqs']); renderFinEcheqs();
+  toast('eCheq marcado como depositado','ok');
+}
+function acreditarEcheq(id){
+  const e = STATE.echeqs.find(x=>x.id===id); if (!e) return;
+  if (e.estado !== 'depositado') return toast('Primero depositá el eCheq','err');
+  const fecha = prompt('Fecha real de acreditación (AAAA-MM-DD):', today()) || today();
+  e.estado = 'acreditado';
+  e.fechaAcreditacion = fecha;
+  e.cuentaAcreditacion = e.cuentaDeposito;
+  STATE.movBancos.push({
+    id: uid('mb'), cuentaId: e.cuentaAcreditacion, fecha,
+    tipo: 'ingreso', importe: e.importe,
+    concepto: 'Acreditación eCheq ' + e.numero + ' · ' + (e.concepto || e.banco),
+    echeqId: e.id, presupuestoId: e.presupuestoId || null, conciliado: false
+  });
+  save(['echeqs','movBancos']);
+  renderFinEcheqs(); renderFinBancos(); renderFinanzas();
+  toast('eCheq acreditado · ingreso bancario generado','ok');
+}
+function endosarEcheq(id){
+  const e = STATE.echeqs.find(x=>x.id===id); if (!e) return;
+  const destinatario = prompt('¿A quién se endosa? (proveedor / empresa)');
+  if (!destinatario) return;
+  const cuit = prompt('CUIT del destinatario:', '') || '';
+  const fecha = prompt('Fecha de endoso (AAAA-MM-DD):', today()) || today();
+  e.estado = 'endosado';
+  e.endoso = { destinatario, cuit, fecha };
+  save(['echeqs']); renderFinEcheqs(); renderFinanzas();
+  toast('eCheq endosado · no genera ingreso bancario','ok');
+}
+function eliminarEcheq(id){
+  confirmar('¿Eliminar este eCheq?').then(ok=>{
+    if (!ok) return;
+    STATE.echeqs = STATE.echeqs.filter(x=>x.id!==id);
+    save(['echeqs']); renderFinEcheqs(); renderFinanzas();
+    toast('eCheq eliminado','ok');
+  });
+}
+function renderFinEcheqs(){
+  $('ecTotalCartera').textContent = money(totalEcheqPorEstado('en_cartera'));
+  $('ecTotalDepos').textContent = money(totalEcheqPorEstado('depositado'));
+  $('ecTotalAcr').textContent = money(totalEcheqPorEstado('acreditado'));
+  $('ecTotalEnd').textContent = money(totalEcheqPorEstado('endosado'));
+  const tb = $('ecLista');
+  const list = STATE.echeqs.slice().sort((a,b)=>(a.vencimiento||'').localeCompare(b.vencimiento||''));
+  tb.innerHTML = list.length ? list.map(e=>{
+    const venc = new Date(e.vencimiento), hoy = new Date();
+    const dias = Math.ceil((venc-hoy)/86400000);
+    const alerta = e.estado==='en_cartera' && dias <= 5 ? ` <span class="badge badge-amber">vence en ${dias}d</span>` : '';
+    const estadoBadge = { en_cartera:'badge-blue', depositado:'badge-amber', acreditado:'badge-green', endosado:'badge-gray' }[e.estado] || 'badge-gray';
+    let acciones = '';
+    if (e.estado === 'en_cartera') acciones = `<button class="btn btn-primary btn-sm" onclick="depositarEcheq('${e.id}')">Depositar</button> <button class="btn btn-secondary btn-sm" onclick="endosarEcheq('${e.id}')">Endosar</button>`;
+    else if (e.estado === 'depositado') acciones = `<button class="btn btn-primary btn-sm" onclick="acreditarEcheq('${e.id}')">Confirmar acreditación</button>`;
+    return `<tr>
+      <td><b>${esc(e.numero)}</b>${alerta}</td>
+      <td>${esc(e.banco)}</td>
+      <td>${esc(e.concepto || e.cuit || '—')}</td>
+      <td>${formatoFecha(e.vencimiento)}</td>
+      <td>${money(e.importe)}</td>
+      <td><span class="badge ${estadoBadge}">${esc(e.estado.replace('_',' '))}</span></td>
+      <td>${acciones} <button class="btn btn-danger btn-sm" onclick="eliminarEcheq('${e.id}')"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Sin eCheqs en cartera.</td></tr>';
+}
+function renderFinCobrar(){
+  const hoy = new Date();
+  let total = 0, vencido = 0, facturadoMes = 0, count = 0;
+  const rows = [];
+  STATE.presupuestos.forEach(p=>{
+    const totalDoc = p.items.reduce((s,x)=>s+N(x.precioVentaTotal)*1.21, 0);
+    const cob = cobradoDocumento(p.id);
+    const pend = Math.max(0, totalDoc - cob);
+    if (pend > 0){
+      const fd = new Date(p.fecha);
+      const dias = Math.ceil((hoy - fd) / 86400000);
+      total += pend;
+      if (dias > 30) vencido += pend;
+      count++;
+      rows.push({ p, totalDoc, cob, pend, dias });
+    }
+    const fdoc = new Date(p.fecha);
+    if (fdoc.getMonth() === hoy.getMonth() && fdoc.getFullYear() === hoy.getFullYear()) facturadoMes += totalDoc;
+  });
+  $('cobTotal').textContent = money(total);
+  $('cobVencido').textContent = money(vencido);
+  $('cobMes').textContent = money(facturadoMes);
+  $('cobClientes').textContent = count;
+  const tb = $('cobLista');
+  tb.innerHTML = rows.length ? rows.map(r=>`<tr>
+    <td><b>${esc(r.p.numero)}</b></td>
+    <td>${esc(r.p.clienteRazonSocial)}</td>
+    <td>${formatoFecha(r.p.fecha)}${r.dias > 30 ? ` <span class="badge badge-red">${r.dias}d</span>` : ''}</td>
+    <td>${money(r.totalDoc)}</td>
+    <td>${money(r.cob)}</td>
+    <td style="font-weight:700;color:#b45309">${money(r.pend)}</td>
+    <td><button class="btn btn-primary btn-sm" onclick="registrarCobro('${r.p.id}')"><i class="fa-solid fa-hand-holding-dollar"></i> Registrar cobro</button></td>
+  </tr>`).join('') : '<tr><td colspan="7" class="empty">Sin saldos pendientes.</td></tr>';
+}
+function registrarCobro(presId){
+  const p = STATE.presupuestos.find(x=>x.id===presId); if (!p) return;
+  const totalDoc = p.items.reduce((s,x)=>s+N(x.precioVentaTotal)*1.21, 0);
+  const cob = cobradoDocumento(presId);
+  const pend = Math.max(0, totalDoc - cob);
+  const impStr = prompt(`Importe del cobro para ${p.numero}\nPendiente: ${money(pend)}\n\nIngresá el importe:`, pend.toFixed(2));
+  if (impStr === null) return;
+  const importe = N(impStr);
+  if (!(importe > 0)) return toast('Importe inválido','err');
+  const medio = prompt('Medio: 1) Transferencia  2) Efectivo  3) eCheq\n\nIngresá número:', '1');
+  if (medio === null) return;
+  if (medio === '1'){
+    if (!STATE.bancos.length) return toast('Primero cargá una cuenta bancaria','err');
+    const cuentas = STATE.bancos.map((b,i)=>`${i+1}. ${b.nombre}`).join('\n');
+    const resp = prompt(`¿En qué cuenta ingresa?\n\n${cuentas}`, '1');
+    if (resp === null) return;
+    const idx = Number(resp)-1;
+    if (!Number.isInteger(idx) || idx < 0 || idx >= STATE.bancos.length) return toast('Número inválido','err');
+    const fecha = prompt('Fecha de la transferencia (AAAA-MM-DD):', today()) || today();
+    STATE.movBancos.push({
+      id: uid('mb'), cuentaId: STATE.bancos[idx].id, fecha, tipo: 'ingreso', importe,
+      concepto: `Cobro ${p.numero} · ${p.clienteRazonSocial}`,
+      presupuestoId: p.id, conciliado: false
+    });
+    save(['movBancos']);
+    toast('Cobro registrado como ingreso bancario','ok');
+  } else if (medio === '2'){
+    STATE.movBancos.push({
+      id: uid('mb'), cuentaId: 'efectivo', fecha: today(), tipo: 'ingreso', importe,
+      concepto: `Cobro efectivo ${p.numero} · ${p.clienteRazonSocial}`,
+      presupuestoId: p.id, conciliado: true
+    });
+    save(['movBancos']);
+    toast('Cobro en efectivo registrado','ok');
+  } else if (medio === '3'){
+    const num = prompt('N° / ID del eCheq:');
+    if (!num) return;
+    const banco = prompt('Banco emisor:') || '';
+    const venc = prompt('Vencimiento (AAAA-MM-DD):', today()) || today();
+    STATE.echeqs.push({
+      id: uid('ec'), numero: num, banco, importe,
+      emision: today(), vencimiento: venc, cuit: '',
+      concepto: `${p.numero} · ${p.clienteRazonSocial}`,
+      estado: 'en_cartera', presupuestoId: p.id,
+      fechaDeposito: null, cuentaDeposito: null,
+      fechaAcreditacion: null, cuentaAcreditacion: null, endoso: null
+    });
+    save(['echeqs']);
+    toast('eCheq agregado a cartera vinculado al presupuesto','ok');
+  }
+  renderFinCobrar(); renderFinBancos(); renderFinEcheqs(); renderFinanzas();
+}
+const PROVEEDORES_FIJOS = ['Rominal (adhesivo)','Cartón principal','Cartón relleno','Cartón tapa','Flete','EPEC','Prosegur','Contadora'];
+function cargarProveedores(){
+  const dl = $('provList');
+  if (dl) dl.innerHTML = PROVEEDORES_FIJOS.map(p=>`<option value="${esc(p)}">`).join('');
+}
+function guardarObligacion(){
+  const prov = $('pgProveedor').value.trim();
+  const concepto = $('pgConcepto').value.trim();
+  const importe = N($('pgImporte').value);
+  const venc = $('pgVenc').value || '';
+  if (!prov || !concepto || !(importe > 0)) return toast('Completá proveedor, concepto e importe','err');
+  STATE.obligaciones.push({
+    id: uid('ob'), proveedor: prov, concepto, importe, vencimiento: venc,
+    pagado: 0, fechaAlta: today()
+  });
+  save(['obligaciones']);
+  ['pgProveedor','pgConcepto','pgImporte','pgVenc'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  renderFinPagar(); renderFinanzas();
+  toast('Obligación agregada','ok');
+}
+function pagarObligacion(id){
+  const o = STATE.obligaciones.find(x=>x.id===id); if (!o) return;
+  const pend = o.importe - o.pagado;
+  const impStr = prompt(`Importe a pagar de "${o.proveedor} · ${o.concepto}"\nPendiente: ${money(pend)}`, pend.toFixed(2));
+  if (impStr === null) return;
+  const imp = N(impStr);
+  if (!(imp > 0)) return toast('Importe inválido','err');
+  if (!STATE.bancos.length) return toast('Cargá una cuenta bancaria primero','err');
+  const cuentas = STATE.bancos.map((b,i)=>`${i+1}. ${b.nombre}`).join('\n');
+  const resp = prompt(`¿Desde qué cuenta se paga?\n\n${cuentas}`, '1');
+  if (resp === null) return;
+  const idx = Number(resp)-1;
+  if (!Number.isInteger(idx) || idx < 0 || idx >= STATE.bancos.length) return toast('Número inválido','err');
+  const fecha = prompt('Fecha del pago (AAAA-MM-DD):', today()) || today();
+  o.pagado = (o.pagado||0) + imp;
+  STATE.movBancos.push({
+    id: uid('mb'), cuentaId: STATE.bancos[idx].id, fecha, tipo: 'egreso', importe: imp,
+    concepto: `Pago ${o.proveedor} · ${o.concepto}`,
+    obligacionId: o.id, conciliado: false
+  });
+  save(['obligaciones','movBancos']);
+  renderFinPagar(); renderFinBancos(); renderFinanzas();
+  toast('Pago registrado','ok');
+}
+function eliminarObligacion(id){
+  confirmar('¿Eliminar esta obligación?').then(ok=>{
+    if (!ok) return;
+    STATE.obligaciones = STATE.obligaciones.filter(x=>x.id!==id);
+    save(['obligaciones']); renderFinPagar(); renderFinanzas();
+    toast('Obligación eliminada','ok');
+  });
+}
+function renderFinPagar(){
+  const hoy = new Date();
+  let total = 0, vencido = 0, pagMes = 0;
+  const mes = today().slice(0,7);
+  STATE.obligaciones.forEach(o=>{
+    const pend = o.importe - (o.pagado||0);
+    if (pend > 0){
+      total += pend;
+      if (o.vencimiento && new Date(o.vencimiento) < hoy) vencido += pend;
+    }
+  });
+  STATE.movBancos.forEach(m=>{
+    if (m.tipo==='egreso' && m.obligacionId && (m.fecha||'').slice(0,7)===mes) pagMes += N(m.importe);
+  });
+  $('pgTotal').textContent = money(total);
+  $('pgVencido').textContent = money(vencido);
+  $('pgPagMes').textContent = money(pagMes);
+  const tb = $('pgLista');
+  const list = STATE.obligaciones.slice().sort((a,b)=>(a.vencimiento||'9999').localeCompare(b.vencimiento||'9999'));
+  tb.innerHTML = list.length ? list.map(o=>{
+    const pend = o.importe - (o.pagado||0);
+    const vencidoBadge = (o.vencimiento && new Date(o.vencimiento) < hoy && pend > 0) ? ' <span class="badge badge-red">vencido</span>' : '';
+    return `<tr>
+      <td>${esc(o.proveedor)}</td>
+      <td>${esc(o.concepto)}</td>
+      <td>${o.vencimiento?formatoFecha(o.vencimiento):'—'}${vencidoBadge}</td>
+      <td>${money(o.importe)}</td>
+      <td>${money(o.pagado||0)}</td>
+      <td style="font-weight:700;color:${pend>0?'#b45309':'#15803d'}">${money(pend)}</td>
+      <td>${pend>0?`<button class="btn btn-primary btn-sm" onclick="pagarObligacion('${o.id}')">Pagar</button> `:''}<button class="btn btn-danger btn-sm" onclick="eliminarObligacion('${o.id}')"><i class="fa-solid fa-trash"></i></button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="7" class="empty">Sin obligaciones cargadas.</td></tr>';
+}
+function renderFinConciliacion(){
+  const tb = $('concLista');
+  tb.innerHTML = STATE.bancos.length ? STATE.bancos.map(b=>{
+    const calc = saldoCuenta(b.id);
+    const real = b.saldoReal != null ? N(b.saldoReal) : null;
+    const dif = real != null ? (real - calc) : null;
+    const difColor = dif == null ? '#64748b' : Math.abs(dif) < 0.01 ? '#15803d' : '#b91c1c';
+    return `<tr>
+      <td><b>${esc(b.nombre)}</b></td>
+      <td>${money(calc)}</td>
+      <td>${real != null ? money(real) : '<span style="color:#94a3b8">sin cargar</span>'}</td>
+      <td style="font-weight:700;color:${difColor}">${dif == null ? '—' : money(dif)}</td>
+      <td>${b.ultimaConciliacion ? formatoFecha(b.ultimaConciliacion) : '—'}</td>
+      <td><button class="btn btn-secondary btn-sm" onclick="actualizarSaldoReal('${b.id}')">Actualizar saldo real</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="6" class="empty">Sin cuentas cargadas.</td></tr>';
+}
+function actualizarSaldoReal(id){
+  const b = STATE.bancos.find(x=>x.id===id); if (!b) return;
+  const calc = saldoCuenta(b.id);
+  const realStr = prompt(`Saldo real de "${b.nombre}" según home banking:\n\nSaldo calculado: ${money(calc)}\n\nIngresá el saldo real:`, b.saldoReal != null ? b.saldoReal.toFixed(2) : calc.toFixed(2));
+  if (realStr === null) return;
+  const real = N(realStr);
+  b.saldoReal = real;
+  b.ultimaConciliacion = today();
+  const dif = real - calc;
+  save(['bancos']);
+  if (Math.abs(dif) > 0.01){
+    if (confirm(`Hay una diferencia de ${money(dif)}.\n\n¿Registrar como ajuste bancario automáticamente?`)){
+      STATE.movBancos.push({
+        id: uid('mb'), cuentaId: b.id, fecha: today(), tipo: 'ajuste', importe: Math.abs(dif),
+        concepto: 'Ajuste de conciliación bancaria', conciliado: true
+      });
+      save(['movBancos']);
+      b.saldoReal = saldoCuenta(b.id);
+      save(['bancos']);
+    }
+  }
+  renderFinConciliacion(); renderFinBancos(); renderFinanzas();
+  toast('Conciliación actualizada','ok');
+}
+function renderFinanzas(){
+  const saldoTot = STATE.bancos.reduce((s,b)=>s + saldoCuenta(b.id), 0);
+  const enCartera = totalEcheqPorEstado('en_cartera') + totalEcheqPorEstado('depositado');
+  let porCobrar = 0;
+  STATE.presupuestos.forEach(p=>{
+    const t = p.items.reduce((a,x)=>a + N(x.precioVentaTotal)*1.21, 0);
+    const c = cobradoDocumento(p.id);
+    porCobrar += Math.max(0, t - c);
+  });
+  let porPagar = 0;
+  STATE.obligaciones.forEach(o=>{ porPagar += Math.max(0, o.importe - (o.pagado||0)); });
+  const elS = $('finSaldoTotal'); if (elS) elS.textContent = money(saldoTot);
+  const elEC = $('finEcheqCartera'); if (elEC) elEC.textContent = money(enCartera);
+  const elPC = $('finPorCobrar'); if (elPC) elPC.textContent = money(porCobrar);
+  const elPP = $('finPorPagar'); if (elPP) elPP.textContent = money(porPagar);
+  const ySel = $('finAnio'), mSel = $('finMes');
+  if (ySel && !ySel.options.length){
+    const anios = [...new Set([today().slice(0,4), ...STATE.movBancos.map(m=>(m.fecha||'').slice(0,4)).filter(Boolean)])].sort().reverse();
+    ySel.innerHTML = '<option value="">Todos</option>' + anios.map(a=>`<option value="${a}">${a}</option>`).join('');
+    if (anios[0]) ySel.value = anios[0];
+    if (mSel) mSel.innerHTML = '<option value="0">Todo el año</option>' + Array.from({length:12},(_,i)=>`<option value="${i+1}">${['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][i]}</option>`).join('');
+  }
+  const anio = ySel?.value || '';
+  const mes = mSel ? parseInt(mSel.value)||0 : 0;
+  const movs = STATE.movBancos.filter(m=>{
+    const [y, mm] = (m.fecha||'').split('-');
+    return (!anio || y === anio) && (!mes || parseInt(mm) === mes);
+  });
+  const ing = movs.filter(m=>m.tipo==='ingreso').reduce((s,m)=>s+N(m.importe),0);
+  const egr = movs.filter(m=>m.tipo==='egreso' || m.tipo==='ajuste').reduce((s,m)=>s+N(m.importe),0);
+  const elI = $('finIng'); if (elI) elI.textContent = money(ing);
+  const elE = $('finEgr'); if (elE) elE.textContent = money(egr);
+  const elN = $('finNeto'); if (elN) elN.textContent = money(ing - egr);
+}
+document.addEventListener('click', (e)=>{
+  const b = e.target.closest('[data-fintab]');
+  if (!b) return;
+  document.querySelectorAll('#finSubTabs .tab').forEach(x=>x.classList.toggle('active', x === b));
+  document.querySelectorAll('.fin-sub').forEach(x=>x.style.display = 'none');
+  const sec = $('finsub-' + b.dataset.fintab);
+  if (sec) sec.style.display = 'block';
+  if (b.dataset.fintab === 'bancos') renderFinBancos();
+  if (b.dataset.fintab === 'echeqs') renderFinEcheqs();
+  if (b.dataset.fintab === 'cobrar') renderFinCobrar();
+  if (b.dataset.fintab === 'pagar') renderFinPagar();
+  if (b.dataset.fintab === 'conciliacion') renderFinConciliacion();
+});
+
+/* ========== EMPLEADOS ========== */
+const DB_EMP = 'TUBCOR_EMPLEADOS_ARCHIVOS';
+function abrirDB(){ return new Promise((res, rej)=>{ const r = indexedDB.open(DB_EMP, 1); r.onupgradeneeded = ()=>{ if (!r.result.objectStoreNames.contains('files')) r.result.createObjectStore('files'); }; r.onsuccess = ()=>res(r.result); r.onerror = ()=>rej(r.error); }); }
+async function guardarArchivo(id, file){
+  const db = await abrirDB();
+  try {
+    const buffer = await file.arrayBuffer();
+    await new Promise((res, rej)=>{
+      const tx = db.transaction('files','readwrite');
+      tx.objectStore('files').put({ buffer, name: file.name, type: file.type||'application/octet-stream', size: file.size, lastModified: file.lastModified||Date.now() }, id);
+      tx.oncomplete = res; tx.onerror = ()=>rej(tx.error);
+    });
+  } finally { db.close(); }
+}
+async function leerArchivo(id){
+  if (!id) return null;
+  try {
+    const db = await abrirDB();
+    const rec = await new Promise((res, rej)=>{ const tx = db.transaction('files','readonly'); const q = tx.objectStore('files').get(id); q.onsuccess = ()=>res(q.result); q.onerror = ()=>rej(q.error); });
+    db.close();
+    if (!rec) return null;
+    return new File([rec.buffer], rec.name||'documento', { type: rec.type||'application/octet-stream', lastModified: rec.lastModified||Date.now() });
+  } catch (_) { return null; }
+}
+async function borrarArchivo(id){
+  if (!id) return;
+  try {
+    const db = await abrirDB();
+    await new Promise(res=>{ const tx = db.transaction('files','readwrite'); tx.objectStore('files').delete(id); tx.oncomplete = res; tx.onerror = res; });
+    db.close();
+  } catch (_) {}
+}
+const MIN_YEAR = 2026, MIN_MONTH = 5, MAX_YEAR = 2035;
+function listaPeriodos(){
+  const a = [];
+  for (let y=MIN_YEAR; y<=MAX_YEAR; y++){
+    const m0 = (y===MIN_YEAR) ? MIN_MONTH : 1;
+    for (let m=m0; m<=12; m++){
+      const mm = String(m).padStart(2,'0');
+      a.push(`${mm}-${y} 1° Q`); a.push(`${mm}-${y} 2° Q`);
+    }
+    a.push(`SAC 1° ${y}`); a.push(`SAC 2° ${y}`);
+  }
+  return a;
+}
+function parsePeriodo(p){
+  const s = String(p||'').trim();
+  let m = s.match(/^SAC\s*(1|2)\s*°\s*(20\d{2})$/i);
+  if (m) return { year:+m[2], month: m[1]==='1'?6:12 };
+  m = s.match(/^(0?[1-9]|1[0-2])-(20\d{2})\s*(1|2)\s*°\s*Q$/i);
+  if (m) return { year:+m[2], month:+m[1] };
+  m = s.match(/(20\d{2})/);
+  return m ? { year:+m[1], month:null } : { year:null };
+}
+function empleadoActual(){ return STATE.empleados.find(e=>e.id===STATE.config.empleadoSeleccionadoId) || null; }
+function renderEmpleados(){
+  $('empLista').innerHTML = STATE.empleados.length ? STATE.empleados.map(e=>`
+    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.empleadoSeleccionadoId===e.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="seleccionarEmpleado('${e.id}')">
+      <div style="font-weight:700;font-size:12.5px">${esc(e.nombre)}</div>
+      <div style="font-size:10.5px;color:#64748b">${esc(e.dni||'')} · ${esc(e.puesto||'Sin puesto')}</div>
+    </div>`).join('') : '<div class="empty">Sin empleados cargados.</div>';
+}
+function seleccionarEmpleado(id){
+  const e = STATE.empleados.find(x=>x.id===id); if (!e) return;
+  STATE.config.empleadoSeleccionadoId = id;
+  $('empId').value = e.id;
+  $('empNombre').value = e.nombre||'';
+  $('empDni').value = e.dni||'';
+  $('empCuil').value = e.cuil||'';
+  $('empNac').value = e.nac||'';
+  $('empTel').value = e.tel||'';
+  $('empIng').value = e.ing||'';
+  $('empPuesto').value = e.puesto||'';
+  $('empSueldo').value = e.sueldo||'';
+  $('empDom').value = e.dom||'';
+  $('empObs').value = e.obs||'';
+  $('empFormTitle').textContent = 'Editar empleado: ' + e.nombre;
+  $('empEliminar').style.display = 'inline-flex';
+  $('empLaboralWrap').style.display = 'block';
+  llenarSelectPeriodos(); llenarSelectCuentasPago();
+  renderDashEmpleado(); renderHorasExtras(); actualizarContadores();
+  renderEmpleados();
+  save(['config']);
+}
+function nuevoEmpleado(){
+  STATE.config.empleadoSeleccionadoId = null;
+  ['empId','empNombre','empDni','empCuil','empNac','empTel','empIng','empPuesto','empSueldo','empDom','empObs'].forEach(id=>{ const el=$(id); if(el) el.value=''; });
+  $('empFormTitle').textContent='Nuevo empleado';
+  $('empEliminar').style.display='none';
+  $('empLaboralWrap').style.display='none';
+  renderEmpleados();
+  save(['config']);
+}
+function guardarEmpleado(){
+  const nombre = $('empNombre').value.trim();
+  if (!nombre) return toast('Ingresá el nombre','err');
+  const id = $('empId').value || uid('emp');
+  const data = {
+    id, nombre,
+    dni: $('empDni').value.trim(), cuil: $('empCuil').value.trim(),
+    nac: $('empNac').value, tel: $('empTel').value.trim(), ing: $('empIng').value,
+    puesto: $('empPuesto').value.trim(), sueldo: N($('empSueldo').value),
+    dom: $('empDom').value.trim(), obs: $('empObs').value.trim()
+  };
+  const i = STATE.empleados.findIndex(e=>e.id===id);
+  if (i<0) STATE.empleados.push(data); else STATE.empleados[i]=data;
+  STATE.config.empleadoSeleccionadoId = id;
+  save(['empleados','config']);
+  seleccionarEmpleado(id);
+  toast('Empleado guardado','ok');
+}
+function eliminarEmpleado(){
+  const id = $('empId').value; if (!id) return;
+  confirmar('¿Eliminar este empleado y toda su documentación?').then(async ok=>{
+    if (!ok) return;
+    const docs = [
+      ...STATE.recibos.filter(r=>r.empleadoId===id).map(r=>r.archivoId),
+      ...STATE.pagosEmpleado.filter(p=>p.empleadoId===id).map(p=>p.archivoId),
+      ...STATE.archivosEmpleado.filter(a=>a.empleadoId===id).map(a=>a.id)
+    ].filter(Boolean);
+    for (const f of docs) await borrarArchivo(f);
+    STATE.empleados = STATE.empleados.filter(e=>e.id!==id);
+    STATE.recibos = STATE.recibos.filter(r=>r.empleadoId!==id);
+    STATE.pagosEmpleado = STATE.pagosEmpleado.filter(p=>p.empleadoId!==id);
+    STATE.horasExtras = STATE.horasExtras.filter(h=>h.empleadoId!==id);
+    STATE.archivosEmpleado = STATE.archivosEmpleado.filter(a=>a.empleadoId!==id);
+    save(['empleados','recibos','pagosEmpleado','horasExtras','archivosEmpleado']);
+    nuevoEmpleado();
+    toast('Empleado eliminado','ok');
+  });
+}
+function llenarSelectPeriodos(){
+  const sel = $('recPeriodo'); if (!sel) return;
+  const cur = sel.value;
+  const opts = listaPeriodos();
+  sel.innerHTML = '<option value="">— Período —</option>' + opts.map(p=>`<option value="${p}">${p}</option>`).join('');
+  if (opts.includes(cur)) sel.value = cur;
+}
+function llenarSelectCuentasPago(){
+  const sel = $('pagoCuenta'); if (!sel) return;
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">— Cuenta —</option>' + STATE.bancos.map(b=>`<option value="${b.id}">${esc(b.nombre)}</option>`).join('');
+  if (cur && STATE.bancos.some(b=>b.id===cur)) sel.value = cur;
+}
+function llenarSelectRecibosParaPago(){
+  const sel = $('pagoRecibo'); if (!sel) return;
+  const emp = empleadoActual(); if (!emp){ sel.innerHTML = ''; return; }
+  const recs = STATE.recibos.filter(r=>r.empleadoId===emp.id);
+  sel.innerHTML = '<option value="">— Sin liquidación específica —</option>' +
+    recs.map(r=>{
+      const pagado = STATE.pagosEmpleado.filter(p=>p.reciboId===r.id).reduce((s,p)=>s+N(p.importe),0);
+      const pend = N(r.neto) - pagado;
+      return `<option value="${r.id}">${esc(r.periodo)} · Neto ${money(r.neto)} · Pend ${money(pend)}</option>`;
+    }).join('');
+}
+async function guardarRecibo(){
+  const emp = empleadoActual(); if (!emp) return toast('Seleccioná un empleado','err');
+  const periodo = $('recPeriodo').value;
+  const fecha = $('recFecha').value || today();
+  const neto = N($('recNeto').value);
+  if (!periodo) return toast('Elegí el período','err');
+  if (!(neto > 0)) return toast('Ingresá el neto','err');
+  const id = uid('rec');
+  let archivoId = null;
+  const inp = $('recArchivo');
+  if (inp && inp.files && inp.files[0]){
+    archivoId = id + '_file';
+    try { await guardarArchivo(archivoId, inp.files[0]); } catch (e) { console.error(e); }
+  }
+  STATE.recibos.push({
+    id, empleadoId: emp.id, periodo, fecha, neto,
+    bruto: N($('recBruto').value), descuentos: N($('recDesc').value),
+    costoEmpleador: N($('recCosto').value), archivoId, creado: new Date().toISOString()
+  });
+  save(['recibos']);
+  ['recFecha','recNeto','recBruto','recDesc','recCosto'].forEach(id2=>{ const el=$(id2); if(el) el.value=''; });
+  if (inp) inp.value = '';
+  renderDashEmpleado(); renderHorasExtras(); actualizarContadores(); llenarSelectRecibosParaPago();
+  toast('Recibo guardado','ok');
+}
+function eliminarRecibo(id){
+  confirmar('¿Eliminar este recibo?').then(async ok=>{
+    if (!ok) return;
+    const r = STATE.recibos.find(x=>x.id===id);
+    if (r && r.archivoId) await borrarArchivo(r.archivoId);
+    STATE.recibos = STATE.recibos.filter(x=>x.id!==id);
+    save(['recibos']); renderDashEmpleado(); actualizarContadores(); llenarSelectRecibosParaPago();
+    toast('Recibo eliminado','ok');
+  });
+}
+async function guardarPagoEmpleado(){
+  const emp = empleadoActual(); if (!emp) return toast('Seleccioná un empleado','err');
+  const reciboId = $('pagoRecibo').value || null;
+  const fecha = $('pagoFecha').value || today();
+  const importe = N($('pagoImporte').value);
+  const cuentaId = $('pagoCuenta').value;
+  if (!(importe > 0)) return toast('Ingresá el importe','err');
+  if (!cuentaId) return toast('Elegí la cuenta bancaria','err');
+  const id = uid('pagoe');
+  let archivoId = null;
+  const inp = $('pagoArchivo');
+  if (inp && inp.files && inp.files[0]){
+    archivoId = id + '_file';
+    try { await guardarArchivo(archivoId, inp.files[0]); } catch (e) { console.error(e); }
+  }
+  const concepto = $('pagoConcepto').value.trim() || ('Sueldo a ' + emp.nombre);
+  STATE.pagosEmpleado.push({ id, empleadoId: emp.id, reciboId, fecha, importe, cuentaId, concepto, archivoId, creado: new Date().toISOString() });
+  STATE.movBancos.push({
+    id: uid('mb'), cuentaId, fecha, tipo: 'egreso', importe,
+    concepto: 'Pago sueldo · ' + emp.nombre,
+    empleadoId: emp.id, reciboId, conciliado: false
+  });
+  save(['pagosEmpleado','movBancos']);
+  ['pagoFecha','pagoImporte','pagoConcepto'].forEach(id2=>{ const el=$(id2); if(el) el.value=''; });
+  if (inp) inp.value = '';
+  renderDashEmpleado(); actualizarContadores(); llenarSelectRecibosParaPago(); renderFinBancos();
+  toast('Pago registrado · egreso bancario generado','ok');
+}
+function eliminarPagoEmpleado(id){
+  confirmar('¿Eliminar esta transferencia?').then(async ok=>{
+    if (!ok) return;
+    const p = STATE.pagosEmpleado.find(x=>x.id===id);
+    if (p && p.archivoId) await borrarArchivo(p.archivoId);
+    STATE.pagosEmpleado = STATE.pagosEmpleado.filter(x=>x.id!==id);
+    STATE.movBancos = STATE.movBancos.filter(m=>!(m.empleadoId && m.reciboId === p.reciboId && m.importe === p.importe && m.fecha === p.fecha));
+    save(['pagosEmpleado','movBancos']);
+    renderDashEmpleado(); actualizarContadores(); llenarSelectRecibosParaPago(); renderFinBancos();
+    toast('Transferencia eliminada','ok');
+  });
+}
+function agregarHoraExtra(){
+  const emp = empleadoActual(); if (!emp) return toast('Seleccioná un empleado','err');
+  const fecha = $('heFecha').value || today();
+  const tipo = parseInt($('heTipo').value) || 50;
+  const horas = N($('heHoras').value);
+  if (!(horas > 0)) return toast('Ingresá las horas','err');
+  const f = new Date(fecha + 'T12:00:00');
+  const quincena = f.getDate() <= 15 ? 1 : 2;
+  STATE.horasExtras.push({ id: uid('he'), empleadoId: emp.id, fecha, tipo, horas, quincena, observacion: $('heObs').value.trim() });
+  save(['horasExtras']);
+  $('heHoras').value = ''; $('heObs').value = '';
+  renderHorasExtras();
+  toast('Hora extra agregada','ok');
+}
+function eliminarHoraExtra(id){
+  confirmar('¿Eliminar esta hora extra?').then(ok=>{
+    if (!ok) return;
+    STATE.horasExtras = STATE.horasExtras.filter(x=>x.id!==id);
+    save(['horasExtras']); renderHorasExtras();
+    toast('Hora extra eliminada','ok');
+  });
+}
+function renderHorasExtras(){
+  const emp = empleadoActual(); if (!emp) return;
+  const anioSel = $('heAnio'), mesSel = $('heMes');
+  if (anioSel && !anioSel.options.length){
+    const hoy = new Date();
+    for (let y=MIN_YEAR; y<=hoy.getFullYear()+1; y++) anioSel.innerHTML += `<option value="${y}">${y}</option>`;
+    anioSel.value = hoy.getFullYear();
+  }
+  if (mesSel && !mesSel.options.length){
+    const nombres = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+    nombres.forEach((n,i)=>mesSel.innerHTML += `<option value="${i+1}">${n}</option>`);
+    mesSel.value = new Date().getMonth()+1;
+  }
+  const y = Number($('heAnio').value) || new Date().getFullYear();
+  const m = Number($('heMes').value) || new Date().getMonth()+1;
+  const q = Number($('heQuincena').value) || 1;
+  const list = STATE.horasExtras.filter(h=>{
+    const f = new Date(h.fecha + 'T12:00:00');
+    return h.empleadoId === emp.id && f.getFullYear() === y && (f.getMonth()+1) === m && h.quincena === q;
+  });
+  const t50 = list.filter(h=>h.tipo===50).reduce((s,h)=>s+N(h.horas),0);
+  const t100 = list.filter(h=>h.tipo===100).reduce((s,h)=>s+N(h.horas),0);
+  $('heTotal50').textContent = t50.toFixed(2);
+  $('heTotal100').textContent = t100.toFixed(2);
+  $('heTotal').textContent = (t50+t100).toFixed(2);
+  $('heLista').innerHTML = list.length ? list.slice().reverse().map(h=>`<tr>
+    <td>${formatoFecha(h.fecha)}</td>
+    <td>${h.tipo}%</td>
+    <td>${N(h.horas).toFixed(2)}</td>
+    <td>${esc(h.observacion||'')}</td>
+    <td><button class="btn btn-danger btn-sm" onclick="eliminarHoraExtra('${h.id}')"><i class="fa-solid fa-trash"></i></button></td>
+  </tr>`).join('') : '<tr><td colspan="5" class="empty">Sin horas extras en este período.</td></tr>';
+}
+function renderDashEmpleado(){
+  const emp = empleadoActual(); if (!emp) return;
+  const recibos = STATE.recibos.filter(r=>r.empleadoId===emp.id);
+  const anios = [...new Set(recibos.map(r=>parsePeriodo(r.periodo).year).filter(Boolean))].sort((a,b)=>b-a);
+  const anioSel = $('dashAnio');
+  if (anioSel){
+    const cur = anioSel.value || 'all';
+    anioSel.innerHTML = '<option value="all">Todos los años</option>' + anios.map(y=>`<option value="${y}">${y}</option>`).join('');
+    anioSel.value = [...anioSel.options].some(o=>o.value===cur) ? cur : 'all';
+  }
+  const y = anioSel?.value || 'all';
+  const periodos = [...new Set(recibos.filter(r=>y==='all' || parsePeriodo(r.periodo).year === +y).map(r=>r.periodo))];
+  const perSel = $('dashPeriodo');
+  if (perSel){
+    const cur = perSel.value || 'all';
+    perSel.innerHTML = '<option value="all">Todos los períodos</option>' + periodos.map(p=>`<option value="${p}">${p}</option>`).join('');
+    perSel.value = [...perSel.options].some(o=>o.value===cur) ? cur : 'all';
+  }
+  const p = perSel?.value || 'all';
+  const sel = recibos.filter(r => (y==='all' || parsePeriodo(r.periodo).year === +y) && (p==='all' || r.periodo === p));
+  let aPagar = 0, pagado = 0;
+  sel.forEach(r=>{
+    aPagar += N(r.neto);
+    pagado += STATE.pagosEmpleado.filter(pg=>pg.reciboId===r.id).reduce((s,pg)=>s+N(pg.importe),0);
+  });
+  const pendiente = Math.max(0, aPagar - pagado);
+  const saldoFavor = Math.max(0, pagado - aPagar);
+  $('empDash').innerHTML = `
+    <div class="kpi"><div class="k-label">A pagar</div><div class="k-value text-[14px]">${money(aPagar)}</div></div>
+    <div class="kpi"><div class="k-label">Pagado</div><div class="k-value text-[14px]" style="color:#15803d">${money(pagado)}</div></div>
+    <div class="kpi"><div class="k-label">Pendiente</div><div class="k-value text-[14px]" style="color:#b45309">${money(pendiente)}</div></div>
+    <div class="kpi"><div class="k-label">Saldo a favor</div><div class="k-value text-[14px]" style="color:#0369a1">${money(saldoFavor)}</div></div>
+  `;
+  $('empDashDetalle').innerHTML = sel.length ? sel.map(r=>{
+    const pag = STATE.pagosEmpleado.filter(pg=>pg.reciboId===r.id).reduce((s,pg)=>s+N(pg.importe),0);
+    const pend = Math.max(0, N(r.neto) - pag);
+    const estado = pend > 0 ? 'PENDIENTE' : (pag > N(r.neto) ? 'PAGADO · SALDO A FAVOR' : 'PAGADO');
+    const color = pend > 0 ? '#b45309' : '#15803d';
+    return `<div class="border border-slate-200 rounded-lg p-2 mb-2">
+      <div style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <div><b>${esc(r.periodo)}</b> · Fecha: ${formatoFecha(r.fecha)}</div>
+        <div style="color:${color};font-weight:700;font-size:11px">${estado}</div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-top:6px;font-size:11px">
+        <div>Neto: <b>${money(r.neto)}</b></div>
+        <div>Pagado: <b>${money(pag)}</b></div>
+        <div>Pendiente: <b>${money(pend)}</b></div>
+        <div><button class="btn btn-danger btn-sm" onclick="eliminarRecibo('${r.id}')">Eliminar</button></div>
+      </div>
+    </div>`;
+  }).join('') : '<div class="empty">Sin recibos para el filtro seleccionado.</div>';
+  llenarSelectRecibosParaPago();
+}
+function actualizarContadores(){
+  const emp = empleadoActual(); if (!emp) return;
+  $('cntRecibos').textContent = STATE.recibos.filter(r=>r.empleadoId===emp.id).length;
+  $('cntPagos').textContent = STATE.pagosEmpleado.filter(p=>p.empleadoId===emp.id).length;
+  $('cntOtros').textContent = STATE.archivosEmpleado.filter(a=>a.empleadoId===emp.id).length;
+}
+function abrirCarpeta(tipo){
+  const emp = empleadoActual(); if (!emp) return;
+  const items = tipo === 'recibos' ? STATE.recibos.filter(r=>r.empleadoId===emp.id).map(r=>({ id:r.id, titulo:r.periodo, sub:money(r.neto), archivoId:r.archivoId, tipo:'recibo' }))
+              : tipo === 'pagos'   ? STATE.pagosEmpleado.filter(p=>p.empleadoId===emp.id).map(p=>({ id:p.id, titulo:formatoFecha(p.fecha), sub:money(p.importe), archivoId:p.archivoId, tipo:'pago' }))
+              : STATE.archivosEmpleado.filter(a=>a.empleadoId===emp.id).map(a=>({ id:a.id, titulo:a.nombre || 'Documento', sub:a.descripcion || '', archivoId:a.id, tipo:'otro' }));
+  const modal = document.createElement('div');
+  modal.className = 'modal-bg';
+  modal.innerHTML = `<div class="modal" style="max-width:720px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+      <div style="font-size:14px;font-weight:800">
+        ${tipo === 'recibos' ? '📁 Recibos de sueldo' : tipo === 'pagos' ? '📁 Transferencias' : '📁 Otros documentos'}
+        · ${esc(emp.nombre)}
+      </div>
+      <button class="btn btn-secondary btn-sm" id="cerrarCarpeta">✕ Cerrar</button>
+    </div>
+    ${tipo === 'otros' ? `<div style="display:grid;grid-template-columns:2fr 2fr 1fr;gap:8px;margin-bottom:10px">
+      <input id="otroDesc" placeholder="Descripción"/>
+      <input id="otroArchivo" type="file" accept="application/pdf,image/*"/>
+      <button class="btn btn-primary btn-sm" id="btnSubirOtro">Subir</button>
+    </div>` : ''}
+    <div style="max-height:60vh;overflow:auto;display:grid;gap:6px" id="carpetaLista">
+      ${items.length ? items.map(it=>`<div class="border border-slate-200 rounded-lg p-2" style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center">
+        <div>
+          <div style="font-weight:700;font-size:12px">${esc(it.titulo)}</div>
+          <div style="font-size:10.5px;color:#64748b">${esc(it.sub)}</div>
+        </div>
+        <div style="display:flex;gap:4px">
+          ${it.archivoId ? `<button class="btn btn-secondary btn-sm" data-accion="ver" data-id="${esc(it.archivoId)}">👁 Ver</button>
+                            <button class="btn btn-secondary btn-sm" data-accion="desc" data-id="${esc(it.archivoId)}">⬇ Descargar</button>` : ''}
+          ${it.tipo === 'recibo' ? `<button class="btn btn-danger btn-sm" data-accion="del-recibo" data-id="${esc(it.id)}">🗑</button>` : ''}
+          ${it.tipo === 'pago' ? `<button class="btn btn-danger btn-sm" data-accion="del-pago" data-id="${esc(it.id)}">🗑</button>` : ''}
+          ${it.tipo === 'otro' ? `<button class="btn btn-danger btn-sm" data-accion="del-otro" data-id="${esc(it.id)}">🗑</button>` : ''}
+        </div>
+      </div>`).join('') : '<div class="empty">Sin documentos en esta carpeta.</div>'}
+    </div>
+  </div>`;
+  document.body.appendChild(modal);
+  modal.querySelector('#cerrarCarpeta').onclick = ()=>modal.remove();
+  modal.addEventListener('click', async (e)=>{
+    const b = e.target.closest('[data-accion]');
+    if (!b) return;
+    const a = b.dataset.accion;
+    if (a === 'ver'){
+      const f = await leerArchivo(b.dataset.id);
+      if (!f) return toast('Archivo no encontrado','err');
+      const url = URL.createObjectURL(f);
+      window.open(url, '_blank');
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    } else if (a === 'desc'){
+      const f = await leerArchivo(b.dataset.id);
+      if (!f) return toast('Archivo no encontrado','err');
+      const url = URL.createObjectURL(f);
+      const link = document.createElement('a');
+      link.href = url; link.download = f.name || 'documento';
+      document.body.appendChild(link); link.click(); link.remove();
+      setTimeout(()=>URL.revokeObjectURL(url), 60000);
+    } else if (a === 'del-recibo'){ modal.remove(); eliminarRecibo(b.dataset.id); }
+    else if (a === 'del-pago'){ modal.remove(); eliminarPagoEmpleado(b.dataset.id); }
+    else if (a === 'del-otro'){ modal.remove(); eliminarOtroDocumento(b.dataset.id); }
+  });
+  const btnSubir = modal.querySelector('#btnSubirOtro');
+  if (btnSubir){
+    btnSubir.onclick = async ()=>{
+      const inp = modal.querySelector('#otroArchivo');
+      if (!inp || !inp.files[0]) return toast('Elegí un archivo','err');
+      const desc = modal.querySelector('#otroDesc').value.trim();
+      const id = uid('odoc');
+      try {
+        await guardarArchivo(id, inp.files[0]);
+        STATE.archivosEmpleado.push({ id, empleadoId: emp.id, nombre: inp.files[0].name, descripcion: desc, creado: new Date().toISOString() });
+        save(['archivosEmpleado']);
+        modal.remove(); abrirCarpeta('otros'); actualizarContadores();
+        toast('Documento subido','ok');
+      } catch (e) { console.error(e); toast('No se pudo subir','err'); }
+    };
+  }
+}
+function eliminarOtroDocumento(id){
+  confirmar('¿Eliminar este documento?').then(async ok=>{
+    if (!ok) return;
+    await borrarArchivo(id);
+    STATE.archivosEmpleado = STATE.archivosEmpleado.filter(a=>a.id!==id);
+    save(['archivosEmpleado']); actualizarContadores();
+    toast('Documento eliminado','ok');
+  });
+}
+
+/* ========== TABS ========== */
+function switchTab(name){
+  $$('.section').forEach(s=>s.classList.remove('active'));
+  $$('.tab').forEach(t=>t.classList.toggle('active', t.dataset.tab === name));
+  const sec = document.getElementById('tab-' + name);
+  if (sec) sec.classList.add('active');
+  if (name === 'presupuestos') renderPresupuestos();
+  if (name === 'of') renderOF();
+  if (name === 'produccion') renderProduccion();
+  if (name === 'finanzas'){ renderFinanzas(); renderFinBancos(); renderFinEcheqs(); renderFinCobrar(); renderFinPagar(); renderFinConciliacion(); }
+  if (name === 'calibrador'){ calPrevia(); renderCalibrador(); }
+  if (name === 'clientes'){ renderClientes(); cargarSelectoresClientes(); }
+  if (name === 'empleados'){ renderEmpleados(); llenarSelectPeriodos(); llenarSelectCuentasPago(); }
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+document.addEventListener('click', (e)=>{
+  const t = e.target.closest('.tab[data-tab]');
+  if (t) switchTab(t.dataset.tab);
+});
+
+/* ========== LOGIN / BOOT ========== */
+async function iniciarAuth(){
+  if (SESSION_TOKEN){
+    try {
+      await load();
+      arrancarApp();
+      return;
+    } catch (_){
+      SESSION_TOKEN = '';
+      localStorage.removeItem('tubcor_session');
+    }
+  }
+  mostrarLogin();
+}
+
+function mostrarLogin(mensaje){
+  const bg = document.createElement('div');
+  bg.className = 'modal-bg';
+  bg.style.zIndex = '5000';
+  bg.innerHTML = `<div class="modal" style="max-width:420px">
+    <div style="text-align:center;margin-bottom:18px">
+      <div style="display:inline-flex;width:56px;height:56px;border-radius:14px;background:#16a34a;align-items:center;justify-content:center;margin-bottom:10px">
+        <i class="fa-solid fa-industry" style="color:#fff;font-size:24px"></i>
+      </div>
+      <div style="font-size:20px;font-weight:800;color:#0f172a">TUBCOR</div>
+      <div style="font-size:12px;color:#64748b;margin-top:2px">Sistema Integral de Gestión</div>
+    </div>
+    ${mensaje ? `<div style="background:#fee2e2;color:#b91c1c;border-radius:8px;padding:8px 10px;font-size:12px;margin-bottom:12px;text-align:center">${esc(mensaje)}</div>` : ''}
+    <div class="grid grid-cols-1 gap-2">
+      <div><label>Usuario</label><input id="loginUser" autocomplete="username" autofocus/></div>
+      <div><label>Contraseña</label><input id="loginPass" type="password" autocomplete="current-password"/></div>
+    </div>
+    <button class="btn btn-primary w-full mt-4" id="loginBtn" style="padding:10px"><i class="fa-solid fa-right-to-bracket"></i> Ingresar</button>
+    <div class="hint" style="text-align:center;margin-top:10px">Solo personal autorizado</div>
+  </div>`;
+  document.body.appendChild(bg);
+  const userInput = bg.querySelector('#loginUser');
+  const passInput = bg.querySelector('#loginPass');
+  const btn = bg.querySelector('#loginBtn');
+
+  async function intentarLogin(){
+    const u = userInput.value.trim();
+    const p = passInput.value;
+    if (!u || !p) return toast('Completá usuario y contraseña', 'err');
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
+    try {
+      const r = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: u, password: p })
+      });
+      const data = await r.json();
+      if (!r.ok){
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Ingresar';
+        return toast(data.error || 'No se pudo ingresar', 'err');
+      }
+      SESSION_TOKEN = data.token;
+      localStorage.setItem('tubcor_session', data.token);
+      bg.remove();
+      if (data.mustChangePassword) await mostrarCambioPassword(true);
+      await load();
+      arrancarApp();
+      toast('Bienvenido', 'ok');
+    } catch (e) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Ingresar';
+      toast('Error de conexión', 'err');
+    }
+  }
+  btn.onclick = intentarLogin;
+  bg.addEventListener('keydown', e => { if (e.key === 'Enter') intentarLogin(); });
+}
+
+function mostrarCambioPassword(obligatorio){
+  return new Promise(resolve => {
+    const bg = document.createElement('div');
+    bg.className = 'modal-bg';
+    bg.style.zIndex = '5001';
+    bg.innerHTML = `<div class="modal" style="max-width:420px">
+      <div style="font-size:16px;font-weight:800;color:#0f172a;margin-bottom:6px">Cambiar contraseña</div>
+      <div style="font-size:12px;color:#475569;margin-bottom:14px">
+        ${obligatorio ? 'Es tu primer ingreso. Por seguridad, cambiá la contraseña temporal antes de continuar.' : 'Ingresá la contraseña actual y la nueva.'}
+      </div>
+      <div class="grid grid-cols-1 gap-2">
+        <div><label>Contraseña actual</label><input id="cpActual" type="password"/></div>
+        <div><label>Nueva contraseña (mín. 8 caracteres)</label><input id="cpNueva" type="password"/></div>
+        <div><label>Repetir nueva contraseña</label><input id="cpRepetir" type="password"/></div>
+      </div>
+      <button class="btn btn-primary w-full mt-4" id="cpBtn" style="padding:10px">Cambiar contraseña</button>
+      ${!obligatorio ? `<button class="btn btn-secondary w-full mt-2" id="cpCancel">Cancelar</button>` : ''}
+    </div>`;
+    document.body.appendChild(bg);
+    if (!obligatorio) bg.querySelector('#cpCancel').onclick = () => { bg.remove(); resolve(false); };
+    bg.querySelector('#cpBtn').onclick = async () => {
+      const actual = bg.querySelector('#cpActual').value;
+      const nueva = bg.querySelector('#cpNueva').value;
+      const repetir = bg.querySelector('#cpRepetir').value;
+      if (nueva.length < 8) return toast('Mínimo 8 caracteres', 'err');
+      if (nueva !== repetir) return toast('Las contraseñas no coinciden', 'err');
+      try {
+        const r = await fetch('/api/auth/change-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + SESSION_TOKEN },
+          body: JSON.stringify({ currentPassword: actual, newPassword: nueva })
+        });
+        const data = await r.json();
+        if (!r.ok) return toast(data.error || 'Error', 'err');
+        bg.remove();
+        toast('Contraseña cambiada', 'ok');
+        resolve(true);
+      } catch (e) { toast('Error de conexión', 'err'); }
+    };
+  });
+}
+
+async function cerrarSesion(){
+  if (!confirm('¿Cerrar sesión?')) return;
+  try { await fetch('/api/auth/logout', { method: 'POST', headers: { 'Authorization': 'Bearer ' + SESSION_TOKEN } }); } catch (_) {}
+  localStorage.removeItem('tubcor_session');
+  SESSION_TOKEN = '';
+  location.reload();
+}
+
+function arrancarApp(){
+  if (!$('bancoMovFecha').value) $('bancoMovFecha').value = today();
+  if (!$('prFecha').value) $('prFecha').value = today();
+  if (!$('recFecha').value) $('recFecha').value = today();
+  if (!$('pagoFecha').value) $('pagoFecha').value = today();
+  if (!$('heFecha').value) $('heFecha').value = today();
+  $('calFactor').value = N(STATE.config.factorProceso).toFixed(3) || '1.000';
+  cargarSelectoresClientes();
+  cargarSelectoresBancos();
+  cargarProveedores();
+  renderPendientes();
+  renderPresupuestos();
+  renderOF();
+  renderProduccion();
+  renderFinanzas();
+  renderFinBancos();
+  renderFinEcheqs();
+  renderFinCobrar();
+  renderFinPagar();
+  renderFinConciliacion();
+  renderClientes();
+  renderEmpleados();
+  renderCalibrador();
+  recalcular();
+  calPrevia();
+  if (STATE.config.empleadoSeleccionadoId) seleccionarEmpleado(STATE.config.empleadoSeleccionadoId);
+  const fp = N(STATE.config.factorProceso);
+  if (fp && fp !== 1) $('calFactorInfo').textContent = `Factor vigente: ${fp.toFixed(3)} (calibrado históricamente).`;
+  agregarHeaderUsuario();
+  setInterval(checkForUpdates, 5000);
+  window.addEventListener('focus', checkForUpdates);
+}
+
+function agregarHeaderUsuario(){
+  const header = document.querySelector('header .tabs');
+  if (!header || document.getElementById('headerUser')) return;
+  const wrap = document.createElement('div');
+  wrap.id = 'headerUser';
+  wrap.style.cssText = 'display:flex;align-items:center;gap:8px;margin-left:10px';
+  wrap.innerHTML = `
+    <span id="syncStatus" style="font-size:10px;color:#64748b" title="Estado de sincronización">●</span>
+    <button class="btn btn-secondary btn-sm" onclick="mostrarCambioPassword(false)" title="Cambiar contraseña"><i class="fa-solid fa-key"></i></button>
+    <button class="btn btn-secondary btn-sm" onclick="cerrarSesion()" title="Cerrar sesión"><i class="fa-solid fa-right-from-bracket"></i></button>
+  `;
+  header.parentElement.appendChild(wrap);
+}
+
+document.addEventListener('DOMContentLoaded', iniciarAuth);
+</script>
+</body>
+</html>
