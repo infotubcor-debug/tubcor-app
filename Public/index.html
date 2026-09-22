@@ -1650,83 +1650,176 @@ function pdfPresupuesto(p){
   doc.text('www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar', W/2, 285, {align:'center'});
   doc.save(p.numero + '_TUBCOR.pdf');
 }
-function pdfOF(p){
+async function pdfOF(p){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF('p','mm','a4');
-  const W=210, M=15; let y=18;
-  doc.setFont('helvetica','bold'); doc.setFontSize(15); doc.setTextColor(15,23,42);
-  doc.text('TUBCOR S.A.S.', M, y);
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(100,116,139);
-  y+=5; doc.text('Fábrica de tubos de cartón', M, y);
-  y+=4; doc.text('Camino Santa Bárbara 1448 · CP 5014 · Córdoba, Argentina', M, y);
-  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(234,88,12);
-  doc.text('DOCUMENTO INTERNO', W-M, 18, {align:'right'});
-  doc.setFontSize(16); doc.setTextColor(15,23,42);
-  doc.text('ORDEN DE FABRICACIÓN', W-M, 26, {align:'right'});
-  doc.setFontSize(11); doc.setTextColor(51,65,85);
-  doc.text('N° ' + p.ordenNumero, W-M, 32, {align:'right'});
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(100,116,139);
-  doc.text('Presupuesto: ' + p.numero + ' · Fecha: ' + formatoFecha(p.fecha), W-M, 37, {align:'right'});
-  y=42; doc.setDrawColor(22,163,74); doc.setLineWidth(0.6); doc.line(M,y,W-M,y); y+=5;
-  const cliH=22, cw=(W-2*M)/3;
-  doc.setDrawColor(203,213,225); doc.rect(M, y, W-2*M, cliH);
-  doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 6, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
-  ['CLIENTE','CUIT','CONDICIÓN IVA'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+4.5));
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
-  [p.clienteRazonSocial||'—', p.clienteCUIT||'—', p.clienteCondicionIVA||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+13));
-  doc.setFillColor(248,250,252); doc.rect(M, y+13, W-2*M, 6, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
-  ['DOMICILIO','LOCALIDAD','CONTACTO'].forEach((l,i)=>doc.text(l, M+i*cw+3, y+18));
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
-  [p.clienteDomicilio||'—', p.clienteLocalidad||'—', p.clienteContacto||p.clienteTelefono||'—'].forEach((v,i)=>doc.text(String(v).slice(0,32), M+i*cw+3, y+21));
-  y += cliH + 6;
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(22,163,74);
-  doc.text('ESPECIFICACIONES DE FABRICACIÓN', M, y); y+=2;
-  doc.setDrawColor(203,213,225); doc.line(M,y,W-M,y); y+=4;
-  const colW = [20, 90, 70];
-  doc.setFillColor(241,245,249); doc.rect(M, y, W-2*M, 6, 'F');
-  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(51,65,85);
-  let xh=M;
-  ['CANT.','MEDIDAS Y PROCESO','FORMATO DE FAJAS'].forEach((h,i)=>{
-    doc.text(h, xh+colW[i]/2, y+4, {align:'center'});
-    xh += colW[i];
+  const W=210, M=15;
+  const VERDE = [22,163,74];
+  const NEGRO = [15,23,42];
+  const GRIS_LABEL = [100,116,139];
+  const GRIS_FONDO = [241,245,249];
+  const GRIS_BORDE = [203,213,225];
+  let y;
+
+  doc.setFillColor(VERDE[0],VERDE[1],VERDE[2]);
+  doc.rect(0, 0, W, 3, 'F');
+
+  const logoBase64 = await new Promise((resolve) => {
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth;
+        canvas.height = img.naturalHeight;
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0);
+        resolve(canvas.toDataURL('image/jpeg', 0.92));
+      } catch(e) { resolve(null); }
+    };
+    img.onerror = () => resolve(null);
+    img.src = 'tubcor-logo-membrete.jpg';
   });
+
+  y = 14;
+
+  if (logoBase64){
+    try {
+      doc.addImage(logoBase64, 'JPEG', M, y, 32, 24);
+    } catch(e){ }
+  }
+
+  const empresaX = M + 36;
+  doc.setFont('helvetica','bold'); doc.setFontSize(11); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+  doc.text('TUBCOR S.A.S.', empresaX, y + 4);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+  doc.text('Fábrica de tubos de cartón', empresaX, y + 8.5);
+  doc.text('Camino Santa Bárbara 1448 · CP 5014', empresaX, y + 12);
+  doc.text('Córdoba, Argentina', empresaX, y + 15.5);
+  doc.text('CUIT 30-71853010-1 · IVA Responsable Inscripto', empresaX, y + 19);
+  doc.text('Tel. 351 858 0005 · ventas@tubcor.com.ar', empresaX, y + 22.5);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(7); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+  doc.text('DOCUMENTO INTERNO', W - M, y + 2, {align:'right'});
+  doc.setFontSize(14); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+  doc.text('ORDEN DE FABRICACIÓN', W - M, y + 9, {align:'right'});
+  doc.setFontSize(10); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+  doc.setFont('helvetica','bold');
+  doc.text('N° ' + p.ordenNumero, W - M, y + 15, {align:'right'});
+  doc.setFont('helvetica','normal'); doc.setFontSize(8);
+  doc.text('Presupuesto: ' + p.numero, W - M, y + 19.5, {align:'right'});
+  doc.text('Fecha: ' + formatoFecha(p.fecha), W - M, y + 23, {align:'right'});
+
+  y = 42;
+  doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]); doc.setLineWidth(0.3);
+  doc.line(M, y, W - M, y);
   y += 6;
-  doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(15,23,42);
-  p.items.forEach(it=>{
+
+  const cliH = 20, cw = (W - 2*M) / 3;
+
+  doc.setFillColor(GRIS_FONDO[0],GRIS_FONDO[1],GRIS_FONDO[2]);
+  doc.rect(M, y, W - 2*M, cliH, 'F');
+  doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]); doc.setLineWidth(0.2);
+  doc.rect(M, y, W - 2*M, cliH);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+  doc.text('CLIENTE', M + 3, y + 4);
+  doc.text('CUIT', M + cw + 3, y + 4);
+  doc.text('CONDICIÓN IVA', M + 2*cw + 3, y + 4);
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+  doc.text(String(p.clienteRazonSocial||'—').slice(0,32), M + 3, y + 9);
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+  doc.text('DOMICILIO', M + 3, y + 14);
+  doc.text('LOCALIDAD', M + cw + 3, y + 14);
+  doc.text('CONTACTO', M + 2*cw + 3, y + 14);
+  doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+  doc.text(String(p.clienteDomicilio||'—').slice(0,32), M + 3, y + 18.5);
+
+  doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]);
+  doc.line(M + cw, y, M + cw, y + cliH);
+  doc.line(M + 2*cw, y, M + 2*cw, y + cliH);
+
+  y += cliH + 7;
+
+  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+  doc.text('ESPECIFICACIONES DE FABRICACIÓN', M, y);
+  y += 3;
+  doc.setDrawColor(VERDE[0],VERDE[1],VERDE[2]); doc.setLineWidth(0.4);
+  doc.line(M, y, W - M, y);
+  y += 4;
+
+  const colW = [18, 92, 70];
+
+  doc.setFillColor(VERDE[0],VERDE[1],VERDE[2]);
+  doc.rect(M, y, W - 2*M, 7, 'F');
+  doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+  doc.text('CANT.', M + colW[0]/2, y + 4.5, {align:'center'});
+  doc.text('MEDIDAS Y PROCESO', M + colW[0] + colW[1]/2, y + 4.5, {align:'center'});
+  doc.text('FORMATO DE FAJAS', M + colW[0] + colW[1] + colW[2]/2, y + 4.5, {align:'center'});
+  y += 7;
+
+  p.items.forEach((it, idx) => {
     const n = parseInt(it.tipoPaquete)||37;
     const pack = n===37?'37 un. (Hexagonal)':n===19?'19 un.':n===61?'61 un.':n===1?'Sin empaquetar':n+' un.';
     const corte = N(it.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
-    const rowH = 14;
+    const rowH = 18;
+
+    if (idx % 2 === 1){
+      doc.setFillColor(250,251,252);
+      doc.rect(M, y, W - 2*M, rowH, 'F');
+    }
+
     let x = M;
-    doc.text(String(it.cantidad.toLocaleString('es-AR')), x+colW[0]/2, y+5, {align:'center'}); x += colW[0];
-    doc.setFont('helvetica','bold');
-    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x+2, y+4);
-    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(100,116,139);
-    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x+2, y+8);
-    doc.text('Empaquetado: '+pack, x+2, y+11);
-    doc.text(corte, x+2, y+14);
-    doc.setFontSize(8); doc.setTextColor(15,23,42);
+    doc.setFont('helvetica','bold'); doc.setFontSize(10); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    doc.text(String(it.cantidad.toLocaleString('es-AR')), x + colW[0]/2, y + 6, {align:'center'});
+    x += colW[0];
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 5);
+    doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 8.5);
+    doc.text('Empaquetado: '+pack, x + 3, y + 11.5);
+    doc.text(corte, x + 3, y + 14.5);
     x += colW[1];
-    doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x+2, y+4);
-    doc.text('Relleno: '+it.cantRelleno+' × '+it.anchoRell+' mm / '+it.gramajeRell+' g/m²', x+2, y+8);
-    doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x+2, y+12);
-    y += rowH + 2;
-    doc.setDrawColor(226,232,240); doc.line(M, y, W-M, y);
+
+    doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x + 3, y + 5);
+    doc.text('Relleno: '+it.cantRelleno+' × '+it.anchoRell+' mm / '+it.gramajeRell+' g/m²', x + 3, y + 8.5);
+    doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x + 3, y + 12);
+
+    y += rowH;
+
+    if (idx < p.items.length - 1){
+      doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]); doc.setLineWidth(0.15);
+      doc.line(M, y, W - M, y);
+    }
   });
+
+  doc.setDrawColor(VERDE[0],VERDE[1],VERDE[2]); doc.setLineWidth(0.4);
+  doc.line(M, y, W - M, y);
+  y += 8;
+
   if (p.observacionesOF){
-    y += 6;
-    doc.setFillColor(248,250,252); doc.rect(M, y, W-2*M, 14, 'F');
-    doc.setDrawColor(234,88,12); doc.setLineWidth(0.8); doc.line(M, y, M, y+14);
-    doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(234,88,12);
-    doc.text('OBSERVACIONES DE PLANTA', M+3, y+4);
-    doc.setFont('helvetica','normal'); doc.setTextColor(51,65,85);
-    const lines = doc.splitTextToSize(p.observacionesOF, W-2*M-6);
-    doc.text(lines.slice(0,3), M+3, y+9);
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.text('OBSERVACIONES DE PLANTA', M, y);
+    y += 3;
+    doc.setDrawColor(VERDE[0],VERDE[1],VERDE[2]); doc.setLineWidth(0.4);
+    doc.line(M, y, W - M, y);
+    y += 5;
+    doc.setFont('helvetica','normal'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    const lines = doc.splitTextToSize(p.observacionesOF, W - 2*M);
+    lines.forEach(line => { doc.text(line, M, y); y += 4.5; });
   }
-  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(148,163,184);
-  doc.text('TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar', W/2, 285, {align:'center'});
+
+  const footerY = 285;
+  doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]); doc.setLineWidth(0.2);
+  doc.line(M, footerY, W - M, footerY);
+  doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
+  doc.text('www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar', M, footerY + 4);
+  doc.setFont('helvetica','bold'); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+  doc.text('TUBCOR S.A.S. · Orden interna de fabricación', W - M, footerY + 4, {align:'right'});
+
   doc.save(p.ordenNumero + '_TUBCOR.pdf');
 }
 function descargarPresupuestoPDF(){
@@ -1734,10 +1827,15 @@ function descargarPresupuestoPDF(){
   if (!p) return toast('Seleccioná un presupuesto','err');
   try { pdfPresupuesto(p); } catch(e){ console.error(e); toast('Error al generar PDF','err'); }
 }
-function descargarOrdenPDF(){
+async function descargarOrdenPDF(){
   const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
   if (!p) return toast('Seleccioná una OF','err');
-  try { pdfOF(p); } catch(e){ console.error(e); toast('Error al generar PDF','err'); }
+  try {
+    await pdfOF(p);
+  } catch(e){
+    console.error(e);
+    toast('Error al generar PDF: ' + e.message, 'err');
+  }
 }
 
 /* ========== Producción ========== */
