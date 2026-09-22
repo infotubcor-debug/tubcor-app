@@ -1713,7 +1713,7 @@ function pdfOF(p){
     doc.text('Relleno: '+it.cantRelleno+' × '+it.anchoRell+' mm / '+it.gramajeRell+' g/m²', x+2, y+8);
     doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x+2, y+12);
     y += rowH + 2;
-    doc.setDrawColor(226,232,240); doc.line(M, y-2, W-M, y-2);
+    doc.setDrawColor(226,232,240); doc.line(M, y, W-M, y);
   });
   if (p.observacionesOF){
     y += 6;
