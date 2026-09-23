@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="utf-8"/>
+<title>Generador de ícono TUBCOR</title>
+<style>
+  body{font-family:Arial,sans-serif;background:#f1f5f9;padding:20px;max-width:600px;margin:0 auto}
+  h1{color:#16a34a;font-size:20px}
+  input[type=file]{padding:10px;background:#fff;border:2px dashed #cbd5e1;width:100%;border-radius:8px}
+  button{background:#16a34a;color:#fff;border:0;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:10px}
+  button:disabled{opacity:.5;cursor:not-allowed}
+  #preview{margin-top:20px;text-align:center}
+  canvas{border:1px solid #e2e8f0;border-radius:8px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.08);max-width:300px}
+  .info{font-size:12px;color:#64748b;line-height:1.5;margin-top:16px}
+  .ok{background:#dcfce7;color:#166534;padding:10px;border-radius:8px;margin-top:16px;font-weight:700}
+</style>
+</head>
+<body>
+
+<h1>Generador de ícono cuadrado para TUBCOR</h1>
+
+<p>Subí el archivo <b>tubcor-logo-membrete.jpg</b> y te va a generar el ícono cuadrado listo para usar.</p>
+
+<input type="file" id="input" accept="image/*"/>
+<button id="btn" disabled>Descargar ícono cuadrado (512x512 PNG)</button>
+
+<div id="preview"></div>
+
+<div id="ok" class="ok" style="display:none">✓ Ícono descargado. Guardalo como <b>tubcor-icono.png</b> en la carpeta Public.</div>
+
+<div class="info">
+  <b>Instrucciones:</b><br/>
+  1. Elegí el archivo original <code>tubcor-logo-membrete.jpg</code><br/>
+  2. Se va a generar automáticamente el ícono cuadrado con fondo blanco<br/>
+  3. Clic en "Descargar" → se guarda como <code>tubcor-icono.png</code><br/>
+  4. Mové ese archivo a la carpeta <code>Public</code> de tu proyecto
+</div>
+
+<canvas id="canvas" width="512" height="512"></canvas>
+
+<script>
+const input = document.getElementById('input');
+const btn = document.getElementById('btn');
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const preview = document.getElementById('preview');
+const okMsg = document.getElementById('ok');
+
+let lastImage = null;
+
+input.addEventListener('change', (e) => {
+  const file = e.target.files[0];
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = (ev) => {
+    const img = new Image();
+    img.onload = () => {
+      lastImage = img;
+      dibujarIcono(img);
+      btn.disabled = false;
+      preview.style.display = 'block';
+      okMsg.style.display = 'none';
+    };
+    img.src = ev.target.result;
+  };
+  reader.readAsDataURL(file);
+});
+
+function dibujarIcono(img) {
+  const size = 512;
+  const padding = 40; // margen blanco alrededor (ajustable)
+  const innerSize = size - padding * 2;
+
+  // Fondo blanco
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, size, size);
+
+  // Calcular dimensiones manteniendo proporción
+  const ratio = img.width / img.height;
+  let w, h;
+  if (ratio > 1) {
+    // Ancho
+    w = innerSize;
+    h = innerSize / ratio;
+  } else {
+    // Alto
+    h = innerSize;
+    w = innerSize * ratio;
+  }
+
+  const x = (size - w) / 2;
+  const y = (size - h) / 2;
+
+  ctx.drawImage(img, x, y, w, h);
+}
+
+btn.addEventListener('click', () => {
+  if (!lastImage) return;
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'tubcor-icono.png';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  okMsg.style.display = 'block';
+});
+</script>
+
+</body>
+</html>
