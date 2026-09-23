@@ -4,99 +4,168 @@
 <meta charset="utf-8"/>
 <title>Generador de ícono TUBCOR</title>
 <style>
-  body{font-family:Arial,sans-serif;background:#f1f5f9;padding:20px;max-width:600px;margin:0 auto}
+  body{font-family:Arial,sans-serif;background:#f1f5f9;padding:20px;max-width:700px;margin:0 auto}
   h1{color:#16a34a;font-size:20px}
-  input[type=file]{padding:10px;background:#fff;border:2px dashed #cbd5e1;width:100%;border-radius:8px}
-  button{background:#16a34a;color:#fff;border:0;padding:10px 20px;border-radius:8px;font-weight:700;cursor:pointer;margin-top:10px}
+  .card{background:#fff;border-radius:12px;padding:20px;box-shadow:0 4px 10px rgba(0,0,0,.08);margin-bottom:16px}
+  input[type=file]{padding:10px;background:#f8fafc;border:2px dashed #cbd5e1;width:100%;border-radius:8px;box-sizing:border-box}
+  button{background:#16a34a;color:#fff;border:0;padding:12px 24px;border-radius:8px;font-weight:700;cursor:pointer;font-size:15px}
   button:disabled{opacity:.5;cursor:not-allowed}
-  #preview{margin-top:20px;text-align:center}
-  canvas{border:1px solid #e2e8f0;border-radius:8px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.08);max-width:300px}
-  .info{font-size:12px;color:#64748b;line-height:1.5;margin-top:16px}
-  .ok{background:#dcfce7;color:#166534;padding:10px;border-radius:8px;margin-top:16px;font-weight:700}
+  button.secondary{background:#f1f5f9;color:#334155;border:1px solid #cbd5e1}
+  .controles{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:16px}
+  .control{display:flex;flex-direction:column;gap:6px}
+  .control label{font-size:12px;font-weight:700;color:#334155;text-transform:uppercase}
+  .control input[type=range]{width:100%}
+  .control .valor{font-size:13px;color:#16a34a;font-weight:700}
+  #previewWrap{margin-top:20px;text-align:center}
+  canvas{border:2px solid #e2e8f0;border-radius:16px;background:#fff;box-shadow:0 4px 10px rgba(0,0,0,.08);max-width:340px;width:100%}
+  .info{font-size:12px;color:#64748b;line-height:1.5;margin-top:16px;background:#f8fafc;padding:12px;border-radius:8px}
+  .ok{background:#dcfce7;color:#166534;padding:12px;border-radius:8px;margin-top:16px;font-weight:700;text-align:center;display:none}
+  .reset{margin-top:12px;background:#f1f5f9;color:#334155;border:1px solid #cbd5e1;padding:8px 16px;border-radius:8px;cursor:pointer;font-size:13px}
 </style>
 </head>
 <body>
 
-<h1>Generador de ícono cuadrado para TUBCOR</h1>
+<h1>Generador de ícono cuadrado — TUBCOR</h1>
 
-<p>Subí el archivo <b>tubcor-logo-membrete.jpg</b> y te va a generar el ícono cuadrado listo para usar.</p>
+<div class="card">
+  <p style="margin-top:0">1. Subí el archivo <b>tubcor-logo-membrete.jpg</b>:</p>
+  <input type="file" id="input" accept="image/*"/>
+</div>
 
-<input type="file" id="input" accept="image/*"/>
-<button id="btn" disabled>Descargar ícono cuadrado (512x512 PNG)</button>
+<div class="card" id="cardControles" style="display:none">
+  <p style="margin-top:0;font-weight:700">2. Ajustá el encuadre:</p>
+  <div class="controles">
+    <div class="control">
+      <label>Zoom</label>
+      <input type="range" id="zoom" min="100" max="300" value="140" step="5"/>
+      <span class="valor" id="zoomVal">140%</span>
+    </div>
+    <div class="control">
+      <label>Posición vertical</label>
+      <input type="range" id="offsetY" min="-100" max="100" value="0" step="5"/>
+      <span class="valor" id="offsetYVal">0</span>
+    </div>
+    <div class="control">
+      <label>Posición horizontal</label>
+      <input type="range" id="offsetX" min="-100" max="100" value="0" step="5"/>
+      <span class="valor" id="offsetXVal">0</span>
+    </div>
+    <div class="control">
+      <label>Fondo</label>
+      <select id="fondo" style="padding:8px;border-radius:6px;border:1px solid #cbd5e1">
+        <option value="#ffffff">Blanco</option>
+        <option value="#f8fafc">Blanco humo</option>
+        <option value="#16a34a">Verde TUBCOR</option>
+        <option value="#0f172a">Negro</option>
+        <option value="#1e3a8a">Azul</option>
+      </select>
+    </div>
+  </div>
 
-<div id="preview"></div>
+  <div style="margin-top:16px;text-align:center">
+    <button class="reset" id="reset">↺ Resetear ajustes</button>
+    <button id="btnDescargar" style="margin-left:8px">⬇ Descargar ícono PNG (512×512)</button>
+  </div>
+</div>
 
-<div id="ok" class="ok" style="display:none">✓ Ícono descargado. Guardalo como <b>tubcor-icono.png</b> en la carpeta Public.</div>
+<div id="previewWrap">
+  <canvas id="canvas" width="512" height="512"></canvas>
+</div>
+
+<div class="ok" id="ok">✓ Descargado. Guardalo como <b>tubcor-icono.png</b> en la carpeta Public</div>
 
 <div class="info">
   <b>Instrucciones:</b><br/>
-  1. Elegí el archivo original <code>tubcor-logo-membrete.jpg</code><br/>
-  2. Se va a generar automáticamente el ícono cuadrado con fondo blanco<br/>
-  3. Clic en "Descargar" → se guarda como <code>tubcor-icono.png</code><br/>
-  4. Mové ese archivo a la carpeta <code>Public</code> de tu proyecto
+  1. Elegí el logo original<br/>
+  2. Ajustá con los sliders hasta que se vea como querés<br/>
+  3. Descargá → se guarda como <code>tubcor-icono.png</code> en Descargas<br/>
+  4. Movelo a la carpeta <code>Public</code> del proyecto
 </div>
-
-<canvas id="canvas" width="512" height="512"></canvas>
 
 <script>
 const input = document.getElementById('input');
-const btn = document.getElementById('btn');
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
-const preview = document.getElementById('preview');
+const cardControles = document.getElementById('cardControles');
+const zoom = document.getElementById('zoom');
+const zoomVal = document.getElementById('zoomVal');
+const offsetY = document.getElementById('offsetY');
+const offsetYVal = document.getElementById('offsetYVal');
+const offsetX = document.getElementById('offsetX');
+const offsetXVal = document.getElementById('offsetXVal');
+const fondo = document.getElementById('fondo');
+const reset = document.getElementById('reset');
+const btnDescargar = document.getElementById('btnDescargar');
 const okMsg = document.getElementById('ok');
 
-let lastImage = null;
+let logoImg = null;
 
 input.addEventListener('change', (e) => {
   const file = e.target.files[0];
   if (!file) return;
-
   const reader = new FileReader();
   reader.onload = (ev) => {
     const img = new Image();
     img.onload = () => {
-      lastImage = img;
-      dibujarIcono(img);
-      btn.disabled = false;
-      preview.style.display = 'block';
-      okMsg.style.display = 'none';
+      logoImg = img;
+      cardControles.style.display = 'block';
+      dibujar();
     };
     img.src = ev.target.result;
   };
   reader.readAsDataURL(file);
 });
 
-function dibujarIcono(img) {
+function dibujar() {
+  if (!logoImg) return;
   const size = 512;
-  const padding = 40; // margen blanco alrededor (ajustable)
-  const innerSize = size - padding * 2;
+  const z = parseInt(zoom.value) / 100;
+  const oY = parseInt(offsetY.value);
+  const oX = parseInt(offsetX.value);
 
-  // Fondo blanco
-  ctx.fillStyle = '#ffffff';
+  // Fondo
+  ctx.fillStyle = fondo.value;
   ctx.fillRect(0, 0, size, size);
 
-  // Calcular dimensiones manteniendo proporción
-  const ratio = img.width / img.height;
-  let w, h;
+  // Calcular escala base para "cubrir" (fill) el cuadrado
+  const ratio = logoImg.width / logoImg.height;
+  let baseW, baseH;
   if (ratio > 1) {
-    // Ancho
-    w = innerSize;
-    h = innerSize / ratio;
+    // Imagen más ancha: alto = size
+    baseH = size;
+    baseW = size * ratio;
   } else {
-    // Alto
-    h = innerSize;
-    w = innerSize * ratio;
+    // Imagen más alta: ancho = size
+    baseW = size;
+    baseH = size / ratio;
   }
 
-  const x = (size - w) / 2;
-  const y = (size - h) / 2;
+  // Aplicar zoom
+  const w = baseW * z;
+  const h = baseH * z;
 
-  ctx.drawImage(img, x, y, w, h);
+  // Centrar con offset
+  const x = (size - w) / 2 + oX;
+  const y = (size - h) / 2 + oY;
+
+  ctx.drawImage(logoImg, x, y, w, h);
 }
 
-btn.addEventListener('click', () => {
-  if (!lastImage) return;
+zoom.addEventListener('input', () => { zoomVal.textContent = zoom.value + '%'; dibujar(); });
+offsetY.addEventListener('input', () => { offsetYVal.textContent = offsetY.value; dibujar(); });
+offsetX.addEventListener('input', () => { offsetXVal.textContent = offsetX.value; dibujar(); });
+fondo.addEventListener('change', dibujar);
+
+reset.addEventListener('click', () => {
+  zoom.value = 140; zoomVal.textContent = '140%';
+  offsetY.value = 0; offsetYVal.textContent = '0';
+  offsetX.value = 0; offsetXVal.textContent = '0';
+  fondo.value = '#ffffff';
+  dibujar();
+});
+
+btnDescargar.addEventListener('click', () => {
+  if (!logoImg) return;
   const url = canvas.toDataURL('image/png');
   const a = document.createElement('a');
   a.href = url;
@@ -106,7 +175,13 @@ btn.addEventListener('click', () => {
   a.remove();
   okMsg.style.display = 'block';
 });
+
+// Sliders con etiquetas iniciales
+zoomVal.textContent = zoom.value + '%';
+offsetYVal.textContent = offsetY.value;
+offsetXVal.textContent = offsetX.value;
 </script>
 
 </body>
+</html>
 </html>
