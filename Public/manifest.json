@@ -1,0 +1,24 @@
+{
+  "name": "TUBCOR - Sistema Integral",
+  "short_name": "TUBCOR",
+  "description": "Sistema Integral de Gestión · Tubos de cartón",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#ffffff",
+  "theme_color": "#16a34a",
+  "icons": [
+    {
+      "src": "tubcor-logo-membrete.jpg",
+      "sizes": "192x192",
+      "type": "image/jpeg",
+      "purpose": "any"
+    },
+    {
+      "src": "tubcor-logo-membrete.jpg",
+      "sizes": "512x512",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
