@@ -210,7 +210,8 @@ window.tubcorCargarMesGF = function(){
   }
   try { recalcular(); } catch(_){}
   renderKPIsGF();
-};
+  renderHistGF();
+};;
 
 window.tubcorEliminarMesGF = async function(mes){
   if (!confirm('¿Eliminar los gastos fijos guardados de ' + mes + '?')) return;
