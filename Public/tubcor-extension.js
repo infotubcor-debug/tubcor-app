@@ -28,9 +28,17 @@ function inyectarKwh(){
   if (!costoDiv || $id('costoKwhExt')) return;
   const row = document.createElement('div');
   row.id = 'costoKwhExt';
-  row.innerHTML = `<label>Energía ($/kWh)</label>
-    <input id="costoKwh" type="number" value="${N(getState()?.config?.costoKwh) || 520}" step="1"
-           oninput="window.tubcorGuardarKwh()"/>`;
+  row.style = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;grid-column:span 2;margin-top:8px';
+  row.innerHTML = `<div>
+      <label>Consumo eléctrico (kWh/mes)</label>
+      <input id="kwhMensual" type="number" value="${N(getState()?.config?.kwhMensual) || 973}" step="1" min="0"
+             oninput="window.tubcorGuardarKwh()"/>
+    </div>
+    <div>
+      <label>Energía ($/kWh)</label>
+      <input id="costoKwh" type="number" value="${N(getState()?.config?.costoKwh) || 536}" step="1" min="0"
+             oninput="window.tubcorGuardarKwh()"/>
+    </div>`;
   costoDiv.appendChild(row);
 }
 window.tubcorGuardarKwh = function(){
