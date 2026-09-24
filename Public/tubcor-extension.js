@@ -109,7 +109,11 @@ function inyectarAyuda(){
 
         '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px">' +
           '<div style="font-weight:800;color:#0f172a;margin-bottom:4px">Faja principal, relleno, tapa</div>' +
-          '<div style="color:#475569">Ancho (mm) y gramaje (g/m²) según cómo venga el rollo del proveedor. Ej: 70 mm / 175 g/m².</div>' +
+
+        '<div style="border:1px solid #e2e8f0;border-radius:8px;padding:10px">' +
+          '<div style="font-weight:800;color:#0f172a;margin-bottom:4px">Flete ($/kg transportado)</div>' +
+          '<div style="color:#475569">Costo del transporte de la materia prima, repartido por kg.<br><b>Calculo:</b> total del viaje / kg transportados.<br>Ejemplo: flete de $50.000 para 10.000 kg = $5/kg.<br>Si el proveedor entrega sin cargo, poner 0.</div>' +
+        '</div>' +          '<div style="color:#475569">Ancho (mm) y gramaje (g/m²) según cómo venga el rollo del proveedor. Ej: 70 mm / 175 g/m².</div>' +
         '</div>' +
 
       '</div>' +
