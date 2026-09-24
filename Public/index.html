@@ -987,8 +987,8 @@ function recalcular(){
   const horasProd = metrosLineales/25;
   const kwhMensual = N($('kwhMensual')?.value) || 973;
   const costoKwh = N($('costoKwh')?.value) || 536;
-  const prodKgMes = N($('prodMensual')?.value) || 1;
-  const costoEnergiaKg = prodKgMes > 0 ? (kwhMensual * costoKwh) / prodKgMes : 0;
+  const prodKgMesEnergia = N($('prodMensual')?.value) || 1;
+  const costoEnergiaKg = prodKgMesEnergia > 0 ? (kwhMensual * costoKwh) / prodKgMesEnergia : 0;
   const costoEnergia = costoEnergiaKg * pesoLoteKg;
   const costoVariableTotal = costoCarton + costoAdhInt + costoAdhTapa + costoFlete + costoEnergia;
   const costoVariableUnit = costoVariableTotal / cant;
