@@ -986,7 +986,7 @@ function recalcular(){
   const metrosLineales = (long/1000)*cant;
   const horasProd = metrosLineales/25;
   const kwh = (15.75+5.22)*horasProd + (long<750 ? 2.2*(metrosLineales/30) : 0);
-  const costoEnergia = kwh*160;
+  const costoEnergia = kwh * (N($('costoKwh')?.value) || 520);
   const costoVariableTotal = costoCarton + costoAdhInt + costoAdhTapa + costoFlete + costoEnergia;
   const costoVariableUnit = costoVariableTotal / cant;
   const gf = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro']
