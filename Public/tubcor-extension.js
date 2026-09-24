@@ -146,9 +146,14 @@ function inyectarPanelGF(){
       <div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>
       <div class="kpi"><div class="k-label">Total año</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>
     </div>
-    <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px">
+    <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">
       <div><label>Mes que estás cargando</label>
-        <input id="gfMesExt" type="month" oninput="window.tubcorCargarMesGF()"/>
+        <input id="gfMesExt" type="month"/>
+      </div>
+      <div style="display:flex;align-items:flex-end">
+        <button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesGF()">
+          ⬇ Cargar mes
+        </button>
       </div>
       <div style="display:flex;align-items:flex-end">
         <button class="btn btn-primary" style="width:100%" type="button" onclick="window.tubcorGuardarMesGF()">
@@ -258,10 +263,16 @@ function cargarMesActualAuto(){
   if (!$id('gfMesExt').value) $id('gfMesExt').value = mes;
   const hist = st.config?.gastosFijosHistorial || {};
   if (hist[mes]){
-    escribirGFUI(hist[mes]);
-    $id('gfEstadoExt').textContent = '✓ Gastos del mes actual cargados del historial';
-    $id('gfEstadoExt').style.color = '#15803d';
-    try { recalcular(); } catch(_){}
+    const todosCero = CAMPOS_GF.every(id => { const el = $id(id); return !el || N(el.value) === 0; });
+    if (todosCero){
+      escribirGFUI(hist[mes]);
+      $id('gfEstadoExt').textContent = '✓ Gastos cargados del historial para ' + mes;
+      $id('gfEstadoExt').style.color = '#15803d';
+      try { recalcular(); } catch(_){}
+    } else {
+      $id('gfEstadoExt').textContent = 'Hay datos en pantalla. Clic en "Cargar mes" para traer los guardados.';
+      $id('gfEstadoExt').style.color = '#64748b';
+    }
   }
   renderHistGF();
   renderKPIsGF();
@@ -396,6 +407,18 @@ async function boot(){
   inyectarEvolucion();
   cargarKwhGuardado();
   cargarMesActualAuto();
+  let reintentosGF = 0;
+  const reintentarGF = () => {
+    const st = getState();
+    const hist = st?.config?.gastosFijosHistorial || {};
+    const mes = mesActualKey();
+    if (reintentosGF < 15 && (!hist[mes] || !$id('gfMesExt')?.value)){
+      reintentosGF++;
+      cargarMesActualAuto();
+      setTimeout(reintentarGF, 2000);
+    }
+  };
+  setTimeout(reintentarGF, 2000);
 
   // Hookear switchTab
   const orig = window.switchTab;
@@ -408,6 +431,7 @@ async function boot(){
         inyectarPanelGF();
         inyectarEvolucion();
         cargarKwhGuardado();
+        cargarMesActualAuto();
         if (name === 'produccion') renderEvolucion();
       }, 60);
       return r;
