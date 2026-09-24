@@ -404,6 +404,399 @@ function renderEvolucion(){
   }
 }
 
+
+
+/* ============ PRECIOS DE INSUMOS PERSISTENTES ============ */
+const CAMPOS_PRECIOS = ['precioCP','precioCR','precioCT','precioFlete','precioAdh','precioAdhTapa','solidosAdh','pctAdhSeco','pctAdhTapa','ingDesperdicio'];
+
+function mesActualKeyPrecios(){
+  const d = new Date();
+  return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0');
+}
+
+function leerPreciosUI(){
+  const out = {};
+  CAMPOS_PRECIOS.forEach(id => { const el = $id(id); if (el) out[id] = N(el.value); });
+  return out;
+}
+
+function escribirPreciosUI(datos){
+  if (!datos) return;
+  CAMPOS_PRECIOS.forEach(id => { const el = $id(id); if (el && datos[id] != null) el.value = datos[id]; });
+}
+
+window.tubcorGuardarPrecios = async function(){
+  const st = getState(); if (!st) return;
+  const mes = mesActualKeyPrecios();
+  st.config = st.config || {};
+  st.config.preciosHistorial = st.config.preciosHistorial || {};
+  const datos = leerPreciosUI();
+  datos.guardado = new Date().toISOString();
+  st.config.preciosHistorial[mes] = datos;
+  // Guardar también como "actual" para cargar rápido al abrir
+  st.config.preciosActuales = datos;
+  await saveState(['config']);
+  renderHistPrecios();
+  renderEstadoPrecios();
+};
+
+function renderEstadoPrecios(){
+  const st = getState(); if (!st) return;
+  const el = $id('preciosEstadoExt');
+  if (!el) return;
+  const actuales = st.config?.preciosActuales;
+  if (!actuales || !actuales.guardado){
+    el.textContent = 'Sin guardar. Los cambios se guardan automáticamente.';
+    el.style.color = '#64748b';
+    return;
+  }
+  const fecha = new Date(actuales.guardado);
+  el.textContent = '✓ Última actualización: ' + fecha.toLocaleDateString('es-AR') + ' ' + fecha.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+  el.style.color = '#15803d';
+}
+
+function renderHistPrecios(){
+  const tb = $id('preciosHistExt');
+  if (!tb) return;
+  const st = getState(); if (!st) return;
+  const hist = st.config?.preciosHistorial || {};
+  const meses = Object.keys(hist).sort().reverse();
+  if (!meses.length){
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay precios guardados.</td></tr>';
+    return;
+  }
+  tb.innerHTML = meses.map(mes => {
+    const d = hist[mes];
+    const resumen = 'CP:
+async function boot(){
+  for (let i = 0; i < 100; i++){
+    if ($id('tab-ingenieria') && getState()) break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  inyectarKwh();
+  inyectarAyuda();
+  inyectarPanelGF();
+  inyectarEvolucion();
+  cargarKwhGuardado();
+  cargarMesActualAuto();
+  let reintentosGF = 0;
+  const reintentarGF = () => {
+    const st = getState();
+    const hist = st?.config?.gastosFijosHistorial || {};
+    const mes = mesActualKey();
+    if (reintentosGF < 15 && (!hist[mes] || !$id('gfMesExt')?.value)){
+      reintentosGF++;
+      cargarMesActualAuto();
+      setTimeout(reintentarGF, 2000);
+    }
+  };
+  setTimeout(reintentarGF, 2000);
+
+  // Hookear switchTab
+  const orig = window.switchTab;
+  if (typeof orig === 'function' && !orig.__extHooked){
+    const wrapped = function(name){
+      const r = orig.apply(this, arguments);
+      setTimeout(() => {
+        inyectarKwh();
+        inyectarAyuda();
+        inyectarPanelGF();
+        inyectarEvolucion();
+        cargarKwhGuardado();
+        cargarMesActualAuto();
+        if (name === 'produccion') renderEvolucion();
+      }, 60);
+      return r;
+    };
+    wrapped.__extHooked = true;
+    window.switchTab = wrapped;
+  }
+
+  // Re-inyectar periódicamente
+  setInterval(() => {
+    inyectarKwh();
+    inyectarAyuda();
+    inyectarPanelGF();
+    inyectarEvolucion();
+    renderEvolucion();
+  }, 3000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})(); + N(d.precioCP) + ' CR:
+async function boot(){
+  for (let i = 0; i < 100; i++){
+    if ($id('tab-ingenieria') && getState()) break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  inyectarKwh();
+  inyectarAyuda();
+  inyectarPanelGF();
+  inyectarEvolucion();
+  cargarKwhGuardado();
+  cargarMesActualAuto();
+  let reintentosGF = 0;
+  const reintentarGF = () => {
+    const st = getState();
+    const hist = st?.config?.gastosFijosHistorial || {};
+    const mes = mesActualKey();
+    if (reintentosGF < 15 && (!hist[mes] || !$id('gfMesExt')?.value)){
+      reintentosGF++;
+      cargarMesActualAuto();
+      setTimeout(reintentarGF, 2000);
+    }
+  };
+  setTimeout(reintentarGF, 2000);
+
+  // Hookear switchTab
+  const orig = window.switchTab;
+  if (typeof orig === 'function' && !orig.__extHooked){
+    const wrapped = function(name){
+      const r = orig.apply(this, arguments);
+      setTimeout(() => {
+        inyectarKwh();
+        inyectarAyuda();
+        inyectarPanelGF();
+        inyectarEvolucion();
+        cargarKwhGuardado();
+        cargarMesActualAuto();
+        if (name === 'produccion') renderEvolucion();
+      }, 60);
+      return r;
+    };
+    wrapped.__extHooked = true;
+    window.switchTab = wrapped;
+  }
+
+  // Re-inyectar periódicamente
+  setInterval(() => {
+    inyectarKwh();
+    inyectarAyuda();
+    inyectarPanelGF();
+    inyectarEvolucion();
+    renderEvolucion();
+  }, 3000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})(); + N(d.precioCR) + ' CT:
+async function boot(){
+  for (let i = 0; i < 100; i++){
+    if ($id('tab-ingenieria') && getState()) break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  inyectarKwh();
+  inyectarAyuda();
+  inyectarPanelGF();
+  inyectarEvolucion();
+  cargarKwhGuardado();
+  cargarMesActualAuto();
+  let reintentosGF = 0;
+  const reintentarGF = () => {
+    const st = getState();
+    const hist = st?.config?.gastosFijosHistorial || {};
+    const mes = mesActualKey();
+    if (reintentosGF < 15 && (!hist[mes] || !$id('gfMesExt')?.value)){
+      reintentosGF++;
+      cargarMesActualAuto();
+      setTimeout(reintentarGF, 2000);
+    }
+  };
+  setTimeout(reintentarGF, 2000);
+
+  // Hookear switchTab
+  const orig = window.switchTab;
+  if (typeof orig === 'function' && !orig.__extHooked){
+    const wrapped = function(name){
+      const r = orig.apply(this, arguments);
+      setTimeout(() => {
+        inyectarKwh();
+        inyectarAyuda();
+        inyectarPanelGF();
+        inyectarEvolucion();
+        cargarKwhGuardado();
+        cargarMesActualAuto();
+        if (name === 'produccion') renderEvolucion();
+      }, 60);
+      return r;
+    };
+    wrapped.__extHooked = true;
+    window.switchTab = wrapped;
+  }
+
+  // Re-inyectar periódicamente
+  setInterval(() => {
+    inyectarKwh();
+    inyectarAyuda();
+    inyectarPanelGF();
+    inyectarEvolucion();
+    renderEvolucion();
+  }, 3000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})(); + N(d.precioCT) + ' MD:
+async function boot(){
+  for (let i = 0; i < 100; i++){
+    if ($id('tab-ingenieria') && getState()) break;
+    await new Promise(r => setTimeout(r, 150));
+  }
+  inyectarKwh();
+  inyectarAyuda();
+  inyectarPanelGF();
+  inyectarEvolucion();
+  cargarKwhGuardado();
+  cargarMesActualAuto();
+  let reintentosGF = 0;
+  const reintentarGF = () => {
+    const st = getState();
+    const hist = st?.config?.gastosFijosHistorial || {};
+    const mes = mesActualKey();
+    if (reintentosGF < 15 && (!hist[mes] || !$id('gfMesExt')?.value)){
+      reintentosGF++;
+      cargarMesActualAuto();
+      setTimeout(reintentarGF, 2000);
+    }
+  };
+  setTimeout(reintentarGF, 2000);
+
+  // Hookear switchTab
+  const orig = window.switchTab;
+  if (typeof orig === 'function' && !orig.__extHooked){
+    const wrapped = function(name){
+      const r = orig.apply(this, arguments);
+      setTimeout(() => {
+        inyectarKwh();
+        inyectarAyuda();
+        inyectarPanelGF();
+        inyectarEvolucion();
+        cargarKwhGuardado();
+        cargarMesActualAuto();
+        if (name === 'produccion') renderEvolucion();
+      }, 60);
+      return r;
+    };
+    wrapped.__extHooked = true;
+    window.switchTab = wrapped;
+  }
+
+  // Re-inyectar periódicamente
+  setInterval(() => {
+    inyectarKwh();
+    inyectarAyuda();
+    inyectarPanelGF();
+    inyectarEvolucion();
+    renderEvolucion();
+  }, 3000);
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', boot);
+} else {
+  boot();
+}
+
+})(); + N(d.precioAdh);
+    return '<tr>' +
+      '<td><b>' + esc(mes) + '</b></td>' +
+      '<td style="font-size:10px;color:#64748b">' + esc(resumen) + '</td>' +
+      '<td>' +
+        '<button class="btn btn-secondary btn-sm" type="button" onclick="window.tubcorCargarMesPrecios(\'' + mes + '\')">Cargar</button> ' +
+        '<button class="btn btn-danger btn-sm" type="button" onclick="window.tubcorEliminarMesPrecios(\'' + mes + '\')">🗑</button>' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+}
+
+window.tubcorCargarMesPrecios = function(mes){
+  const st = getState(); if (!st) return;
+  const hist = st.config?.preciosHistorial || {};
+  const datos = hist[mes];
+  if (datos){
+    escribirPreciosUI(datos);
+    try { recalcular(); } catch(_){}
+    const el = $id('preciosEstadoExt');
+    if (el){ el.textContent = '✓ Precios de ' + mes + ' cargados'; el.style.color = '#15803d'; }
+    toastMsg('Precios de ' + mes + ' cargados', 'ok');
+  }
+};
+
+window.tubcorEliminarMesPrecios = async function(mes){
+  if (!confirm('¿Eliminar los precios guardados de ' + mes + '?')) return;
+  const st = getState(); if (!st) return;
+  if (st.config?.preciosHistorial) delete st.config.preciosHistorial[mes];
+  await saveState(['config']);
+  renderHistPrecios();
+  toastMsg('Mes eliminado', 'ok');
+};
+
+function inyectarPanelPrecios(){
+  const costoDiv = $id('ingDesperdicio')?.parentElement?.parentElement;
+  if (!costoDiv || $id('panelPreciosExt')) return;
+  const div = document.createElement('div');
+  div.id = 'panelPreciosExt';
+  div.style = 'margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0';
+  div.innerHTML = `
+    <div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>
+    <div style="display:flex;gap:8px;margin-bottom:8px">
+      <button class="btn btn-primary" style="flex:1;font-size:11px" type="button" onclick="window.tubcorGuardarPrecios()">💾 Guardar precios de este mes</button>
+    </div>
+    <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Historial de precios</div>
+    <div style="max-height:200px;overflow:auto">
+      <table>
+        <thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead>
+        <tbody id="preciosHistExt"></tbody>
+      </table>
+    </div>
+  `;
+  costoDiv.appendChild(div);
+  renderHistPrecios();
+  renderEstadoPrecios();
+}
+
+function hookAutoguardadoPrecios(){
+  CAMPOS_PRECIOS.forEach(id => {
+    const el = $id(id);
+    if (!el || el.dataset.autosaveHooked) return;
+    el.dataset.autosaveHooked = '1';
+    el.addEventListener('change', () => {
+      // Autoguardado suave (sin spamear el server)
+      clearTimeout(window.__tubcorPreciosTimer);
+      window.__tubcorPreciosTimer = setTimeout(() => window.tubcorGuardarPrecios(), 800);
+    });
+  });
+}
+
+function cargarPreciosGuardados(){
+  const st = getState(); if (!st) return;
+  const actuales = st.config?.preciosActuales;
+  if (actuales){
+    // Solo carga si los inputs están todos vacíos o en 0 (evita pisar ediciones en curso)
+    const vacios = CAMPOS_PRECIOS.every(id => { const el = $id(id); return !el || el.value === '' || N(el.value) === 0; });
+    if (vacios){
+      escribirPreciosUI(actuales);
+      try { recalcular(); } catch(_){}
+    }
+  }
+  renderHistPrecios();
+  renderEstadoPrecios();
+}
+
 /* ============ INYECCIÓN DINÁMICA ============ */
 async function boot(){
   for (let i = 0; i < 100; i++){
