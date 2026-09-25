@@ -287,16 +287,25 @@ function escribirPreciosUI(datos){
 
 window.tubcorGuardarPrecios = async function(){
   const st = getState(); if (!st) return;
+  // Validar que haya al menos los precios básicos cargados
+  const datos = leerPreciosUI();
+  if (N(datos.precioCP) === 0 && N(datos.precioCR) === 0 && N(datos.precioCT) === 0){
+    // No guardar si todo esta en 0, salvo que sea explicito
+    if (!window.__tubcorForzarGuardadoPrecios) return;
+  }
   const mes = mesActualKey();
   st.config = st.config || {};
   st.config.preciosHistorial = st.config.preciosHistorial || {};
-  const datos = leerPreciosUI();
   datos.guardado = new Date().toISOString();
   st.config.preciosHistorial[mes] = datos;
   st.config.preciosActuales = datos;
   await saveState(['config']);
   renderHistPrecios();
   renderEstadoPrecios();
+  if (window.__tubcorForzarGuardadoPrecios){
+    toastMsg('Precios guardados', 'ok');
+    window.__tubcorForzarGuardadoPrecios = false;
+  }
 };
 
 function renderEstadoPrecios(){
@@ -366,7 +375,7 @@ function inyectarPanelPrecios(){
   div.style = 'margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0';
   div.innerHTML = '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
     '<div style="display:flex;gap:8px;margin-bottom:8px">' +
-      '<button class="btn btn-primary" style="flex:1;font-size:11px" type="button" onclick="window.tubcorGuardarPrecios()">💾 Guardar precios de este mes</button>' +
+      '<button class="btn btn-primary" style="flex:1;font-size:11px" type="button" onclick="window.__tubcorForzarGuardadoPrecios = true; window.tubcorGuardarPrecios()">💾 Guardar precios de este mes</button>' +
     '</div>' +
     '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Historial de precios</div>' +
     '<div style="max-height:200px;overflow:auto">' +
@@ -381,28 +390,27 @@ function inyectarPanelPrecios(){
 }
 
 function hookAutoguardadoPrecios(){
-  CAMPOS_PRECIOS.forEach(id => {
-    const el = $id(id);
-    if (!el || el.dataset.autosaveHooked) return;
-    el.dataset.autosaveHooked = '1';
-    el.addEventListener('change', () => {
-      clearTimeout(window.__tubcorPreciosTimer);
-      window.__tubcorPreciosTimer = setTimeout(() => window.tubcorGuardarPrecios(), 800);
-    });
-  });
+  // El guardado ahora es SOLO manual con el boton "Guardar precios de este mes"
+  // para evitar guardados accidentales con valores en 0.
+  // No se hace nada aca.
 }
 
 function cargarPreciosGuardados(){
   const st = getState(); if (!st) return;
   const actuales = st.config?.preciosActuales;
   if (actuales){
+    // Sobreescribir SOLO si el valor guardado es > 0
+    // y el input esta vacio o en 0
     let cargoAlguno = false;
     CAMPOS_PRECIOS.forEach(id => {
       const el = $id(id);
       if (!el) return;
-      const estaVacio = el.value === '' || N(el.value) === 0;
-      if (estaVacio && actuales[id] != null && N(actuales[id]) > 0){
-        el.value = actuales[id];
+      const valorGuardado = N(actuales[id]);
+      const valorInput = N(el.value);
+      // Sobreescribir si el guardado tiene valor y el input no lo tiene
+      // (el input puede ser 0 o vacio)
+      if (valorGuardado > 0 && valorInput === 0){
+        el.value = valorGuardado;
         cargoAlguno = true;
       }
     });
