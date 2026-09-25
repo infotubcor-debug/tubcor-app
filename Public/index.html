@@ -1716,6 +1716,7 @@ async function pdfPresupuesto(p){
 
   const subOrig = p.items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
   const descPct = N(p.descuentoPct) || 0;
+  console.log('[TUBCOR PDF] Presupuesto:', p.numero, '| descuentoPct:', p.descuentoPct, '| descPct:', descPct);
   const subConDesc = subOrig * (1 - descPct/100);
   const descImporte = subOrig - subConDesc;
   const sub = subOrig;
