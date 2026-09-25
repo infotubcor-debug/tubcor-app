@@ -413,8 +413,23 @@ function inyectarPanelPrecios(){
   histWrap.innerHTML = '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>';
   div.appendChild(histWrap);
 
-  // Agregar al FINAL del card, después de la ficha técnica
-  card.appendChild(div);
+  // Insertar ANTES del título "4. GASTOS FIJOS MENSUALES"
+  let insertado = false;
+  const elementos = card.querySelectorAll('*');
+  for (const el of elementos){
+    const texto = (el.textContent || '').trim().toUpperCase();
+    if (texto.startsWith('4. GASTOS FIJOS MENSUALES') && el.children.length === 0){
+      // Encontramos el título. Insertamos antes del bloque que lo contiene.
+      const contenedor = el.closest('.flex') || el.parentElement;
+      if (contenedor && contenedor.parentElement){
+        contenedor.parentElement.insertBefore(div, contenedor);
+        insertado = true;
+      }
+      break;
+    }
+  }
+  // Fallback: si no encontramos el título, al final del card
+  if (!insertado) card.appendChild(div);
 
   renderHistPrecios();
   renderEstadoPrecios();
