@@ -1395,6 +1395,46 @@ function renderPreviewPresupuesto(){
   $('presPreview').style.display='block';
   $('presPaper').innerHTML = renderPaperPresupuesto(p);
 }
+
+/* ============ Datos actuales del cliente (para PDF y preview) ============ */
+function datosClienteActual(p){
+  if (!p) return {};
+  const cli = STATE.clientes.find(c =>
+    (p.clienteId && c.id === p.clienteId) ||
+    (c.razonSocial && p.clienteRazonSocial && c.razonSocial === p.clienteRazonSocial)
+  );
+  if (!cli){
+    return {
+      razonSocial: p.clienteRazonSocial,
+      cuit: p.clienteCUIT,
+      condicionIVA: p.clienteCondicionIVA,
+      domicilio: p.clienteDomicilio,
+      localidad: p.clienteLocalidad,
+      contacto: p.clienteContacto,
+      telefono: p.clienteTelefono,
+      email: p.clienteEmail
+    };
+  }
+  return {
+    razonSocial: cli.razonSocial || p.clienteRazonSocial,
+    cuit: cli.cuit || p.clienteCUIT,
+    condicionIVA: cli.condicionIVA || p.clienteCondicionIVA,
+    domicilio: cli.domicilio || p.clienteDomicilio,
+    localidad: cli.localidad || p.clienteLocalidad,
+    contacto: cli.contacto || p.clienteContacto,
+    telefono: cli.telefono || p.clienteTelefono,
+    email: cli.email || p.clienteEmail
+  };
+}
+
+function contactoConTelefono(p){
+  const d = datosClienteActual(p);
+  const partes = [];
+  if (d.contacto) partes.push(d.contacto);
+  if (d.telefono) partes.push(d.telefono);
+  return partes.join(' · ') || '—';
+}
+
 function renderPaperPresupuesto(p){
   const items = p.items||[];
   const subtotal = items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
@@ -1420,12 +1460,12 @@ function renderPaperPresupuesto(p){
       </div>
     </div>
     <div class="paper-client">
-      <div><div class="lbl">Cliente</div><div class="val">${esc(p.clienteRazonSocial||'—')}</div></div>
-      <div><div class="lbl">CUIT</div><div class="val">${esc(p.clienteCUIT||'—')}</div></div>
-      <div><div class="lbl">Condición IVA</div><div class="val">${esc(p.clienteCondicionIVA||'—')}</div></div>
-      <div><div class="lbl">Domicilio</div><div class="val">${esc(p.clienteDomicilio||'—')}</div></div>
-      <div><div class="lbl">Localidad</div><div class="val">${esc(p.clienteLocalidad||'—')}</div></div>
-      <div><div class="lbl">Contacto</div><div class="val">${esc(p.clienteContacto||p.clienteTelefono||'—')}</div></div>
+      <div><div class="lbl">Cliente</div><div class="val">${esc(datosClienteActual(p).razonSocial||'—')}</div></div>
+      <div><div class="lbl">CUIT</div><div class="val">${esc(datosClienteActual(p).cuit||'—')}</div></div>
+      <div><div class="lbl">Condición IVA</div><div class="val">${esc(datosClienteActual(p).condicionIVA||'—')}</div></div>
+      <div><div class="lbl">Domicilio</div><div class="val">${esc(datosClienteActual(p).domicilio||'—')}</div></div>
+      <div><div class="lbl">Localidad</div><div class="val">${esc(datosClienteActual(p).localidad||'—')}</div></div>
+      <div><div class="lbl">Contacto</div><div class="val">${esc(contactoConTelefono(p))}</div></div>
     </div>
     <div class="paper-section">Detalle de la propuesta</div>
     <table class="paper-table">
@@ -1507,12 +1547,12 @@ function renderPaperOF(p){
       </div>
     </div>
     <div class="paper-client">
-      <div><div class="lbl">Cliente</div><div class="val">${esc(p.clienteRazonSocial||'—')}</div></div>
-      <div><div class="lbl">CUIT</div><div class="val">${esc(p.clienteCUIT||'—')}</div></div>
-      <div><div class="lbl">Condición IVA</div><div class="val">${esc(p.clienteCondicionIVA||'—')}</div></div>
-      <div><div class="lbl">Domicilio</div><div class="val">${esc(p.clienteDomicilio||'—')}</div></div>
-      <div><div class="lbl">Localidad</div><div class="val">${esc(p.clienteLocalidad||'—')}</div></div>
-      <div><div class="lbl">Contacto</div><div class="val">${esc(p.clienteContacto||p.clienteTelefono||'—')}</div></div>
+      <div><div class="lbl">Cliente</div><div class="val">${esc(datosClienteActual(p).razonSocial||'—')}</div></div>
+      <div><div class="lbl">CUIT</div><div class="val">${esc(datosClienteActual(p).cuit||'—')}</div></div>
+      <div><div class="lbl">Condición IVA</div><div class="val">${esc(datosClienteActual(p).condicionIVA||'—')}</div></div>
+      <div><div class="lbl">Domicilio</div><div class="val">${esc(datosClienteActual(p).domicilio||'—')}</div></div>
+      <div><div class="lbl">Localidad</div><div class="val">${esc(datosClienteActual(p).localidad||'—')}</div></div>
+      <div><div class="lbl">Contacto</div><div class="val">${esc(contactoConTelefono(p))}</div></div>
     </div>
     <div class="paper-section">Especificaciones de fabricación</div>
     <table class="paper-table">
@@ -1645,14 +1685,14 @@ async function pdfPresupuesto(p){
   doc.text('CUIT', M + cw + 3, y + 4);
   doc.text('CONDICIÓN IVA', M + 2*cw + 3, y + 4);
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(p.clienteRazonSocial||'—').slice(0,32), M + 3, y + 9);
+  doc.text(String(datosClienteActual(p).razonSocial||'—').slice(0,32), M + 3, y + 9);
 
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
   doc.text('DOMICILIO', M + 3, y + 14);
   doc.text('LOCALIDAD', M + cw + 3, y + 14);
   doc.text('CONTACTO', M + 2*cw + 3, y + 14);
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(p.clienteDomicilio||'—').slice(0,32), M + 3, y + 18.5);
+  doc.text(String(datosClienteActual(p).domicilio||'—').slice(0,32), M + 3, y + 18.5);
 
   doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]);
   doc.line(M + cw, y, M + cw, y + cliH);
@@ -1857,14 +1897,14 @@ async function pdfOF(p){
   doc.text('CUIT', M + cw + 3, y + 4);
   doc.text('CONDICIÓN IVA', M + 2*cw + 3, y + 4);
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(p.clienteRazonSocial||'—').slice(0,32), M + 3, y + 9);
+  doc.text(String(datosClienteActual(p).razonSocial||'—').slice(0,32), M + 3, y + 9);
 
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
   doc.text('DOMICILIO', M + 3, y + 14);
   doc.text('LOCALIDAD', M + cw + 3, y + 14);
   doc.text('CONTACTO', M + 2*cw + 3, y + 14);
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(p.clienteDomicilio||'—').slice(0,32), M + 3, y + 18.5);
+  doc.text(String(datosClienteActual(p).domicilio||'—').slice(0,32), M + 3, y + 18.5);
 
   doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]);
   doc.line(M + cw, y, M + cw, y + cliH);
