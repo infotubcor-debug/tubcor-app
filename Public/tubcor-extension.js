@@ -167,242 +167,26 @@ function inyectarPanelGF(){
       '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.tubcorGuardarMesGF()">💾 Guardar / actualizar</button></div>' +
     '</div>' +
     '<div id="gfEstadoExt" style="font-size:10px;color:#64748b;text-align:center;min-height:14px"></div>' +
-    '<div style="margin-top:12px">' +
-      '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Historial de gastos fijos</div>' +
-      '<div style="max-height:220px;overflow:auto"><table>' +
+    '<details style="margin-top:12px">' +
+      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">Ver historial de gastos fijos guardados</summary>' +
+      '<div style="max-height:220px;overflow:auto;margin-top:8px"><table>' +
         '<thead><tr><th>Mes</th><th class="num">Total</th><th style="width:140px">Acciones</th></tr></thead>' +
         '<tbody id="gfHistExt"></tbody>' +
       '</table></div>' +
-    '</div>';
-  panel.appendChild(div);
-}
-
-window.tubcorGuardarMesGF = async function(){
-  const st = getState(); if (!st) return;
-  const mes = $id('gfMesExt').value || mesActualKey();
-  st.config = st.config || {};
-  st.config.gastosFijosHistorial = st.config.gastosFijosHistorial || {};
-  const existente = st.config.gastosFijosHistorial[mes];
-  if (existente && !confirm('Ya hay gastos guardados para ' + mes + '. ¿Sobrescribir?')) return;
-  const datos = leerGFUI();
-  datos.total = totalGFUI();
-  datos.guardado = new Date().toISOString();
-  st.config.gastosFijosHistorial[mes] = datos;
-  await saveState(['config']);
-  renderHistGF(); renderKPIsGF(); renderEvolucion();
-  toastMsg('Gastos fijos de ' + mes + ' guardados', 'ok');
-};
-
-window.tubcorCargarMesGF = function(){
-  const st = getState(); if (!st) return;
-  const mes = $id('gfMesExt').value;
-  if (!mes) return;
-  const hist = st.config?.gastosFijosHistorial || {};
-  const datos = hist[mes];
-  if (datos){
-    escribirGFUI(datos);
-    const el = $id('gfEstadoExt');
-    if (el){ el.textContent = '✓ Datos cargados desde el historial'; el.style.color = '#15803d'; }
-  } else {
-    const el = $id('gfEstadoExt');
-    if (el){ el.textContent = 'Sin datos para este mes.'; el.style.color = '#64748b'; }
-  }
-  try { recalcular(); } catch(_){}
-  renderKPIsGF();
-  renderHistGF();
-};
-
-window.tubcorEliminarMesGF = async function(mes){
-  if (!confirm('¿Eliminar los gastos fijos guardados de ' + mes + '?')) return;
-  const st = getState(); if (!st) return;
-  if (st.config?.gastosFijosHistorial) delete st.config.gastosFijosHistorial[mes];
-  await saveState(['config']);
-  renderHistGF(); renderKPIsGF(); renderEvolucion();
-  toastMsg('Mes eliminado', 'ok');
-};
-
-function renderHistGF(){
-  const tb = $id('gfHistExt'); if (!tb) return;
-  const st = getState(); if (!st) return;
-  const hist = st.config?.gastosFijosHistorial || {};
-  const meses = Object.keys(hist).sort().reverse();
-  if (!meses.length){
-    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay meses guardados.</td></tr>';
-    return;
-  }
-  tb.innerHTML = meses.map(mes => '<tr>' +
-    '<td><b>' + esc(mes) + '</b></td>' +
-    '<td class="num">' + money(hist[mes].total || 0) + '</td>' +
-    '<td>' +
-      '<button class="btn btn-secondary btn-sm" type="button" onclick="$id(\'gfMesExt\').value=\'' + mes + '\';window.tubcorCargarMesGF()">Cargar</button> ' +
-      '<button class="btn btn-danger btn-sm" type="button" onclick="window.tubcorEliminarMesGF(\'' + mes + '\')">🗑</button>' +
-    '</td>' +
-  '</tr>').join('');
-}
-
-function renderKPIsGF(){
-  const st = getState(); if (!st) return;
-  const anio = new Date().getFullYear();
-  const hist = st.config?.gastosFijosHistorial || {};
-  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
-  const totalAnio = meses.reduce((s,m) => s + (hist[m].total || 0), 0);
-  const promedio = meses.length ? totalAnio / meses.length : 0;
-  const mes = $id('gfMesExt')?.value || mesActualKey();
-  const totalMes = (hist[mes] && hist[mes].total) || totalGFUI();
-  if ($id('gfMesActualExt')) $id('gfMesActualExt').textContent = money(totalMes);
-  if ($id('gfPromAnioExt')) $id('gfPromAnioExt').textContent = money(promedio);
-  if ($id('gfTotalAnioExt')) $id('gfTotalAnioExt').textContent = money(totalAnio);
-}
-
-function cargarMesActualAuto(){
-  const st = getState(); if (!st || !$id('gfMesExt')) return;
-  const mes = mesActualKey();
-  if (!$id('gfMesExt').value) $id('gfMesExt').value = mes;
-  const hist = st.config?.gastosFijosHistorial || {};
-  if (hist[mes]){
-    const todosCero = CAMPOS_GF.every(id => { const el = $id(id); return !el || N(el.value) === 0; });
-    if (todosCero){
-      escribirGFUI(hist[mes]);
-      const el = $id('gfEstadoExt');
-      if (el){ el.textContent = '✓ Gastos cargados del historial para ' + mes; el.style.color = '#15803d'; }
-      try { recalcular(); } catch(_){}
-    }
-  }
-  renderHistGF();
-  renderKPIsGF();
-}
-
-/* ============ PRECIOS DE INSUMOS PERSISTENTES ============ */
-const CAMPOS_PRECIOS = ['precioCP','precioCR','precioCT','precioFlete','precioAdh','precioAdhTapa','solidosAdh','pctAdhSeco','pctAdhTapa','ingDesperdicio'];
-
-function leerPreciosUI(){
-  const out = {};
-  CAMPOS_PRECIOS.forEach(id => { const el = $id(id); if (el) out[id] = N(el.value); });
-  return out;
-}
-function escribirPreciosUI(datos){
-  if (!datos) return;
-  CAMPOS_PRECIOS.forEach(id => { const el = $id(id); if (el && datos[id] != null) el.value = datos[id]; });
-}
-
-window.tubcorGuardarPrecios = async function(){
-  const st = getState(); if (!st) return;
-  const _datosDebug = leerPreciosUI();
-  console.log('[TUBCOR] Guardando precios:', JSON.stringify(_datosDebug));
-  // Validar que haya al menos los precios básicos cargados
-  const datos = leerPreciosUI();
-  if (N(datos.precioCP) === 0 && N(datos.precioCR) === 0 && N(datos.precioCT) === 0){
-    // No guardar si todo esta en 0, salvo que sea explicito
-    if (!window.__tubcorForzarGuardadoPrecios) return;
-  }
-  const mes = mesActualKey();
-  st.config = st.config || {};
-  st.config.preciosHistorial = st.config.preciosHistorial || {};
-  datos.guardado = new Date().toISOString();
-  st.config.preciosHistorial[mes] = datos;
-  st.config.preciosActuales = datos;
-  await saveState(['config']);
-  renderHistPrecios();
-  renderEstadoPrecios();
-  if (window.__tubcorForzarGuardadoPrecios){
-    toastMsg('Precios guardados', 'ok');
-    window.__tubcorForzarGuardadoPrecios = false;
-  }
-};
-
-function renderEstadoPrecios(){
-  const st = getState(); if (!st) return;
-  const el = $id('preciosEstadoExt'); if (!el) return;
-  const actuales = st.config?.preciosActuales;
-  if (!actuales || !actuales.guardado){
-    el.textContent = 'Sin guardar. Los cambios se guardan automáticamente.';
-    el.style.color = '#64748b';
-    return;
-  }
-  const fecha = new Date(actuales.guardado);
-  el.textContent = '✓ Última actualización: ' + fecha.toLocaleDateString('es-AR') + ' ' + fecha.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
-  el.style.color = '#15803d';
-}
-
-function renderHistPrecios(){
-  const tb = $id('preciosHistExt'); if (!tb) return;
-  const st = getState(); if (!st) return;
-  const hist = st.config?.preciosHistorial || {};
-  const meses = Object.keys(hist).sort().reverse();
-  if (!meses.length){
-    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay precios guardados.</td></tr>';
-    return;
-  }
-  tb.innerHTML = meses.map(mes => {
-    const d = hist[mes];
-    const resumen = 'CP:$' + N(d.precioCP) + ' CR:$' + N(d.precioCR) + ' CT:$' + N(d.precioCT) + ' MD:$' + N(d.precioAdh);
-    return '<tr>' +
-      '<td><b>' + esc(mes) + '</b></td>' +
-      '<td style="font-size:10px;color:#64748b">' + esc(resumen) + '</td>' +
-      '<td>' +
-        '<button class="btn btn-secondary btn-sm" type="button" onclick="window.tubcorCargarMesPrecios(\'' + mes + '\')">Cargar</button> ' +
-        '<button class="btn btn-danger btn-sm" type="button" onclick="window.tubcorEliminarMesPrecios(\'' + mes + '\')">🗑</button>' +
-      '</td>' +
-    '</tr>';
-  }).join('');
-}
-
-window.tubcorCargarMesPrecios = function(mes){
-  const st = getState(); if (!st) return;
-  const hist = st.config?.preciosHistorial || {};
-  const datos = hist[mes];
-  if (datos){
-    escribirPreciosUI(datos);
-    try { recalcular(); } catch(_){}
-    const el = $id('preciosEstadoExt');
-    if (el){ el.textContent = '✓ Precios de ' + mes + ' cargados'; el.style.color = '#15803d'; }
-    toastMsg('Precios de ' + mes + ' cargados', 'ok');
-  }
-};
-
-window.tubcorEliminarMesPrecios = async function(mes){
-  if (!confirm('¿Eliminar los precios guardados de ' + mes + '?')) return;
-  const st = getState(); if (!st) return;
-  if (st.config?.preciosHistorial) delete st.config.preciosHistorial[mes];
-  await saveState(['config']);
-  renderHistPrecios();
-  toastMsg('Mes eliminado', 'ok');
-};
-
-
-/* Wrapper para el boton Cargar del historial de precios */
-window.tubcorCargarMesPreciosUI2 = function(mes){
-  const sel = $id('preciosMesExt');
-  if (sel) sel.value = mes;
-  window.tubcorCargarMesPreciosUI();
-};
-
-function inyectarPanelPrecios(){
-  const existente = $id('panelPreciosExt');
-  if (existente) existente.remove();
-
-  const card = $id('ingDesperdicio')?.closest('.card');
-  if (!card) return;
-
-  const div = document.createElement('div');
-  div.id = 'panelPreciosExt';
-  div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
-
-  div.innerHTML = '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Precios guardados por mes</div>' +
+    '</details>' +
     '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
       '<div><label>Mes</label><input id="preciosMesExt" type="month"/></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesPreciosUI()">⬇ Cargar mes</button></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.__tubcorForzarGuardadoPrecios=true;window.tubcorGuardarPrecios()">💾 Guardar / actualizar</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesPreciosUI()">Cargar mes</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.__tubcorForzarGuardadoPrecios=true;window.tubcorGuardarPrecios()">Guardar / actualizar</button></div>' +
     '</div>' +
-    '<details style="margin-top:12px">' +
-      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">▸ Ver historial de precios guardados</summary>' +
+    '<details style="margin-top:12px" id="preciosHistDetails">' +
+      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">Ver historial de precios guardados</summary>' +
       '<div style="max-height:220px;overflow:auto;margin-top:8px">' +
         '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>' +
       '</div>' +
     '</details>';
 
-  // Insertar antes del bloque de Gastos Fijos
   const gfAlqInput = $id('gfAlq');
   if (gfAlqInput){
     const cardCont = gfAlqInput.closest('.card');
@@ -428,8 +212,28 @@ function inyectarPanelPrecios(){
     card.appendChild(div);
   }
 
+  // Fijar mes actual
+  const selMes = $id('preciosMesExt');
+  if (selMes && !selMes.value) selMes.value = mesActualKey();
+
   renderHistPrecios();
   renderEstadoPrecios();
+  renderKPIsPrecios();
+}
+
+function renderKPIsPrecios(){
+  const st = getState(); if (!st) return;
+  const hist = st.config?.preciosHistorial || {};
+  const anio = new Date().getFullYear();
+  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
+  const sel = $id('preciosMesExt');
+  const mesSel = sel?.value || mesActualKey();
+  const datoMes = hist[mesSel];
+  const cpMes = datoMes ? N(datoMes.precioCP) : 0;
+  const cpProm = meses.length ? meses.reduce((s,m) => s + N(hist[m].precioCP), 0) / meses.length : 0;
+  if ($id('preciosKPICP')) $id('preciosKPICP').textContent = cpMes > 0 ? '$' + cpMes.toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIProm')) $id('preciosKPIProm').textContent = cpProm > 0 ? '$' + Math.round(cpProm).toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIMeses')) $id('preciosKPIMeses').textContent = meses.length;
 }
 
 /* Cargar precios del mes seleccionado en el input */
