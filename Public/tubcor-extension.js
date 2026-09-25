@@ -428,8 +428,43 @@ function inyectarPanelPrecios(){
       break;
     }
   }
-  // Fallback: si no encontramos el título, al final del card
-  if (!insertado) card.appendChild(div);
+  // Insertar antes del bloque de Gastos Fijos (usando el input #gfAlq como ancla)
+  const gfAlqInput = $id('gfAlq');
+  if (gfAlqInput){
+    // Subir hasta el .card que contiene las secciones 3 y 4
+    const cardContenedor = gfAlqInput.closest('.card');
+    // Dentro del card, buscar el div que contiene el título "4. GASTOS..."
+    if (cardContenedor){
+      // Todos los divs del card. Buscamos el que tiene el texto "4." y "GASTOS"
+      const divs = cardContenedor.querySelectorAll('div');
+      let bloqueGastos = null;
+      for (const d of divs){
+        const t = (d.textContent || '').trim().toUpperCase();
+        // El título está en un div con esas palabras exactas
+        if (t.indexOf('4. GASTOS FIJOS MENSUALES') !== -1 && t.length < 60){
+          // Ese div es el título. Subir al contenedor.
+          bloqueGastos = d.closest('.flex') || d.parentElement;
+          break;
+        }
+      }
+      if (bloqueGastos && bloqueGastos.parentElement){
+        bloqueGastos.parentElement.insertBefore(div, bloqueGastos);
+      } else {
+        // Último fallback: insertar antes del input de Alquiler, subiendo 3 niveles
+        let nodo = gfAlqInput;
+        for (let k = 0; k < 3 && nodo.parentElement; k++) nodo = nodo.parentElement;
+        if (nodo && nodo.parentElement){
+          nodo.parentElement.insertBefore(div, nodo);
+        } else {
+          card.appendChild(div);
+        }
+      }
+    } else {
+      card.appendChild(div);
+    }
+  } else {
+    card.appendChild(div);
+  }
 
   renderHistPrecios();
   renderEstadoPrecios();
