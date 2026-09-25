@@ -1685,14 +1685,18 @@ async function pdfPresupuesto(p){
   doc.text('CUIT', M + cw + 3, y + 4);
   doc.text('CONDICIÓN IVA', M + 2*cw + 3, y + 4);
   doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(datosClienteActual(p).razonSocial||'—').slice(0,32), M + 3, y + 9);
+  doc.text(String(datosClienteActual(p).razonSocial||'\u2014').slice(0,32), M + 3, y + 9);
+  doc.text(String(datosClienteActual(p).cuit||'\u2014').slice(0,20), M + cw + 3, y + 9);
+  doc.text(String(datosClienteActual(p).condicionIVA||'\u2014').slice(0,20), M + 2*cw + 3, y + 9);
 
   doc.setFont('helvetica','bold'); doc.setFontSize(6.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
   doc.text('DOMICILIO', M + 3, y + 14);
   doc.text('LOCALIDAD', M + cw + 3, y + 14);
   doc.text('CONTACTO', M + 2*cw + 3, y + 14);
   doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-  doc.text(String(datosClienteActual(p).domicilio||'—').slice(0,32), M + 3, y + 18.5);
+  doc.text(String(datosClienteActual(p).domicilio||'\u2014').slice(0,32), M + 3, y + 18.5);
+  doc.text(String(datosClienteActual(p).localidad||'\u2014').slice(0,20), M + cw + 3, y + 18.5);
+  doc.text(String(contactoConTelefono(p)).slice(0,25), M + 2*cw + 3, y + 18.5);
 
   doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]);
   doc.line(M + cw, y, M + cw, y + cliH);
