@@ -1038,8 +1038,8 @@ function recalcular(){
     ['Papel principal ('+$('ingPrincAncho').value+' / '+$('ingPrincGram').value+')', gPrinc/1000*cant, compraPrinc],
     ['Papel relleno ('+$('ingRellAncho').value+' / '+$('ingRellGram').value+') × '+$('ingRellCant').value, gRell/1000*cant, compraRell],
     ['Papel tapa ('+$('ingTapaAncho').value+' / '+$('ingTapaGram').value+')', gTapa/1000*cant, compraTapa],
-    ['MD50 seco incorporado', adhSecoInterno*cant/1000, compraPastaInt],
-    ['Adhesivo tapa seco', adhSecoTapa*cant/1000, compraPastaTapa]
+    ['Adhesivo incorporado', adhSecoInterno*cant/1000, compraPastaInt],
+    ['Adhesivo tapa', adhSecoTapa*cant/1000, compraPastaTapa]
   ];
   $('rConsumos').innerHTML = rows.map(r=>`<tr>
     <td>${esc(r[0])}</td>

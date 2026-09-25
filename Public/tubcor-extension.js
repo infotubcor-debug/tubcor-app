@@ -30,11 +30,11 @@ function inyectarKwh(){
   row.id = 'costoKwhExt';
   row.style = 'display:grid;grid-template-columns:1fr 1fr;gap:8px;grid-column:span 2;margin-top:8px';
   row.innerHTML = '<div>' +
-      '<label>Consumo electrico (kWh/mes)</label>' +
+      '<label>Consumo eléctrico (kWh/mes)</label>' +
       '<input id="kwhMensual" type="number" value="' + (N(getState()?.config?.kwhMensual) || 973) + '" step="1" min="0" oninput="window.tubcorGuardarKwh()"/>' +
     '</div>' +
     '<div>' +
-      '<label>Energia ($/kWh)</label>' +
+      '<label>Energía ($/kWh)</label>' +
       '<input id="costoKwh" type="number" value="' + (N(getState()?.config?.costoKwh) || 536) + '" step="1" min="0" oninput="window.tubcorGuardarKwh()"/>' +
     '</div>';
   costoDiv.appendChild(row);
@@ -63,18 +63,18 @@ function inyectarAyuda(){
   if (!ing || $id('ayudaMemoriaExt')) return;
 
   const items = [
-    ['Adhesivo ($/kg pasta)', 'Precio del tambor tal como sale del envase (pasta humeda, 41% solidos). La app convierte a seco automaticamente con el campo Solidos.'],
-    ['Solidos (%)', 'Dato de ficha tecnica Romial MD50: 41%. Fraccion del peso de la pasta que queda en el tubo despues del secado.'],
+    ['Adhesivo ($/kg pasta)', 'Precio del tambor tal como sale del envase (pasta húmeda, 41% sólidos). La app convierte a seco automáticamente con el campo Sólidos.'],
+    ['Solidos (%)', 'Dato de ficha técnica Romial: 41%. Fracción del peso de la pasta que queda en el tubo después del secado.'],
     ['% adhesivo seco / papel', 'Adhesivo seco que queda vs peso del papel interno. Valor inicial: 15%. Se recalibra con los pesajes del Calibrador.'],
-    ['Adhesivo tapa ($/kg)', 'Precio del adhesivo usado solo en la faja exterior (tapa). Romial recomienda vinilico o dextrina.'],
+    ['Adhesivo tapa ($/kg)', 'Precio del adhesivo usado solo en la faja exterior (tapa). Romial recomienda vinílico o dextrina.'],
     ['% adhesivo tapa seco / papel tapa', 'Aplicado solo a la tapa exterior. Valor inicial: 8%. Se calibra con pesajes reales.'],
-    ['Consumo electrico (kWh/mes)', 'Promedio de tus facturas EPEC. Suma los kWh de las ultimas 3 facturas y divide por la cantidad de meses.'],
-    ['Energia ($/kWh)', 'Calculo: (Total factura - Cargo fijo) / kWh consumidos. Ejemplo EPEC: ($540.497 - $5.028) / 1.038 kWh = $516/kWh.'],
+    ['Consumo eléctrico (kWh/mes)', 'Promedio de tus facturas EPEC. Sumá los kWh de las últimas 3 facturas y dividí por la cantidad de meses.'],
+    ['Energía ($/kWh)', 'Cálculo: (Total factura − Cargo fijo) ÷ kWh consumidos. Ejemplo EPEC: ($540.497 - $5.028) / 1.038 kWh = $516/kWh.'],
     ['EPEC (Luz) - en Gastos Fijos', 'Cargo fijo de la factura EPEC, mensualizado. Si la factura es bimestral: cargo fijo / 2.'],
-    ['Produccion mensual (kg de tubo)', 'Cuantos kg de tubo terminado producis por mes. Se usa para prorratear los gastos fijos.'],
-    ['Precios de insumos', 'Se guardan con el boton Guardar / actualizar en cada panel. Podes ver el historial de meses anteriores.'],
-    ['Flete ($/kg transportado)', 'Costo del transporte de la materia prima, repartido por kg. Calculo: total del viaje / kg transportados. Si el proveedor entrega sin cargo, poner 0.'],
-    ['Faja principal, relleno, tapa', 'Ancho (mm) y gramaje (g/m2) segun como venga el rollo del proveedor. Ej: 70 mm / 175 g/m2.']
+    ['Produccion mensual (kg de tubo)', 'Cuántos kg de tubo terminado producís por mes. Se usa para prorratear los gastos fijos.'],
+    ['Precios de insumos', 'Se guardan con el botón Guardar / actualizar en cada panel. Podés ver el historial de meses anteriores.'],
+    ['Flete ($/kg transportado)', 'Costo del transporte de la materia prima, repartido por kg. Cálculo: total del viaje ÷ kg transportados. Si el proveedor entrega sin cargo, poner 0.'],
+    ['Faja principal, relleno, tapa', 'Ancho (mm) y gramaje (g/m²) según cómo venga el rollo del proveedor. Ej: 70 mm / 175 g/m².']
   ];
 
   const div = document.createElement('div');
@@ -90,7 +90,7 @@ function inyectarAyuda(){
   });
 
   div.innerHTML = '<button type="button" onclick="window.tubcorToggleAyuda()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">' +
-      '<div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px">Ayuda memoria - como calcular cada campo</div>' +
+      '<div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px">Ayuda memoria — cómo calcular cada campo</div>' +
       '<span id="ayudaChevronExt" style="color:#64748b;font-weight:800;font-size:18px">+</span>' +
     '</button>' +
     '<div id="ayudaContenidoExt" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0">' +
@@ -215,7 +215,7 @@ function renderHistGF(){
   const hist = st.config?.gastosFijosHistorial || {};
   const meses = Object.keys(hist).sort().reverse();
   if (!meses.length){
-    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavia no hay meses guardados.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay meses guardados.</td></tr>';
     return;
   }
   tb.innerHTML = meses.map(mes => '<tr>' +
@@ -302,12 +302,12 @@ function renderEstadoPrecios(){
   const el = $id('preciosEstadoExt'); if (!el) return;
   const actuales = st.config?.preciosActuales;
   if (!actuales || !actuales.guardado){
-    el.textContent = 'Sin guardar. Carga los precios y apreta Guardar.';
+    el.textContent = 'Sin guardar. Cargá los precios y apretá Guardar.';
     el.style.color = '#64748b';
     return;
   }
   const fecha = new Date(actuales.guardado);
-  el.textContent = 'Ultima actualizacion: ' + fecha.toLocaleDateString('es-AR') + ' ' + fecha.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
+  el.textContent = 'Última actualización: ' + fecha.toLocaleDateString('es-AR') + ' ' + fecha.toLocaleTimeString('es-AR', {hour:'2-digit', minute:'2-digit'});
   el.style.color = '#15803d';
 }
 
@@ -317,7 +317,7 @@ function renderHistPrecios(){
   const hist = st.config?.preciosHistorial || {};
   const meses = Object.keys(hist).sort().reverse();
   if (!meses.length){
-    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavia no hay precios guardados.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="3" class="empty">Todavía no hay precios guardados.</td></tr>';
     return;
   }
   tb.innerHTML = meses.map(mes => {
@@ -387,16 +387,32 @@ function renderKPIsPrecios(){
   const st = getState(); if (!st) return;
   const hist = st.config?.preciosHistorial || {};
   const anio = new Date().getFullYear();
-  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
   const sel = $id('preciosMesExt');
   const mesSel = sel?.value || mesActualKey();
-  const totalMes = totalPreciosDato(hist[mesSel]);
-  const totales = meses.map(m => totalPreciosDato(hist[m]));
-  const totalAnio = totales.reduce((s,x) => s + x, 0);
-  const promedio = meses.length ? totalAnio / meses.length : 0;
-  if ($id('preciosKPICP')) $id('preciosKPICP').textContent = totalMes > 0 ? '$' + totalMes.toLocaleString('es-AR') : '$0';
-  if ($id('preciosKPIProm')) $id('preciosKPIProm').textContent = promedio > 0 ? '$' + Math.round(promedio).toLocaleString('es-AR') : '$0';
-  if ($id('preciosKPIMeses')) $id('preciosKPIMeses').textContent = totalAnio > 0 ? '$' + totalAnio.toLocaleString('es-AR') : '$0';
+  const datoMes = hist[mesSel] || {};
+  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
+
+  // Promedio cartón del mes seleccionado (promedio de los 3 cartones)
+  const cps = [N(datoMes.precioCP), N(datoMes.precioCR), N(datoMes.precioCT)].filter(v => v > 0);
+  const cartMes = cps.length ? cps.reduce((s,v) => s+v, 0) / cps.length : 0;
+
+  // Promedio anual de cada insumo
+  const promAnual = (campo) => {
+    const vals = meses.map(m => N(hist[m] && hist[m][campo])).filter(v => v > 0);
+    return vals.length ? vals.reduce((s,v) => s+v, 0) / vals.length : 0;
+  };
+
+  const promCP = promAnual('precioCP');
+  const promCR = promAnual('precioCR');
+  const promCT = promAnual('precioCT');
+  const promAdh = promAnual('precioAdh');
+
+  const fmt = (v) => v > 0 ? '$' + Math.round(v).toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIPromCartMes')) $id('preciosKPIPromCartMes').textContent = fmt(cartMes);
+  if ($id('preciosKPIPromAnualCP')) $id('preciosKPIPromAnualCP').textContent = fmt(promCP);
+  if ($id('preciosKPIPromAnualCR')) $id('preciosKPIPromAnualCR').textContent = fmt(promCR);
+  if ($id('preciosKPIPromAnualCT')) $id('preciosKPIPromAnualCT').textContent = fmt(promCT);
+  if ($id('preciosKPIPromAnualAdh')) $id('preciosKPIPromAnualAdh').textContent = fmt(promAdh);
 }
 
 function inyectarPanelPrecios(){
@@ -409,10 +425,12 @@ function inyectarPanelPrecios(){
   div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
 
   div.innerHTML = '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Precios de insumos guardados</div>' +
-    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
-      '<div class="kpi"><div class="k-label">Carton ppal (mes)</div><div class="k-value text-[13px]" id="preciosKPICP">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="preciosKPIProm">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Total aÑo</div><div class="k-value text-[13px]" id="preciosKPIMeses">0</div></div>' +
+    '<div style="display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-bottom:10px">' +
+      '<div class="kpi"><div class="k-label" style="font-size:9px">Prom. cartón (mes)</div><div class="k-value text-[12px]" id="preciosKPIPromCartMes">$0</div></div>' +
+      '<div class="kpi"><div class="k-label" style="font-size:9px">Prom. anual C. principal</div><div class="k-value text-[12px]" id="preciosKPIPromAnualCP">$0</div></div>' +
+      '<div class="kpi"><div class="k-label" style="font-size:9px">Prom. anual C. relleno</div><div class="k-value text-[12px]" id="preciosKPIPromAnualCR">$0</div></div>' +
+      '<div class="kpi"><div class="k-label" style="font-size:9px">Prom. anual C. tapa</div><div class="k-value text-[12px]" id="preciosKPIPromAnualCT">$0</div></div>' +
+      '<div class="kpi"><div class="k-label" style="font-size:9px">Prom. anual adhesivo</div><div class="k-value text-[12px]" id="preciosKPIPromAnualAdh">$0</div></div>' +
     '</div>' +
     '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
@@ -466,7 +484,7 @@ function inyectarEvolucion(){
   const div = document.createElement('div');
   div.className = 'card mt-3';
   div.id = 'evolucionPEExt';
-  div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px;text-align:center;margin-bottom:12px">Evolucion hacia el punto de equilibrio - datos reales</div>' +
+  div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px;text-align:center;margin-bottom:12px">Evolución hacia el punto de equilibrio — datos reales</div>' +
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' +
       '<div class="kpi"><div class="k-label">kg producidos (año)</div><div class="k-value text-[14px]" id="evKgAnioExt">0</div></div>' +
       '<div class="kpi"><div class="k-label">Gastos fijos (año)</div><div class="k-value text-[14px]" id="evGfAnioExt">$0</div></div>' +
