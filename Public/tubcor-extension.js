@@ -151,17 +151,14 @@ function totalGFUI(){
 }
 
 function inyectarPanelGF(){
-  if ($id('panelGFExt')) return;
-
-  // Insertar despues del input gfPro (Prosegur - ultimo campo de gastos fijos)
-  const ancla = $id('gfPro');
-  if (!ancla) return;
-  const contenedor5 = ancla.closest('.grid') || ancla.parentElement?.parentElement;
-  if (!contenedor5) return;
+  const anchor = $id('anchor-gf');
+  if (!anchor) return;
+  if ($id('panelGFExt')) $id('panelGFExt').remove();
 
   const div = document.createElement('div');
   div.id = 'panelGFExt';
   div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
+
   div.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
       '<div class="kpi"><div class="k-label">Mes seleccionado</div><div class="k-value text-[13px]" id="gfMesActualExt">$0</div></div>' +
       '<div class="kpi"><div class="k-label">Promedio ano</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>' +
@@ -181,8 +178,7 @@ function inyectarPanelGF(){
       '</table></div>' +
     '</details>';
 
-  // Insertar despues del contenedor 5
-  contenedor5.parentElement.insertBefore(div, contenedor5.nextSibling);
+  anchor.appendChild(div);
 
   const selMes = $id('gfMesExt');
   if (selMes && !selMes.value) selMes.value = mesActualKey();
@@ -276,6 +272,96 @@ function cargarPreciosGuardados(){
 }
 
 /* ============ EVOLUCIÓN PE REAL ============ */
+
+/* ============ PANEL DE PRECIOS DE INSUMOS ============ */
+function inyectarPanelPrecios(){
+  const anchor = $id('anchor-precios');
+  if (!anchor) return;
+  if ($id('panelPreciosExt')) $id('panelPreciosExt').remove();
+
+  const div = document.createElement('div');
+  div.id = 'panelPreciosExt';
+  div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
+
+  div.innerHTML = '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Precios de insumos guardados</div>' +
+    '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
+      '<div class="kpi"><div class="k-label">Carton ppal (mes)</div><div class="k-value text-[13px]" id="preciosKPICP">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Promedio ano</div><div class="k-value text-[13px]" id="preciosKPIProm">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Meses guardados</div><div class="k-value text-[13px]" id="preciosKPIMeses">0</div></div>' +
+    '</div>' +
+    '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<div><label>Mes</label><input id="preciosMesExt" type="month"/></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesPreciosUI()">Cargar mes</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.__tubcorForzarGuardadoPrecios=true;window.tubcorGuardarPrecios()">Guardar / actualizar</button></div>' +
+    '</div>' +
+    '<details style="margin-top:12px" id="preciosHistDetails">' +
+      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">Ver historial de precios guardados</summary>' +
+      '<div style="max-height:220px;overflow:auto;margin-top:8px">' +
+        '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>' +
+      '</div>' +
+    '</details>';
+
+  anchor.appendChild(div);
+
+  const selMes = $id('preciosMesExt');
+  if (selMes && !selMes.value) selMes.value = mesActualKey();
+
+  renderHistPrecios();
+  renderEstadoPrecios();
+  renderKPIsPrecios();
+}
+
+function renderKPIsPrecios(){
+  const st = getState(); if (!st) return;
+  const hist = st.config?.preciosHistorial || {};
+  const anio = new Date().getFullYear();
+  const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
+  const sel = $id('preciosMesExt');
+  const mesSel = sel?.value || mesActualKey();
+  const datoMes = hist[mesSel];
+  const cpMes = datoMes ? N(datoMes.precioCP) : 0;
+  const cpProm = meses.length ? meses.reduce((s,m) => s + N(hist[m].precioCP), 0) / meses.length : 0;
+  if ($id('preciosKPICP')) $id('preciosKPICP').textContent = cpMes > 0 ? '$' + cpMes.toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIProm')) $id('preciosKPIProm').textContent = cpProm > 0 ? '$' + Math.round(cpProm).toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIMeses')) $id('preciosKPIMeses').textContent = meses.length;
+}
+
+window.tubcorCargarMesPreciosUI = function(){
+  const st = getState(); if (!st) return;
+  const sel = $id('preciosMesExt');
+  if (!sel) return;
+  const mes = sel.value;
+  if (!mes){
+    const hist = st.config?.preciosHistorial || {};
+    const meses = Object.keys(hist).sort().reverse();
+    if (meses.length) {
+      sel.value = meses[0];
+      return window.tubcorCargarMesPreciosUI();
+    }
+    return;
+  }
+  const hist = st.config?.preciosHistorial || {};
+  const datos = hist[mes];
+  if (datos){
+    escribirPreciosUI(datos);
+    try { recalcular(); } catch(_){}
+    const el = $id('preciosEstadoExt');
+    if (el){ el.textContent = '✓ Precios de ' + mes + ' cargados'; el.style.color = '#15803d'; }
+    toastMsg('Precios de ' + mes + ' cargados', 'ok');
+  } else {
+    const el = $id('preciosEstadoExt');
+    if (el){ el.textContent = 'Sin datos para ' + mes; el.style.color = '#64748b'; }
+  }
+};
+
+window.tubcorCargarMesPreciosUI2 = function(mes){
+  const sel = $id('preciosMesExt');
+  if (sel) sel.value = mes;
+  window.tubcorCargarMesPreciosUI();
+};
+
+
 function inyectarEvolucion(){
   const prod = $id('tab-produccion');
   if (!prod || $id('evolucionPEExt')) return;
