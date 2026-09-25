@@ -590,4 +590,44 @@ if (document.readyState === 'loading') {
   boot();
 }
 
+
+/* Chequeo ultra-frecuente: restaura precios y GF si los inputs estan en 0 */
+setInterval(() => {
+  try {
+    const st = getState(); if (!st) return;
+    const tabIng = $id('tab-ingenieria');
+    if (!tabIng || tabIng.classList.contains('hidden')) return;
+    
+    // Precios
+    const selP = $id('preciosMesExt');
+    const mesP = selP?.value || mesActualKey();
+    const datosP = (st.config?.preciosHistorial || {})[mesP] || st.config?.preciosActuales;
+    if (datosP){
+      CAMPOS_PRECIOS.forEach(id => {
+        const el = $id(id);
+        if (!el) return;
+        if (N(el.value) === 0 && N(datosP[id]) > 0) el.value = datosP[id];
+      });
+      try { renderHistPrecios(); } catch(_){}
+      try { renderKPIsPrecios(); } catch(_){}
+    }
+    
+    // Gastos fijos
+    const selG = $id('gfMesExt');
+    const mesG = selG?.value || mesActualKey();
+    const datosG = (st.config?.gastosFijosHistorial || {})[mesG];
+    if (datosG){
+      CAMPOS_GF.forEach(id => {
+        const el = $id(id);
+        if (!el) return;
+        if (N(el.value) === 0 && N(datosG[id]) > 0) el.value = datosG[id];
+      });
+      const prodEl = $id('prodMensual');
+      if (prodEl && N(prodEl.value) === 0 && N(datosG.prodMensual) > 0) prodEl.value = datosG.prodMensual;
+      try { renderHistGF(); } catch(_){}
+      try { renderKPIsGF(); } catch(_){}
+    }
+  } catch(_){}
+}, 500);
+
 })();
