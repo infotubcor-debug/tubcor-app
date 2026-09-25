@@ -287,6 +287,8 @@ function escribirPreciosUI(datos){
 
 window.tubcorGuardarPrecios = async function(){
   const st = getState(); if (!st) return;
+  const _datosDebug = leerPreciosUI();
+  console.log('[TUBCOR] Guardando precios:', JSON.stringify(_datosDebug));
   // Validar que haya al menos los precios básicos cargados
   const datos = leerPreciosUI();
   if (N(datos.precioCP) === 0 && N(datos.precioCR) === 0 && N(datos.precioCT) === 0){
@@ -398,6 +400,7 @@ function hookAutoguardadoPrecios(){
 function cargarPreciosGuardados(){
   const st = getState(); if (!st) return;
   const actuales = st.config?.preciosActuales;
+  console.log('[TUBCOR] Cargando precios guardados:', JSON.stringify(actuales));
   if (actuales){
     // Sobreescribir SOLO si el valor guardado es > 0
     // y el input esta vacio o en 0
