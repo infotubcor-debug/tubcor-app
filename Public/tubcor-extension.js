@@ -138,8 +138,8 @@ function inyectarPanelGF(){
 
   div.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
       '<div class="kpi"><div class="k-label">Mes seleccionado</div><div class="k-value text-[13px]" id="gfMesActualExt">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Promedio ano</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Total ano</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Total año</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
       '<div><label>Mes</label><input id="gfMesExt" type="month"/></div>' +
@@ -378,6 +378,11 @@ window.tubcorEliminarMesPrecios = async function(mes){
   toastMsg('Mes eliminado', 'ok');
 };
 
+function totalPreciosDato(d){
+  if (!d) return 0;
+  return N(d.precioCP) + N(d.precioCR) + N(d.precioCT) + N(d.precioFlete) + N(d.precioAdh) + N(d.precioAdhTapa);
+}
+
 function renderKPIsPrecios(){
   const st = getState(); if (!st) return;
   const hist = st.config?.preciosHistorial || {};
@@ -385,12 +390,13 @@ function renderKPIsPrecios(){
   const meses = Object.keys(hist).filter(m => m.startsWith(anio + '-'));
   const sel = $id('preciosMesExt');
   const mesSel = sel?.value || mesActualKey();
-  const datoMes = hist[mesSel];
-  const cpMes = datoMes ? N(datoMes.precioCP) : 0;
-  const cpProm = meses.length ? meses.reduce((s,m) => s + N(hist[m].precioCP), 0) / meses.length : 0;
-  if ($id('preciosKPICP')) $id('preciosKPICP').textContent = cpMes > 0 ? '$' + cpMes.toLocaleString('es-AR') : '$0';
-  if ($id('preciosKPIProm')) $id('preciosKPIProm').textContent = cpProm > 0 ? '$' + Math.round(cpProm).toLocaleString('es-AR') : '$0';
-  if ($id('preciosKPIMeses')) $id('preciosKPIMeses').textContent = meses.length;
+  const totalMes = totalPreciosDato(hist[mesSel]);
+  const totales = meses.map(m => totalPreciosDato(hist[m]));
+  const totalAnio = totales.reduce((s,x) => s + x, 0);
+  const promedio = meses.length ? totalAnio / meses.length : 0;
+  if ($id('preciosKPICP')) $id('preciosKPICP').textContent = totalMes > 0 ? '$' + totalMes.toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIProm')) $id('preciosKPIProm').textContent = promedio > 0 ? '$' + Math.round(promedio).toLocaleString('es-AR') : '$0';
+  if ($id('preciosKPIMeses')) $id('preciosKPIMeses').textContent = totalAnio > 0 ? '$' + totalAnio.toLocaleString('es-AR') : '$0';
 }
 
 function inyectarPanelPrecios(){
@@ -405,8 +411,8 @@ function inyectarPanelPrecios(){
   div.innerHTML = '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Precios de insumos guardados</div>' +
     '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
       '<div class="kpi"><div class="k-label">Carton ppal (mes)</div><div class="k-value text-[13px]" id="preciosKPICP">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Promedio ano</div><div class="k-value text-[13px]" id="preciosKPIProm">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Meses guardados</div><div class="k-value text-[13px]" id="preciosKPIMeses">0</div></div>' +
+      '<div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="preciosKPIProm">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Total aÑo</div><div class="k-value text-[13px]" id="preciosKPIMeses">0</div></div>' +
     '</div>' +
     '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
@@ -462,10 +468,10 @@ function inyectarEvolucion(){
   div.id = 'evolucionPEExt';
   div.innerHTML = '<div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px;text-align:center;margin-bottom:12px">Evolucion hacia el punto de equilibrio - datos reales</div>' +
     '<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px">' +
-      '<div class="kpi"><div class="k-label">kg producidos (ano)</div><div class="k-value text-[14px]" id="evKgAnioExt">0</div></div>' +
-      '<div class="kpi"><div class="k-label">Gastos fijos (ano)</div><div class="k-value text-[14px]" id="evGfAnioExt">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">PE requerido (ano)</div><div class="k-value text-[14px]" id="evPeAnioExt">0 kg</div></div>' +
-      '<div class="kpi"><div class="k-label">Avance del ano</div><div class="k-value text-[14px]" id="evAvanceExt">0 %</div></div>' +
+      '<div class="kpi"><div class="k-label">kg producidos (año)</div><div class="k-value text-[14px]" id="evKgAnioExt">0</div></div>' +
+      '<div class="kpi"><div class="k-label">Gastos fijos (año)</div><div class="k-value text-[14px]" id="evGfAnioExt">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">PE requerido (año)</div><div class="k-value text-[14px]" id="evPeAnioExt">0 kg</div></div>' +
+      '<div class="kpi"><div class="k-label">Avance del año</div><div class="k-value text-[14px]" id="evAvanceExt">0 %</div></div>' +
     '</div>' +
     '<div style="max-height:400px;overflow:auto"><table>' +
       '<thead><tr><th>Mes</th><th class="num">kg producidos</th><th class="num">Gastos fijos</th><th class="num">PE kg del mes</th><th class="num">Avance</th><th>Estado</th></tr></thead>' +
@@ -517,7 +523,7 @@ function renderEvolucion(){
     '<td class="num">' + (f.peKg > 0 ? f.peKg.toFixed(1) : '-') + '</td>' +
     '<td class="num" style="font-weight:700">' + (f.avance > 0 ? f.avance.toFixed(1)+' %' : '-') + '</td>' +
     '<td style="color:' + f.color + ';font-weight:700">' + f.estado + '</td>' +
-  '</tr>').join('') : '<tr><td colspan="6" class="empty">Sin datos para este ano.</td></tr>';
+  '</tr>').join('') : '<tr><td colspan="6" class="empty">Sin datos para este año.</td></tr>';
   const peAnio = contribKg > 0 ? (gfTotalAnio / contribKg) : 0;
   const avanceAnio = peAnio > 0 ? (kgTotalAnio / peAnio) * 100 : 0;
   if ($id('evKgAnioExt')) $id('evKgAnioExt').textContent = kgTotalAnio.toFixed(1) + ' kg';
