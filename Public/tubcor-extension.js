@@ -151,74 +151,44 @@ function totalGFUI(){
 }
 
 function inyectarPanelGF(){
-  const panel = $id('gfTotal')?.closest('.card');
-  if (!panel || $id('panelGFExt')) return;
+  if ($id('panelGFExt')) return;
+
+  // Insertar despues del input gfPro (Prosegur - ultimo campo de gastos fijos)
+  const ancla = $id('gfPro');
+  if (!ancla) return;
+  const contenedor5 = ancla.closest('.grid') || ancla.parentElement?.parentElement;
+  if (!contenedor5) return;
+
   const div = document.createElement('div');
   div.id = 'panelGFExt';
-  div.style = 'margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0';
+  div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
   div.innerHTML = '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:10px">' +
       '<div class="kpi"><div class="k-label">Mes seleccionado</div><div class="k-value text-[13px]" id="gfMesActualExt">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Promedio año</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>' +
-      '<div class="kpi"><div class="k-label">Total año</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Promedio ano</div><div class="k-value text-[13px]" id="gfPromAnioExt">$0</div></div>' +
+      '<div class="kpi"><div class="k-label">Total ano</div><div class="k-value text-[13px]" id="gfTotalAnioExt">$0</div></div>' +
     '</div>' +
     '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
       '<div><label>Mes</label><input id="gfMesExt" type="month"/></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesGF()">⬇ Cargar mes</button></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.tubcorGuardarMesGF()">💾 Guardar / actualizar</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesGF()">Cargar mes</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.tubcorGuardarMesGF()">Guardar / actualizar</button></div>' +
     '</div>' +
     '<div id="gfEstadoExt" style="font-size:10px;color:#64748b;text-align:center;min-height:14px"></div>' +
-    '<details style="margin-top:12px">' +
+    '<details style="margin-top:12px" id="gfHistDetails">' +
       '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">Ver historial de gastos fijos guardados</summary>' +
       '<div style="max-height:220px;overflow:auto;margin-top:8px"><table>' +
         '<thead><tr><th>Mes</th><th class="num">Total</th><th style="width:140px">Acciones</th></tr></thead>' +
         '<tbody id="gfHistExt"></tbody>' +
       '</table></div>' +
-    '</details>' +
-    '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
-    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
-      '<div><label>Mes</label><input id="preciosMesExt" type="month"/></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesPreciosUI()">Cargar mes</button></div>' +
-      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.__tubcorForzarGuardadoPrecios=true;window.tubcorGuardarPrecios()">Guardar / actualizar</button></div>' +
-    '</div>' +
-    '<details style="margin-top:12px" id="preciosHistDetails">' +
-      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">Ver historial de precios guardados</summary>' +
-      '<div style="max-height:220px;overflow:auto;margin-top:8px">' +
-        '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>' +
-      '</div>' +
     '</details>';
 
-  const gfAlqInput = $id('gfAlq');
-  if (gfAlqInput){
-    const cardCont = gfAlqInput.closest('.card');
-    if (cardCont){
-      const divs = cardCont.querySelectorAll('div');
-      let insertado = false;
-      for (const d of divs){
-        const t = (d.textContent || '').trim().toUpperCase();
-        if (t.indexOf('5. GASTOS FIJOS MENSUALES') !== -1 && t.length < 60){
-          const bloque = d.closest('.flex') || d.parentElement;
-          if (bloque && bloque.parentElement){
-            bloque.parentElement.insertBefore(div, bloque);
-            insertado = true;
-          }
-          break;
-        }
-      }
-      if (!insertado) card.appendChild(div);
-    } else {
-      card.appendChild(div);
-    }
-  } else {
-    card.appendChild(div);
-  }
+  // Insertar despues del contenedor 5
+  contenedor5.parentElement.insertBefore(div, contenedor5.nextSibling);
 
-  // Fijar mes actual
-  const selMes = $id('preciosMesExt');
+  const selMes = $id('gfMesExt');
   if (selMes && !selMes.value) selMes.value = mesActualKey();
 
-  renderHistPrecios();
-  renderEstadoPrecios();
-  renderKPIsPrecios();
+  renderHistGF();
+  renderKPIsGF();
 }
 
 function renderKPIsPrecios(){
