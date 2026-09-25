@@ -370,23 +370,52 @@ window.tubcorEliminarMesPrecios = async function(mes){
 };
 
 function inyectarPanelPrecios(){
-  const costoDiv = $id('ingDesperdicio')?.parentElement?.parentElement;
-  if (!costoDiv || $id('panelPreciosExt')) return;
+  // Si ya existe, lo removemos para reposicionarlo
+  const existente = $id('panelPreciosExt');
+  if (existente) existente.remove();
+
+  // Encontrar el CARD completo de "Costos de Insumos"
+  const card = $id('ingDesperdicio')?.closest('.card');
+  if (!card) return;
+
   const div = document.createElement('div');
   div.id = 'panelPreciosExt';
-  div.style = 'margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0';
-  div.innerHTML = '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
-    '<div style="display:flex;gap:8px;margin-bottom:8px">' +
-      '<button class="btn btn-primary" style="flex:1;font-size:11px" type="button" onclick="window.__tubcorForzarGuardadoPrecios = true; window.tubcorGuardarPrecios()">💾 Guardar precios de este mes</button>' +
-    '</div>' +
-    '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Historial de precios</div>' +
-    '<div style="max-height:200px;overflow:auto">' +
-      '<table>' +
-        '<thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead>' +
-        '<tbody id="preciosHistExt"></tbody>' +
-      '</table>' +
-    '</div>';
-  costoDiv.appendChild(div);
+  div.style = 'margin-top:12px;padding-top:12px;border-top:2px solid #16a34a';
+
+  const titulo = document.createElement('div');
+  titulo.style = 'font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px';
+  titulo.textContent = 'Precios guardados por mes';
+  div.appendChild(titulo);
+
+  const estado = document.createElement('div');
+  estado.id = 'preciosEstadoExt';
+  estado.style = 'font-size:10px;color:#64748b;text-align:center;margin-bottom:8px';
+  div.appendChild(estado);
+
+  const btnWrap = document.createElement('div');
+  btnWrap.style = 'display:flex;gap:8px;margin-bottom:8px';
+  const btn = document.createElement('button');
+  btn.className = 'btn btn-primary';
+  btn.style = 'flex:1;font-size:11px';
+  btn.type = 'button';
+  btn.innerHTML = '💾 Guardar precios de este mes';
+  btn.onclick = function(){ window.__tubcorForzarGuardadoPrecios = true; window.tubcorGuardarPrecios(); };
+  btnWrap.appendChild(btn);
+  div.appendChild(btnWrap);
+
+  const histTitulo = document.createElement('div');
+  histTitulo.style = 'font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px';
+  histTitulo.textContent = 'Historial de precios';
+  div.appendChild(histTitulo);
+
+  const histWrap = document.createElement('div');
+  histWrap.style = 'max-height:200px;overflow:auto';
+  histWrap.innerHTML = '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>';
+  div.appendChild(histWrap);
+
+  // Agregar al FINAL del card, después de la ficha técnica
+  card.appendChild(div);
+
   renderHistPrecios();
   renderEstadoPrecios();
 }
