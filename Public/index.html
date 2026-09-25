@@ -419,6 +419,7 @@ table tbody tr:hover{background:#f8fafc}
       <div id="presVacio" class="empty">Seleccioná un presupuesto de la lista o generá uno nuevo desde Ingeniería.</div>
       <div id="presPreview" style="display:none">
         <div class="flex justify-end gap-2 mb-2">
+          <button class="btn btn-secondary btn-sm" onclick="editarDescuentoPresupuesto()"><i class="fa-solid fa-percent"></i> Descuento pronto pago</button>
           <button class="btn btn-secondary btn-sm" onclick="editarPresupuesto()"><i class="fa-solid fa-pen"></i> Editar</button>
           <button class="btn btn-secondary btn-sm" onclick="editarObsPresupuesto()"><i class="fa-solid fa-comment"></i> Observaciones</button>
           <button class="btn btn-primary btn-sm" onclick="descargarPresupuestoPDF()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
@@ -1439,11 +1440,18 @@ function renderPaperPresupuesto(p){
       </tbody>
     </table>
     <div class="paper-totals"><div class="box">
-      <div class="row"><span>Subtotal neto</span><b>${money(subtotal)}</b></div>
-      <div class="row"><span>IVA (21%)</span><b>${money(iva)}</b></div>
-      <div class="row grand"><span>TOTAL</span><span>${money(total)}</span></div>
-    </div></div>
-    ${p.observacionesPresupuesto?`<div class="paper-obs"><b>OBSERVACIONES</b><br/>${esc(p.observacionesPresupuesto).replace(/\n/g,'<br/>')}</div>`:''}
+      ${p.descuentoPct > 0 ? `
+        <div class="row"><span>Subtotal neto</span><b>${money(subtotal)}</b></div>
+        <div class="row" style="color:#16a34a"><span>Descuento pronto pago (${p.descuentoPct}%)</span><b>-${money(subtotal * p.descuentoPct / 100)}</b></div>
+        <div class="row"><span>Subtotal con descuento</span><b>${money(subtotal * (1 - p.descuentoPct/100))}</b></div>
+        <div class="row"><span>IVA (21%)</span><b>${money(subtotal * (1 - p.descuentoPct/100) * 0.21)}</b></div>
+        <div class="row grand"><span>TOTAL</span><span>${money(subtotal * (1 - p.descuentoPct/100) * 1.21)}</span></div>
+      ` : `
+        <div class="row"><span>Subtotal neto</span><b>${money(subtotal)}</b></div>
+        <div class="row"><span>IVA (21%)</span><b>${money(iva)}</b></div>
+        <div class="row grand"><span>TOTAL</span><span>${money(total)}</span></div>
+      `}
+    </div></div>${p.observacionesPresupuesto?`<div class="paper-obs"><b>OBSERVACIONES</b><br/>${esc(p.observacionesPresupuesto).replace(/\n/g,'<br/>')}</div>`:''}
     <div class="paper-footer">www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar</div>
   </div>`;
 }
@@ -1706,9 +1714,13 @@ async function pdfPresupuesto(p){
   doc.line(M, y, W - M, y);
   y += 8;
 
-  const sub = p.items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
-  const iva = sub * 0.21;
-  const tot = sub + iva;
+  const subOrig = p.items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
+  const descPct = N(p.descuentoPct) || 0;
+  const subConDesc = subOrig * (1 - descPct/100);
+  const descImporte = subOrig - subConDesc;
+  const sub = subOrig;
+  const iva = subConDesc * 0.21;
+  const tot = subConDesc + iva;
   const tw = 80;
   const tx = W - M - tw;
 
@@ -1717,6 +1729,18 @@ async function pdfPresupuesto(p){
   doc.setFont('helvetica','bold'); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
   doc.text(money(sub), W - M, y, {align:'right'});
   y += 5;
+  if (descPct > 0){
+    doc.setFont('helvetica','normal'); doc.setTextColor(22,163,74);
+    doc.text('Descuento pronto pago (' + descPct + '%)', tx, y);
+    doc.setFont('helvetica','bold');
+    doc.text('-' + money(descImporte), W - M, y, {align:'right'});
+    y += 5;
+    doc.setFont('helvetica','normal'); doc.setTextColor(100,116,139);
+    doc.text('Subtotal con descuento', tx, y);
+    doc.setFont('helvetica','bold'); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    doc.text(money(subConDesc), W - M, y, {align:'right'});
+    y += 5;
+  }
 
   doc.setFont('helvetica','normal'); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
   doc.text('IVA (21%)', tx, y);
@@ -3152,6 +3176,19 @@ function editarObsOF(){
   save(['presupuestos']);
   renderPreviewOF();
   toast('Observaciones guardadas', 'ok');
+}
+
+/* ============ Descuento pronto pago ============ */
+function editarDescuentoPresupuesto(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return toast('Seleccioná un presupuesto','err');
+  const v = prompt('Descuento por pronto pago (%):', p.descuentoPct || 0);
+  if (v === null) return;
+  const pct = Math.max(0, Math.min(90, N(v)));
+  p.descuentoPct = pct;
+  save(['presupuestos']);
+  renderPreviewPresupuesto();
+  toast(pct > 0 ? 'Descuento del ' + pct + '% aplicado' : 'Descuento quitado', 'ok');
 }
 
 document.addEventListener('DOMContentLoaded', iniciarAuth);
