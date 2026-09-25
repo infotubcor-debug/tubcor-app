@@ -369,96 +369,58 @@ window.tubcorEliminarMesPrecios = async function(mes){
   toastMsg('Mes eliminado', 'ok');
 };
 
+
+/* Wrapper para el boton Cargar del historial de precios */
+window.tubcorCargarMesPreciosUI2 = function(mes){
+  const sel = $id('preciosMesExt');
+  if (sel) sel.value = mes;
+  window.tubcorCargarMesPreciosUI();
+};
+
 function inyectarPanelPrecios(){
-  // Si ya existe, lo removemos para reposicionarlo
   const existente = $id('panelPreciosExt');
   if (existente) existente.remove();
 
-  // Encontrar el CARD completo de "Costos de Insumos"
   const card = $id('ingDesperdicio')?.closest('.card');
   if (!card) return;
 
   const div = document.createElement('div');
   div.id = 'panelPreciosExt';
-  div.style = 'margin-top:12px;padding-top:12px;border-top:2px solid #16a34a';
+  div.style = 'margin-top:16px;padding-top:12px;border-top:2px solid #16a34a';
 
-  const titulo = document.createElement('div');
-  titulo.style = 'font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px';
-  titulo.textContent = 'Precios guardados por mes';
-  div.appendChild(titulo);
+  div.innerHTML = '<div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px">Precios guardados por mes</div>' +
+    '<div id="preciosEstadoExt" style="font-size:10px;color:#64748b;text-align:center;margin-bottom:8px"></div>' +
+    '<div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:8px">' +
+      '<div><label>Mes</label><input id="preciosMesExt" type="month"/></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-secondary" style="width:100%" type="button" onclick="window.tubcorCargarMesPreciosUI()">⬇ Cargar mes</button></div>' +
+      '<div style="display:flex;align-items:flex-end"><button class="btn btn-primary" style="width:100%" type="button" onclick="window.__tubcorForzarGuardadoPrecios=true;window.tubcorGuardarPrecios()">💾 Guardar / actualizar</button></div>' +
+    '</div>' +
+    '<details style="margin-top:12px">' +
+      '<summary style="cursor:pointer;font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;padding:6px 0;list-style:none">▸ Ver historial de precios guardados</summary>' +
+      '<div style="max-height:220px;overflow:auto;margin-top:8px">' +
+        '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>' +
+      '</div>' +
+    '</details>';
 
-  const estado = document.createElement('div');
-  estado.id = 'preciosEstadoExt';
-  estado.style = 'font-size:10px;color:#64748b;text-align:center;margin-bottom:8px';
-  div.appendChild(estado);
-
-  const btnWrap = document.createElement('div');
-  btnWrap.style = 'display:flex;gap:8px;margin-bottom:8px';
-  const btn = document.createElement('button');
-  btn.className = 'btn btn-primary';
-  btn.style = 'flex:1;font-size:11px';
-  btn.type = 'button';
-  btn.innerHTML = '💾 Guardar precios de este mes';
-  btn.onclick = function(){ window.__tubcorForzarGuardadoPrecios = true; window.tubcorGuardarPrecios(); };
-  btnWrap.appendChild(btn);
-  div.appendChild(btnWrap);
-
-  const histTitulo = document.createElement('div');
-  histTitulo.style = 'font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;text-align:center;margin-bottom:8px';
-  histTitulo.textContent = 'Historial de precios';
-  div.appendChild(histTitulo);
-
-  const histWrap = document.createElement('div');
-  histWrap.style = 'max-height:200px;overflow:auto';
-  histWrap.innerHTML = '<table><thead><tr><th>Mes</th><th>Resumen</th><th style="width:140px">Acciones</th></tr></thead><tbody id="preciosHistExt"></tbody></table>';
-  div.appendChild(histWrap);
-
-  // Insertar ANTES del título "4. GASTOS FIJOS MENSUALES"
-  let insertado = false;
-  const elementos = card.querySelectorAll('*');
-  for (const el of elementos){
-    const texto = (el.textContent || '').trim().toUpperCase();
-    if (texto.startsWith('4. GASTOS FIJOS MENSUALES') && el.children.length === 0){
-      // Encontramos el título. Insertamos antes del bloque que lo contiene.
-      const contenedor = el.closest('.flex') || el.parentElement;
-      if (contenedor && contenedor.parentElement){
-        contenedor.parentElement.insertBefore(div, contenedor);
-        insertado = true;
-      }
-      break;
-    }
-  }
-  // Insertar antes del bloque de Gastos Fijos (usando el input #gfAlq como ancla)
+  // Insertar antes del bloque de Gastos Fijos
   const gfAlqInput = $id('gfAlq');
   if (gfAlqInput){
-    // Subir hasta el .card que contiene las secciones 3 y 4
-    const cardContenedor = gfAlqInput.closest('.card');
-    // Dentro del card, buscar el div que contiene el título "4. GASTOS..."
-    if (cardContenedor){
-      // Todos los divs del card. Buscamos el que tiene el texto "4." y "GASTOS"
-      const divs = cardContenedor.querySelectorAll('div');
-      let bloqueGastos = null;
+    const cardCont = gfAlqInput.closest('.card');
+    if (cardCont){
+      const divs = cardCont.querySelectorAll('div');
+      let insertado = false;
       for (const d of divs){
         const t = (d.textContent || '').trim().toUpperCase();
-        // El título está en un div con esas palabras exactas
-        if (t.indexOf('4. GASTOS FIJOS MENSUALES') !== -1 && t.length < 60){
-          // Ese div es el título. Subir al contenedor.
-          bloqueGastos = d.closest('.flex') || d.parentElement;
+        if (t.indexOf('5. GASTOS FIJOS MENSUALES') !== -1 && t.length < 60){
+          const bloque = d.closest('.flex') || d.parentElement;
+          if (bloque && bloque.parentElement){
+            bloque.parentElement.insertBefore(div, bloque);
+            insertado = true;
+          }
           break;
         }
       }
-      if (bloqueGastos && bloqueGastos.parentElement){
-        bloqueGastos.parentElement.insertBefore(div, bloqueGastos);
-      } else {
-        // Último fallback: insertar antes del input de Alquiler, subiendo 3 niveles
-        let nodo = gfAlqInput;
-        for (let k = 0; k < 3 && nodo.parentElement; k++) nodo = nodo.parentElement;
-        if (nodo && nodo.parentElement){
-          nodo.parentElement.insertBefore(div, nodo);
-        } else {
-          card.appendChild(div);
-        }
-      }
+      if (!insertado) card.appendChild(div);
     } else {
       card.appendChild(div);
     }
@@ -470,6 +432,36 @@ function inyectarPanelPrecios(){
   renderEstadoPrecios();
 }
 
+/* Cargar precios del mes seleccionado en el input */
+window.tubcorCargarMesPreciosUI = function(){
+  const st = getState(); if (!st) return;
+  const sel = $id('preciosMesExt');
+  if (!sel) return;
+  const mes = sel.value;
+  if (!mes){
+    // Si no selecciono nada, cargar el mas reciente
+    const hist = st.config?.preciosHistorial || {};
+    const meses = Object.keys(hist).sort().reverse();
+    if (meses.length) {
+      sel.value = meses[0];
+      return window.tubcorCargarMesPreciosUI();
+    }
+    return;
+  }
+  const hist = st.config?.preciosHistorial || {};
+  const datos = hist[mes];
+  if (datos){
+    escribirPreciosUI(datos);
+    try { recalcular(); } catch(_){}
+    const el = $id('preciosEstadoExt');
+    if (el){ el.textContent = '✓ Precios de ' + mes + ' cargados'; el.style.color = '#15803d'; }
+    toastMsg('Precios de ' + mes + ' cargados', 'ok');
+  } else {
+    const el = $id('preciosEstadoExt');
+    if (el){ el.textContent = 'Sin datos para ' + mes; el.style.color = '#64748b'; }
+  }
+};
+
 function hookAutoguardadoPrecios(){
   // El guardado ahora es SOLO manual con el boton "Guardar precios de este mes"
   // para evitar guardados accidentales con valores en 0.
@@ -478,6 +470,11 @@ function hookAutoguardadoPrecios(){
 
 function cargarPreciosGuardados(){
   const st = getState(); if (!st) return;
+  // Fijar el mes actual en el input
+  const selMes = $id('preciosMesExt');
+  if (selMes && !selMes.value){
+    selMes.value = mesActualKey();
+  }
   const actuales = st.config?.preciosActuales;
   console.log('[TUBCOR] Cargando precios guardados:', JSON.stringify(actuales));
   if (actuales){
