@@ -396,9 +396,17 @@ function cargarPreciosGuardados(){
   const st = getState(); if (!st) return;
   const actuales = st.config?.preciosActuales;
   if (actuales){
-    const vacios = CAMPOS_PRECIOS.every(id => { const el = $id(id); return !el || el.value === '' || N(el.value) === 0; });
-    if (vacios){
-      escribirPreciosUI(actuales);
+    let cargoAlguno = false;
+    CAMPOS_PRECIOS.forEach(id => {
+      const el = $id(id);
+      if (!el) return;
+      const estaVacio = el.value === '' || N(el.value) === 0;
+      if (estaVacio && actuales[id] != null && N(actuales[id]) > 0){
+        el.value = actuales[id];
+        cargoAlguno = true;
+      }
+    });
+    if (cargoAlguno){
       try { recalcular(); } catch(_){}
     }
   }
