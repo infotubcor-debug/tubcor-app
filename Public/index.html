@@ -248,6 +248,11 @@ table tbody tr:hover{background:#f8fafc}
         <div class="kpi"><div class="k-label">Costo total / kg</div><div class="k-value text-[13px]" id="rCostoKg">—</div></div>
         <div class="kpi col-span-2"><div class="k-label">Precio venta / kg</div><div class="k-value text-[13px]" id="rPrecioKg" style="color:#15803d">—</div></div>
         <div class="kpi col-span-3"><div class="k-label">Precio de venta unitario neto sugerido</div><div class="k-value text-[18px]" id="rPrecioU" style="color:#15803d">—</div></div>
+        <div class="kpi col-span-3" id="rCorteInfo" style="background:#f0fdf4;border-color:#86efac">
+          <div class="k-label">Tipo de corte</div>
+          <div class="k-value text-[14px]" id="rCorteValor">—</div>
+          <div class="hint" id="rCorteDetalle">—</div>
+        </div>
         <div class="kpi col-span-3" style="background:#f0fdf4;border-color:#86efac">
           <div class="k-label">Ajuste de precio — <span id="rSegLabel">Tubo liviano</span></div>
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
@@ -1124,6 +1129,20 @@ function recalcular(){
   $('rPETubos').textContent = isFinite(peTubos) ? peTubos.toLocaleString('es-AR') : '—';
   $('rPEKg').textContent = isFinite(peKg) ? peKg.toFixed(1) : '—';
   $('rPEVen').textContent = isFinite(peVentas) ? money(peVentas) : '—';
+  /* Tipo de corte */
+  if ($('rCorteValor')) {
+    if (long < 750) {
+      $('rCorteValor').textContent = 'Requiere corte adicional en CNC';
+      $('rCorteValor').style.color = '#b45309';
+      if ($('rCorteDetalle')) $('rCorteDetalle').textContent = 'Longitud < 750 mm - pasa por cortador secundario';
+      if ($('rCorteInfo')) { $('rCorteInfo').style.background = '#fef3c7'; $('rCorteInfo').style.borderColor = '#fde68a'; }
+    } else {
+      $('rCorteValor').textContent = 'Salida directa de tubera';
+      $('rCorteValor').style.color = '#15803d';
+      if ($('rCorteDetalle')) $('rCorteDetalle').textContent = 'Longitud >= 750 mm - no requiere corte secundario';
+      if ($('rCorteInfo')) { $('rCorteInfo').style.background = '#f0fdf4'; $('rCorteInfo').style.borderColor = '#86efac'; }
+    }
+  }
   const rows = [
     ['Papel principal ('+$('ingPrincAncho').value+' / '+$('ingPrincGram').value+')', gPrinc/1000*cant, compraPrinc],
     ['Papel relleno ('+$('ingRellAncho').value+' / '+$('ingRellGram').value+') × '+$('ingRellCant').value, gRell/1000*cant, compraRell],
