@@ -382,6 +382,19 @@ table tbody tr:hover{background:#f8fafc}
   </div>
 </section>
 
+<div class="card mt-3">
+  <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">
+    <i class="fa-solid fa-sliders" style="color:#16a34a"></i> Factor de proceso por segmento
+  </div>
+  <div class="hint" style="margin-bottom:8px;text-align:left">El factor corrige el modelo teorico segun el peso real medido en balanza. Cada segmento tiene su propio factor porque los tubos son distintos.</div>
+  <div class="grid grid-cols-3 gap-2">
+    <div><label>Tubo liviano</label><input id="factorLiviano" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('liviano')"/></div>
+    <div><label>Tubo semipesado</label><input id="factorSemipesado" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('semipesado')"/></div>
+    <div><label>Tubo pesado</label><input id="factorPesado" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('pesado')"/></div>
+  </div>
+  <div class="hint" id="factorInfoExt" style="margin-top:8px"></div>
+</div>
+
 <section class="section" id="tab-clientes">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="card">
@@ -962,8 +975,18 @@ function capasDesdeIngenieria(){
 
 /* ========== Ingeniería ========== */
 function recalcular(){
-  const fp = N(STATE.config.factorProceso)>0 ? N(STATE.config.factorProceso) : 1;
-  $('factorBadge').textContent = '× ' + fp.toFixed(3);
+  if (!STATE.config.factorProcesoPorSegmento) {
+    const fg = N(STATE.config.factorProceso);
+    STATE.config.factorProcesoPorSegmento = {
+      liviano: fg > 0 ? fg : 0.822,
+      semipesado: 1.000,
+      pesado: 1.000
+    };
+  }
+  const segKeyFactor = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
+  const fdict = STATE.config.factorProcesoPorSegmento;
+  const fp = N(fdict[segKeyFactor]) > 0 ? N(fdict[segKeyFactor]) : 1;
+  $('factorBadge').textContent = 'x ' + fp.toFixed(3) + ' (' + segKeyFactor + ')';
   const diam = N($('ingDiam').value), long = N($('ingLong').value), cant = Math.max(1, parseInt($('ingCant').value)||1);
   const capas = capasDesdeIngenieria();
   const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
@@ -3357,6 +3380,42 @@ window.cambiarMargenManual = function(){
   recalcular();
   window.__tubcorForzandoManual = false;
 };
+
+/* ============ FACTORES POR SEGMENTO ============ */
+window.tubcorCargarFactores = function(){
+  if (!STATE.config.factorProcesoPorSegmento){
+    const fg = N(STATE.config.factorProceso);
+    STATE.config.factorProcesoPorSegmento = {
+      liviano: fg > 0 ? fg : 0.822,
+      semipesado: 1.000,
+      pesado: 1.000
+    };
+  }
+  const f = STATE.config.factorProcesoPorSegmento;
+  if ($('factorLiviano') && document.activeElement !== $('factorLiviano')) $('factorLiviano').value = N(f.liviano || 0.822).toFixed(3);
+  if ($('factorSemipesado') && document.activeElement !== $('factorSemipesado')) $('factorSemipesado').value = N(f.semipesado || 1.000).toFixed(3);
+  if ($('factorPesado') && document.activeElement !== $('factorPesado')) $('factorPesado').value = N(f.pesado || 1.000).toFixed(3);
+  if ($('factorInfoExt')){
+    const info = 'Liviano: ' + N(f.liviano || 0).toFixed(3) + ' | Semipesado: ' + N(f.semipesado || 0).toFixed(3) + ' | Pesado: ' + N(f.pesado || 0).toFixed(3);
+    $('factorInfoExt').textContent = info;
+  }
+};
+
+window.guardarFactorSegmento = function(seg){
+  const idMap = { liviano: 'factorLiviano', semipesado: 'factorSemipesado', pesado: 'factorPesado' };
+  const inp = $(idMap[seg]);
+  if (!inp) return;
+  const v = Math.min(1.8, Math.max(0.5, N(inp.value)));
+  if (!(v > 0)) return;
+  STATE.config.factorProcesoPorSegmento = STATE.config.factorProcesoPorSegmento || {};
+  STATE.config.factorProcesoPorSegmento[seg] = v;
+  save(['config']);
+  try { recalcular(); } catch(_){}
+  try { window.tubcorCargarFactores(); } catch(_){}
+};
+
+setTimeout(function(){ try { window.tubcorCargarFactores(); } catch(_){} }, 1500);
+setInterval(function(){ try { window.tubcorCargarFactores(); } catch(_){} }, 3000);
 
 document.addEventListener('DOMContentLoaded', iniciarAuth);
 </script>
