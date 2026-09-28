@@ -181,6 +181,7 @@ window.tubcorGuardarMesGF = async function(){
 };
 
 window.tubcorCargarMesGF = function(){
+  try { window.__tubcorResetCamposTocados && window.__tubcorResetCamposTocados(); } catch(_){} /* al cargar GF */
   const st = getState(); if (!st) return;
   const sel = $id('gfMesExt');
   const mes = sel?.value;
@@ -335,6 +336,7 @@ function renderHistPrecios(){
 }
 
 window.tubcorCargarMesPreciosUI = function(){
+  try { window.__tubcorResetCamposTocados && window.__tubcorResetCamposTocados(); } catch(_){} /* al cargar precios */
   const st = getState(); if (!st) return;
   const sel = $id('preciosMesExt');
   if (!sel) return;
@@ -610,12 +612,31 @@ if (document.readyState === 'loading') {
 
 
 /* Chequeo ultra-frecuente: restaura precios y GF si los inputs estan en 0 */
+/* Set de campos que el usuario toco: no se restauran automaticamente */
+window.__tubcorCamposTocados = window.__tubcorCamposTocados || new Set();
+
+function __tubcorMarcarTocado(e){
+  const t = e.target;
+  if (!t || !t.id) return;
+  if (t.tagName !== 'INPUT' && t.tagName !== 'SELECT' && t.tagName !== 'TEXTAREA') return;
+  window.__tubcorCamposTocados.add(t.id);
+}
+
+document.addEventListener('focusin', __tubcorMarcarTocado, true);
+document.addEventListener('input', __tubcorMarcarTocado, true);
+
+/* Funcion para resetear el set cuando el usuario carga un mes explicitamente */
+window.__tubcorResetCamposTocados = function(){
+  window.__tubcorCamposTocados = new Set();
+};
+
 setInterval(() => {
   try {
     const st = getState(); if (!st) return;
     const tabIng = $id('tab-ingenieria');
     if (!tabIng || tabIng.classList.contains('hidden')) return;
-    
+    const tocados = window.__tubcorCamposTocados || new Set();
+
     // Precios
     const selP = $id('preciosMesExt');
     const mesP = selP?.value || mesActualKey();
@@ -624,12 +645,14 @@ setInterval(() => {
       CAMPOS_PRECIOS.forEach(id => {
         const el = $id(id);
         if (!el) return;
+        if (tocados.has(id)) return;
+        if (document.activeElement === el) return;
         if (N(el.value) === 0 && N(datosP[id]) > 0) el.value = datosP[id];
       });
       try { renderHistPrecios(); } catch(_){}
       try { renderKPIsPrecios(); } catch(_){}
     }
-    
+
     // Gastos fijos
     const selG = $id('gfMesExt');
     const mesG = selG?.value || mesActualKey();
@@ -638,10 +661,12 @@ setInterval(() => {
       CAMPOS_GF.forEach(id => {
         const el = $id(id);
         if (!el) return;
+        if (tocados.has(id)) return;
+        if (document.activeElement === el) return;
         if (N(el.value) === 0 && N(datosG[id]) > 0) el.value = datosG[id];
       });
       const prodEl = $id('prodMensual');
-      if (prodEl && N(prodEl.value) === 0 && N(datosG.prodMensual) > 0) prodEl.value = datosG.prodMensual;
+      if (prodEl && !tocados.has('prodMensual') && document.activeElement !== prodEl && N(prodEl.value) === 0 && N(datosG.prodMensual) > 0) prodEl.value = datosG.prodMensual;
       try { renderHistGF(); } catch(_){}
       try { renderKPIsGF(); } catch(_){}
     }
