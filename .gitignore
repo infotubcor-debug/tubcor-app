@@ -3,3 +3,27 @@ data/
 .env
 *.log
 package-lock.json
+
+# Credenciales y contexto del proyecto
+TUBCOR-CONTEXTO.*
+.env*
+*.key
+*secret*
+
+# Scripts temporales de mantenimiento
+fix-*.js
+diagnostico.*
+reemplazar-*.js
+limpiar-*.js
+mejoras-*.js
+agregar-*.js
+ver-*.js
+console.log*
+
+# Backups locales
+backups/
+
+# Archivos temporales de Windows / editores
+Thumbs.db
+desktop.ini
+~$*
