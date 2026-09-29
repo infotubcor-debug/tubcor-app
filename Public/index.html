@@ -1137,9 +1137,6 @@ function recalcular(){
   const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
   const forzandoManual = window.__tubcorForzandoManual === true;
   const __sinDatos = costoTotalKgActual < 0.01;
-  let coefAplicado = 0;
-  let margenMostrado = 0;
-  let avisoTecho = '';
   /* nuevo calculo tipo/mercado */
   if (__sinDatos) {
     coefAplicado = 0;
@@ -1149,12 +1146,6 @@ function recalcular(){
     margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
     if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
       avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
-    }
-  }
-    coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
-    margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
-    if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
-      avisoTecho = 'ATENCION: coef. supera techo de ' + money(segCfg.techo);
     }
   }
   window.__tubcorForzandoManual = false;
