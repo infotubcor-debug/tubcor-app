@@ -1595,6 +1595,8 @@ function nuevoPedido(){
     if (!ok) return;
     STATE.pendientes = []; save(['pendientes']); renderPendientes();
     try { limpiarIngenieria(); } catch(_){} /* nuevoPedido */
+    /* obs-presupuesto-nuevopedido */
+    if ($('obsPresupuesto')) $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault || '';
     toast('Nuevo pedido iniciado','ok');
   });
 }
@@ -1619,7 +1621,9 @@ function generarPresupuesto(){
     observacionesOF: '', creado: new Date().toISOString()
   };
   STATE.presupuestos.push(pres);
-  STATE.pendientes = []; $('obsPresupuesto').value = '';
+  STATE.config.obsPresupuestoDefault = $('obsPresupuesto').value; /* obs-presupuesto-guardar */
+  STATE.pendientes = [];
+  $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault;
   STATE.config.ultimoPresupuestoId = pres.id;
   save(['presupuestos','pendientes','config']);
   renderPendientes(); renderPresupuestos(); renderOF();
@@ -3455,6 +3459,18 @@ function arrancarApp(){
   if (!$('recFecha').value) $('recFecha').value = today();
   if (!$('pagoFecha').value) $('pagoFecha').value = today();
   if (!$('heFecha').value) $('heFecha').value = today();
+  /* obs-presupuesto-default */
+  if ($('obsPresupuesto')){
+    STATE.config.obsPresupuestoDefault = STATE.config.obsPresupuestoDefault || "Condiciones comerciales:\n- El pago es 100% por adelantado (efectivo o transferencia bancaria).\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envios.\n- El retiro es por planta: Camino Santa Barbara 1448, CP 5014, Cordoba.\n- Precios expresados en pesos, netos + IVA.";
+    if (!$('obsPresupuesto').value.trim()) $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault;
+    if (!$('obsPresupuesto').__obsHooked){
+      $('obsPresupuesto').addEventListener('input', function(){
+        STATE.config.obsPresupuestoDefault = $('obsPresupuesto').value;
+        try { save(['config']); } catch(_){}
+      });
+      $('obsPresupuesto').__obsHooked = true;
+    }
+  }
   $('calFactor').value = N(STATE.config.factorProceso).toFixed(3) || '1.000';
   try { limpiarIngenieria(); } catch(_){} /* arrancarApp */
   try { limpiarCalibrador(); } catch(_){} /* arrancarApp */
