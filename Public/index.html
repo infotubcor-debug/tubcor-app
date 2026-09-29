@@ -153,9 +153,9 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Tipo paquete</label>
             <select id="ingPaquete" onchange="recalcular()">
               <option value="19">19 un.</option>
-              <option value="37" selected>37 un. (Hexagonal)</option>
+              <option value="37">37 un. (Hexagonal)</option>
               <option value="61">61 un.</option>
-              <option value="1">Sin empaquetar</option>
+              <option value="1" selected>Sin empaquetar</option>
             </select>
           </div>
           <!-- margen viejo reemplazado por panel de segmento -->
@@ -3314,7 +3314,7 @@ function limpiarIngenieria(){
   const limpiar = (id) => { const el = $(id); if (el) el.value = ''; };
   const selCli = $('ingCliente'); if (selCli) selCli.value = '';
   limpiar('ingDiam'); limpiar('ingLong'); limpiar('ingCant');
-  const paq = $('ingPaquete'); if (paq) paq.value = '37';
+  const paq = $('ingPaquete'); if (paq) paq.value = '1'; /* paquete */
   const seg = $('ingSegmento'); if (seg) seg.value = 'liviano';
   limpiar('ingPrincAncho'); limpiar('ingPrincGram');
   const rellCant = $('ingRellCant'); if (rellCant) rellCant.value = '0';
