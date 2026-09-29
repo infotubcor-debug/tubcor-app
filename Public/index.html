@@ -1071,6 +1071,7 @@ function recalcular(){
     };
   }
   const tipoKey = $('ingTipoTubo') ? $('ingTipoTubo').value : 'liviano';
+  const mercKey = $('ingMercado') ? $('ingMercado').value : 'cautivo';
   const fdict = STATE.config.factorProcesoPorSegmento || { liviano: 0.822, semipesado: 1.000, pesado: 1.000 };
   const fp = N(fdict[tipoKey]) > 0 ? N(fdict[tipoKey]) : 1;
   if ($('factorBadge')) $('factorBadge').textContent = 'x ' + fp.toFixed(3) + ' (' + tipoKey + ')';
