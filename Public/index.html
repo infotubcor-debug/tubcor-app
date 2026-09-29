@@ -1220,6 +1220,21 @@ function recalcular(){
   if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) {
     $('ingCoefManual').value = __sinDatos ? '' : coefAplicado.toFixed(0);
   }
+  /* INYECTAR MARGEN Y CNC */
+  if ($('ingMargenMostrado')) {
+    $('ingMargenMostrado').value = __sinDatos ? '' : margenMostrado.toFixed(1) + ' %';
+  }
+  if ($('bloqueCNC')) {
+    if (long > 0 && long < 750 && !__sinDatos) {
+      $('bloqueCNC').style.display = 'block';
+      const adicionalInput = $('ingAdicionalCNC');
+      if (adicionalInput && document.activeElement !== adicionalInput) {
+        adicionalInput.value = adicionalCNC > 0 ? adicionalCNC.toFixed(0) : '';
+      }
+    } else {
+      $('bloqueCNC').style.display = 'none';
+    }
+  }
   if ($('rCoefInfo')) {
     if (__sinDatos) {
       $('rCoefInfo').textContent = 'Carga las fajas y los precios para calcular el costo';
