@@ -136,13 +136,21 @@ table tbody tr:hover{background:#f8fafc}
           <a class="hint" style="color:#15803d;text-decoration:underline;cursor:pointer" onclick="switchTab('clientes')">Administrar clientes</a>
         </div>
         <div>
-          <label>Segmento del tubo</label>
-          <select id="ingSegmento" onchange="cambiarSegmento()">
-            <option value="liviano" selected>Tubo liviano (papel higienico) - margen 30%</option>
-            <option value="semipesado">Tubo semipesado (embalaje) - coef fijo</option>
-            <option value="pesado">Tubo pesado (multicapa) - coef fijo</option>
+          <label>Tipo de tubo (por espesor)</label>
+          <select id="ingTipoTubo" onchange="cambiarTipoMercado()">
+            <option value="liviano" selected>Liviano - hasta 1,5 mm</option>
+            <option value="semipesado">Semipesado - 1,5 a 4 mm</option>
+            <option value="pesado">Pesado - mas de 4 mm</option>
           </select>
-          <span class="hint" id="ingSegInfo">Margen 30% - techo $4.400/kg</span>
+        </div>
+        <div>
+          <label>Mercado / Ventaja logistica</label>
+          <select id="ingMercado" onchange="cambiarTipoMercado()">
+            <option value="cautivo" selected>Cautivo - Cordoba, interior, Jujuy</option>
+            <option value="semicautivo">Semi-cautivo - Santa Fe, Rosario</option>
+            <option value="competitivo">Competitivo - Buenos Aires, otras</option>
+          </select>
+          <span class="hint" id="ingSegInfo">Coef sugerido: $3.900/kg - techo $4.400/kg</span>
         </div>
         <div class="grid grid-cols-3 gap-2">
           <div><label>Ø Interno (mm)</label><input id="ingDiam" type="number" step="0.1" oninput="recalcular()"/></div>
@@ -254,16 +262,15 @@ table tbody tr:hover{background:#f8fafc}
           <div class="hint" id="rCorteDetalle">—</div>
         </div>
         <div class="kpi col-span-3" style="background:#f0fdf4;border-color:#86efac">
-          <div class="k-label">Ajuste de precio — <span id="rSegLabel">Tubo liviano</span></div>
-          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
-            <div><label style="text-transform:none;font-size:10px">Coeficiente ($/kg)</label><input id="ingCoefManual" type="number" step="1" oninput="cambiarCoefManual()"/></div>
-            <div><label style="text-transform:none;font-size:10px">Margen (%)</label><input id="ingMargenMostrado" type="number" step="0.1" oninput="cambiarMargenManual()"/></div>
+          <div class="k-label">Ajuste de precio - <span id="rSegLabel">Liviano / Cautivo</span></div>
+          <div style="margin-top:6px">
+            <label style="text-transform:none;font-size:10px">Coeficiente ($/kg) - editable</label>
+            <input id="ingCoefManual" type="number" step="1" oninput="cambiarCoefManual()"/>
           </div>
-          <div class="hint" id="rCoefInfo" style="margin-top:4px"></div>
-          <div id="rAvisoTecho" style="margin-top:6px;font-size:11px;font-weight:700"></div>
-          <div id="rAvisoMargen" style="margin-top:4px;font-size:11px;font-weight:700"></div>
+          <div class="hint" id="rCoefInfo" style="margin-top:6px"></div>
+          <div id="rMargenInfo" style="margin-top:6px;font-size:12px;font-weight:700"></div>
+          <div id="rAvisoTecho" style="margin-top:4px;font-size:11px;font-weight:700"></div>
         </div>
-      </div>
       <div class="mt-3 pt-3 border-t border-slate-200">
         <div class="text-[11px] font-extrabold text-slate-700 uppercase mb-2 text-center">Consumos calculados</div>
         <table>
@@ -889,6 +896,50 @@ async function load(){
   CURRENT_VERSION = data.version;
 }
 
+window.tubcorTipos = {
+  liviano:    { factor: 0.822 },
+  semipesado: { factor: 1.000 },
+  pesado:     { factor: 1.000 }
+};
+
+window.tubcorMatriz = {
+  'liviano_cautivo':        { coef: 3900, techo: 4400 },
+  'liviano_semicautivo':    { coef: 3400, techo: 3900 },
+  'liviano_competitivo':    { coef: 3000, techo: 3500 },
+  'semipesado_cautivo':     { coef: 3500, techo: 3800 },
+  'semipesado_semicautivo': { coef: 3000, techo: 3500 },
+  'semipesado_competitivo': { coef: 2500, techo: 3300 },
+  'pesado_cautivo':         { coef: 3900, techo: 4500 },
+  'pesado_semicautivo':     { coef: 3200, techo: 4000 },
+  'pesado_competitivo':     { coef: 2700, techo: 3500 }
+};
+
+window.__tubcorForzandoManual = false;
+
+window.cambiarTipoMercado = function(){
+  const tipo = $('ingTipoTubo') ? $('ingTipoTubo').value : 'liviano';
+  const merc = $('ingMercado') ? $('ingMercado').value : 'cautivo';
+  const key = tipo + '_' + merc;
+  const cfg = window.tubcorMatriz[key];
+  if (!cfg) return;
+  const info = $('ingSegInfo');
+  if (info){
+    info.textContent = 'Coef sugerido: ' + money(cfg.coef) + '/kg - techo ' + money(cfg.techo) + '/kg';
+  }
+  if ($('ingCoefManual')) $('ingCoefManual').value = '';
+  window.__tubcorForzandoManual = false;
+  recalcular();
+};
+
+window.cambiarCoefManual = function(){
+  if (!$('ingCoefManual')) return;
+  const coef = N($('ingCoefManual').value);
+  if (!(coef > 0)) return;
+  window.__tubcorForzandoManual = true;
+  recalcular();
+  window.__tubcorForzandoManual = false;
+};
+
 async function save(keys){
   if (!SESSION_TOKEN) return;
   savingLocally = true;
@@ -1018,10 +1069,10 @@ function recalcular(){
       pesado: 1.000
     };
   }
-  const segKeyFactor = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
-  const fdict = STATE.config.factorProcesoPorSegmento;
-  const fp = N(fdict[segKeyFactor]) > 0 ? N(fdict[segKeyFactor]) : 1;
-  $('factorBadge').textContent = 'x ' + fp.toFixed(3) + ' (' + segKeyFactor + ')';
+  const tipoKey = $('ingTipoTubo') ? $('ingTipoTubo').value : 'liviano';
+  const fdict = STATE.config.factorProcesoPorSegmento || { liviano: 0.822, semipesado: 1.000, pesado: 1.000 };
+  const fp = N(fdict[tipoKey]) > 0 ? N(fdict[tipoKey]) : 1;
+  if ($('factorBadge')) $('factorBadge').textContent = 'x ' + fp.toFixed(3) + ' (' + tipoKey + ')';
   const diam = N($('ingDiam').value), long = N($('ingLong').value), cant = Math.max(1, parseInt($('ingCant').value)||1);
   const capas = capasDesdeIngenieria();
   const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
@@ -1076,31 +1127,29 @@ function recalcular(){
   const costoTotalUnit = costoTotalLote / cant;
   const costoTotalKg = costoTotalLote / (pesoLoteKg || 1);
   const costoTotalKgActual = costoTotalLote / (pesoLoteKg || 1);
-  const segKey = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
-  const segCfg = window.tubcorSegmentos ? window.tubcorSegmentos[segKey] : null;
-  const modoSeg = segCfg ? segCfg.modo : 'margen';
+  const segKey = tipoKey + '_' + mercKey;
+  const segCfg = window.tubcorMatriz ? window.tubcorMatriz[segKey] : null;
+  const modoSeg = 'coef';
   let coefAplicado = 0;
   let margenMostrado = 0;
   let avisoTecho = '';
   const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
-  const margenInputVal = $('ingMargenMostrado') ? N($('ingMargenMostrado').value) : 0;
   const forzandoManual = window.__tubcorForzandoManual === true;
   const __sinDatos = costoTotalKgActual < 0.01;
-
+  let coefAplicado = 0;
+  let margenMostrado = 0;
+  let avisoTecho = '';
+  /* nuevo calculo tipo/mercado */
   if (__sinDatos) {
     coefAplicado = 0;
     margenMostrado = 0;
-    avisoTecho = '';
-  } else if (modoSeg === 'margen') {
-    const margenPct = (forzandoManual && margenInputVal !== 0) ? margenInputVal : (segCfg ? segCfg.margen : 30);
-    const margenDec = Math.min(0.95, Math.max(0, margenPct / 100));
-    const coefCalc = margenDec < 0.99 ? costoTotalKgActual / (1 - margenDec) : costoTotalKgActual;
-    coefAplicado = coefCalc;
-    margenMostrado = margenPct;
-    if (segCfg && segCfg.techo && coefCalc > segCfg.techo) {
-      avisoTecho = 'ATENCION: coef. supera techo de ' + money(segCfg.techo);
-    }
   } else {
+    coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
+    margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
+    if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
+      avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
+    }
+  }
     coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
     margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
     if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
@@ -1153,35 +1202,35 @@ function recalcular(){
   $('rPrecioKg').textContent = __precioVacio ? '\u2014' : money(precioKg);
   const __precioUVacio = precioUnitSinIva < 0.01;
   $('rPrecioU').textContent = __precioUVacio ? '\u2014' : money(precioUnitSinIva);
-  if ($('rSegLabel')) $('rSegLabel').textContent = modoSeg === 'margen' ? 'Tubo liviano (margen fijo)' : (segKey === 'semipesado' ? 'Tubo semipesado (coef fijo)' : 'Tubo pesado (coef fijo)');
-  const __costoCero = costoTotalKgActual < 0.01;
-  if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) {
-    $('ingCoefManual').value = (modoSeg === 'margen' && __costoCero) ? '' : coefAplicado.toFixed(0);
+  if ($('rSegLabel')) {
+    const tipoTxt = tipoKey === 'liviano' ? 'Liviano' : (tipoKey === 'semipesado' ? 'Semipesado' : 'Pesado');
+    const mercTxt = mercKey === 'cautivo' ? 'Cautivo' : (mercKey === 'semicautivo' ? 'Semi-cautivo' : 'Competitivo');
+    $('rSegLabel').textContent = tipoTxt + ' / ' + mercTxt; /* __labelNuevo */
   }
-  if ($('ingMargenMostrado') && document.activeElement !== $('ingMargenMostrado')) {
-    const __margenVacio = __costoCero;
-    $('ingMargenMostrado').value = __margenVacio ? '' : margenMostrado.toFixed(1);
+  if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) {
+    $('ingCoefManual').value = __sinDatos ? '' : coefAplicado.toFixed(0);
   }
   if ($('rCoefInfo')) {
-    if (__costoCero) {
+    if (__sinDatos) {
       $('rCoefInfo').textContent = 'Carga las fajas y los precios para calcular el costo';
       $('rCoefInfo').style.color = '#94a3b8';
     } else {
       const g = coefAplicado - costoTotalKgActual;
-      $('rCoefInfo').textContent = 'Costo actual: ' + money(costoTotalKgActual) + '/kg - ' + (g >= 0 ? 'Ganancia: +' : 'Perdida: ') + money(Math.abs(g)) + '/kg';
+      $('rCoefInfo').textContent = 'Costo: ' + money(costoTotalKgActual) + '/kg';
       $('rCoefInfo').style.color = '#64748b';
     }
   }
-  if ($('rAvisoTecho')) { $('rAvisoTecho').textContent = avisoTecho; $('rAvisoTecho').style.color = '#b91c1c'; }
-  if ($('rAvisoMargen')) {
-    if (__costoCero) {
-      $('rAvisoMargen').textContent = '';
+  if ($('rMargenInfo')) {
+    if (__sinDatos) {
+      $('rMargenInfo').textContent = '';
     } else {
-      const mr = margenReal * 100;
-      $('rAvisoMargen').textContent = mr >= 0 ? 'Margen real: +' + mr.toFixed(1) + '%' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%';
-      $('rAvisoMargen').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
+      const mr = margenMostrado;
+      const g = coefAplicado - costoTotalKgActual;
+      $('rMargenInfo').textContent = (mr >= 0 ? 'Margen: +' + mr.toFixed(1) + '% - Ganancia: +' + money(g) + '/kg' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%');
+      $('rMargenInfo').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
     }
   }
+  if ($('rAvisoTecho')) { $('rAvisoTecho').textContent = avisoTecho; $('rAvisoTecho').style.color = '#b91c1c'; }
   $('rPETubos').textContent = isFinite(peTubos) ? peTubos.toLocaleString('es-AR') : '—';
   $('rPEKg').textContent = isFinite(peKg) ? peKg.toFixed(1) : '—';
   $('rPEVen').textContent = isFinite(peVentas) ? money(peVentas) : '—';
@@ -3345,7 +3394,8 @@ function limpiarIngenieria(){
   const selCli = $('ingCliente'); if (selCli) selCli.value = '';
   limpiar('ingDiam'); limpiar('ingLong'); limpiar('ingCant');
   const paq = $('ingPaquete'); if (paq) paq.value = '1'; /* paquete */
-  const seg = $('ingSegmento'); if (seg) seg.value = 'liviano';
+  const tipo = $('ingTipoTubo'); if (tipo) tipo.value = 'liviano';
+  const merc = $('ingMercado'); if (merc) merc.value = 'cautivo';
   limpiar('ingPrincAncho'); limpiar('ingPrincGram');
   const rellCant = $('ingRellCant'); if (rellCant) rellCant.value = '';
   limpiar('ingRellAncho'); limpiar('ingRellGram');
@@ -3448,59 +3498,7 @@ function editarDescuentoPresupuesto(){
 }
 
 /* ============ SEGMENTOS: handlers y defaults ============ */
-window.tubcorSegmentos = {
-  liviano:    { modo: 'margen', margen: 30,  techo: 4400 },
-  semipesado: { modo: 'coef',   coef: 2500,  techo: 3300 },
-  pesado:     { modo: 'coef',   coef: 2200,  techo: 2800 }
-};
-window.__tubcorForzandoManual = false;
-
-window.cambiarSegmento = function(){
-  const seg = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
-  const cfg = window.tubcorSegmentos[seg];
-  if (!cfg) return;
-  const info = $('ingSegInfo');
-  if (info){
-    info.textContent = cfg.modo === 'margen'
-      ? 'Margen ' + cfg.margen + '% \u00b7 techo ' + money(cfg.techo) + '/kg'
-      : 'Coef fijo ' + money(cfg.coef) + '/kg \u00b7 techo ' + money(cfg.techo) + '/kg';
-  }
-  if ($('ingCoefManual')) $('ingCoefManual').value = '';
-  if ($('ingMargenMostrado')) $('ingMargenMostrado').value = '';
-  recalcular();
-};
-
-window.cambiarCoefManual = function(){
-  if (!$('ingCoefManual')) return;
-  const seg = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
-  const cfg = window.tubcorSegmentos[seg];
-  if (!cfg) return;
-  const coef = N($('ingCoefManual').value);
-  if (!(coef > 0)) return;
-  const r = STATE.resultados || {};
-  const costoKg = r.costoTotalKgActual || 0;
-  if (costoKg > 0 && $('ingMargenMostrado')) $('ingMargenMostrado').value = ((1 - costoKg / coef) * 100).toFixed(1);
-  window.__tubcorForzandoManual = true;
-  recalcular();
-  window.__tubcorForzandoManual = false;
-};
-
-window.cambiarMargenManual = function(){
-  if (!$('ingMargenMostrado')) return;
-  const seg = $('ingSegmento') ? $('ingSegmento').value : 'liviano';
-  const cfg = window.tubcorSegmentos[seg];
-  if (!cfg) return;
-  const m = N($('ingMargenMostrado').value);
-  const r = STATE.resultados || {};
-  const costoKg = r.costoTotalKgActual || 0;
-  if (costoKg > 0 && m < 99){
-    const coef = costoKg / (1 - m/100);
-    if ($('ingCoefManual')) $('ingCoefManual').value = coef.toFixed(0);
-  }
-  window.__tubcorForzandoManual = true;
-  recalcular();
-  window.__tubcorForzandoManual = false;
-};
+/* handlers viejos eliminados */
 
 /* ============ FACTORES POR SEGMENTO ============ */
 window.tubcorCargarFactores = function(){
@@ -3517,6 +3515,7 @@ window.tubcorCargarFactores = function(){
   if ($('factorSemipesado') && document.activeElement !== $('factorSemipesado')) $('factorSemipesado').value = N(f.semipesado || 1.000).toFixed(3);
   if ($('factorPesado') && document.activeElement !== $('factorPesado')) $('factorPesado').value = N(f.pesado || 1.000).toFixed(3);
   if ($('factorInfoExt')){
+    /* factor por tipo */
     const info = 'Liviano: ' + N(f.liviano || 0).toFixed(3) + ' | Semipesado: ' + N(f.semipesado || 0).toFixed(3) + ' | Pesado: ' + N(f.pesado || 0).toFixed(3);
     $('factorInfoExt').textContent = info;
   }
