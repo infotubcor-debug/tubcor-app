@@ -263,9 +263,20 @@ table tbody tr:hover{background:#f8fafc}
         </div>
         <div class="kpi col-span-3" style="background:#f0fdf4;border-color:#86efac">
           <div class="k-label">Ajuste de precio - <span id="rSegLabel">Liviano / Cautivo</span></div>
-          <div style="margin-top:6px">
-            <label style="text-transform:none;font-size:10px">Coeficiente ($/kg) - editable</label>
-            <input id="ingCoefManual" type="number" step="1" oninput="cambiarCoefManual()"/>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px">
+            <div>
+              <label style="text-transform:none;font-size:10px">Coeficiente ($/kg) - editable</label>
+              <input id="ingCoefManual" type="number" step="1" oninput="cambiarCoefManual()"/>
+            </div>
+            <div>
+              <label style="text-transform:none;font-size:10px">Margen (%) - informativo</label>
+              <input id="ingMargenMostrado" type="text" readonly style="background:#f8fafc;color:#64748b"/>
+            </div>
+          </div>
+          <div id="bloqueCNC" style="margin-top:8px;display:none;padding-top:6px;border-top:1px dashed #cbd5e1">
+            <label style="text-transform:none;font-size:10px;color:#b45309">Adicional por corte CNC ($/tubo) - editable</label>
+            <input id="ingAdicionalCNC" type="number" step="1" oninput="cambiarAdicionalCNC()"/>
+            <div class="hint" style="margin-top:2px;color:#b45309;text-align:left">Se suma al precio de tubos &lt; 750 mm</div>
           </div>
           <div class="hint" id="rCoefInfo" style="margin-top:6px"></div>
           <div id="rMargenInfo" style="margin-top:6px;font-size:12px;font-weight:700"></div>
@@ -892,7 +903,28 @@ async function load(){
   if (!r.ok) throw new Error('Error ' + r.status);
   const data = await r.json();
   Object.keys(LS).forEach(k => {
-    STATE[k] = data.state[k] !== undefined ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
+    STATE[k] = data.state[k] !== const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
+  const forzandoManual = window.__tubcorForzandoManual === true;
+  const __sinDatos = costoTotalKgActual < 0.01;
+  let adicionalCNC = 0;
+  let coefAplicado = 0;
+  let margenMostrado = 0;
+  let avisoTecho = '';
+  /* adicional CNC */
+  if (!__sinDatos) {
+    coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
+    margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
+    if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
+      avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
+    }
+    if (long > 0 && long < 750) {
+      const adicionalInput = $('ingAdicionalCNC') ? N($('ingAdicionalCNC').value) : 0;
+      const adicionalGuardado = (STATE.config.adicionalesCNC && STATE.config.adicionalesCNC[segKey] != null) ? N(STATE.config.adicionalesCNC[segKey]) : null;
+      adicionalCNC = adicionalInput > 0 ? adicionalInput : (adicionalGuardado != null ? adicionalGuardado : (segCfg ? segCfg.adicionalCNC : 0));
+    }
+  }
+  window.__tubcorForzandoManual = false;
+  const precioKg = coefAplicado; ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
   });
   CURRENT_VERSION = data.version;
 }
@@ -904,15 +936,15 @@ window.tubcorTipos = {
 };
 
 window.tubcorMatriz = {
-  'liviano_cautivo':        { coef: 3900, techo: 4400 },
-  'liviano_semicautivo':    { coef: 3400, techo: 3900 },
-  'liviano_competitivo':    { coef: 3000, techo: 3500 },
-  'semipesado_cautivo':     { coef: 3500, techo: 3800 },
-  'semipesado_semicautivo': { coef: 3000, techo: 3500 },
-  'semipesado_competitivo': { coef: 2500, techo: 3300 },
-  'pesado_cautivo':         { coef: 3900, techo: 4500 },
-  'pesado_semicautivo':     { coef: 3200, techo: 4000 },
-  'pesado_competitivo':     { coef: 2700, techo: 3500 }
+  'liviano_cautivo':        { coef: 3900, techo: 4400, adicionalCNC: 80 },
+  'liviano_semicautivo':    { coef: 3400, techo: 3900, adicionalCNC: 60 },
+  'liviano_competitivo':    { coef: 3000, techo: 3500, adicionalCNC: 30 },
+  'semipesado_cautivo':     { coef: 3500, techo: 3800, adicionalCNC: 80 },
+  'semipesado_semicautivo': { coef: 3000, techo: 3500, adicionalCNC: 60 },
+  'semipesado_competitivo': { coef: 2500, techo: 3300, adicionalCNC: 30 },
+  'pesado_cautivo':         { coef: 3900, techo: 4500, adicionalCNC: 80 },
+  'pesado_semicautivo':     { coef: 3200, techo: 4000, adicionalCNC: 60 },
+  'pesado_competitivo':     { coef: 2700, techo: 3500, adicionalCNC: 30 }
 };
 
 window.__tubcorForzandoManual = false;
@@ -1151,8 +1183,8 @@ function recalcular(){
   }
   window.__tubcorForzandoManual = false;
   const precioKg = coefAplicado;
-  const precioUnitSinIvaRaw = (precioKg * pesoLoteKg) / cant;
-  const precioUnitSinIva = Math.round(precioUnitSinIvaRaw * 100) / 100;
+  const precioUnitBase = (precioKg * pesoLoteKg) / cant;
+  const precioUnitSinIva = Math.round((precioUnitBase + adicionalCNC) * 100) / 100;
   const precioTotalSinIva = precioUnitSinIva * cant;
   const margenReal = precioKg > 0 ? (precioKg - costoTotalKgActual) / precioKg : 0;
   const margenEl = $('ingMargen');

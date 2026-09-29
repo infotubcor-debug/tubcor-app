@@ -77,7 +77,13 @@ function inyectarAyuda(){
     ['Produccion mensual (kg de tubo)', 'Cuántos kg de tubo terminado producís por mes. Se usa para prorratear los gastos fijos.'],
     ['Precios de insumos', 'Se guardan con el botón Guardar / actualizar en cada panel. Podés ver el historial de meses anteriores.'],
     ['Flete ($/kg transportado)', 'Costo del transporte de la materia prima, repartido por kg. Cálculo: total del viaje ÷ kg transportados. Si el proveedor entrega sin cargo, poner 0.'],
-    ['Faja principal, relleno, tapa', 'Ancho (mm) y gramaje (g/m²) según cómo venga el rollo del proveedor. Ej: 70 mm / 175 g/m².']
+    ['Faja principal, relleno, tapa', 'Ancho (mm) y gramaje (g/m²) según cómo venga el rollo del proveedor. Ej: 70 mm / 175 g/m².'],
+    ['Coeficiente vs margen', 'El coeficiente ($/kg) es lo que cobras. El margen (%) es lo que ganas sobre el costo. Si sube el carton, el costo sube y el margen baja solo. Vos decidis si subis el coeficiente o aceptas menos margen. Usa el coeficiente como principal y mira el margen como alarma.'],
+    ['Cuando actualizar precios por inflacion', 'Una vez por mes: 1) Actualiza precios de insumos con Guardar/actualizar. 2) Anda a Ingenieria y carga un tubo tipo de cada segmento. 3) Mira el margen. 4) Si bajo mas de 5 puntos, subi el coeficiente. 5) Guarda.'],
+    ['Tipo de tubo por espesor', 'Liviano: hasta 1,5 mm (papel higienico, 2-3 capas). Semipesado: 1,5 a 4 mm (embalaje, autoadhesivos, 5-8 capas). Pesado: mas de 4 mm (industrial grueso, 9+ capas). El factor de proceso cambia segun el tipo: 0,822 para liviano, 1,000 para semipesado y pesado.'],
+    ['Mercado / ventaja logistica', 'Cautivo: Cordoba, interior, Jujuy. BsAs le sale 2-3 veces mas caro por flete, no tiene alternativa real. Semi-cautivo: Santa Fe, Rosario, Entre Rios. BsAs le sale ~27% mas caro. Competitivo: Buenos Aires, otras provincias. Sin ventaja, compite de igual a igual.'],
+    ['Adicional por corte CNC', 'Los tubos menores a 750 mm requieren corte adicional en CNC. La app suma un adicional por tubo, editable, que se guarda por combinacion Tipo x Mercado. Default: $80 cautivo, $60 semi-cautivo, $30 competitivo.'],
+    ['Por que el adicional CNC por segmento', 'El CNC tiene costo real (operario, energia, desgaste). En mercado cautivo podes cobrarlo completo. En competitivo apenas cubris el costo. Por eso cada combinacion tiene su propio valor.']
   ];
 
   const div = document.createElement('div');
