@@ -1146,17 +1146,32 @@ function recalcular(){
   $('rPrecioKg').textContent = money(precioKg);
   $('rPrecioU').textContent = money(precioUnitSinIva);
   if ($('rSegLabel')) $('rSegLabel').textContent = modoSeg === 'margen' ? 'Tubo liviano (margen fijo)' : (segKey === 'semipesado' ? 'Tubo semipesado (coef fijo)' : 'Tubo pesado (coef fijo)');
-  if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) $('ingCoefManual').value = coefAplicado.toFixed(0);
-  if ($('ingMargenMostrado') && document.activeElement !== $('ingMargenMostrado')) $('ingMargenMostrado').value = margenMostrado.toFixed(1);
+  const __costoCero = costoTotalKgActual < 0.01;
+  if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) {
+    $('ingCoefManual').value = (modoSeg === 'margen' && __costoCero) ? '' : coefAplicado.toFixed(0);
+  }
+  if ($('ingMargenMostrado') && document.activeElement !== $('ingMargenMostrado')) {
+    $('ingMargenMostrado').value = (modoSeg !== 'margen' && __costoCero) ? '' : margenMostrado.toFixed(1);
+  }
   if ($('rCoefInfo')) {
-    const g = coefAplicado - costoTotalKgActual;
-    $('rCoefInfo').textContent = 'Costo actual: ' + money(costoTotalKgActual) + '/kg - ' + (g >= 0 ? 'Ganancia: +' : 'Perdida: ') + money(Math.abs(g)) + '/kg';
+    if (__costoCero) {
+      $('rCoefInfo').textContent = 'Carga las fajas y los precios para calcular el costo';
+      $('rCoefInfo').style.color = '#94a3b8';
+    } else {
+      const g = coefAplicado - costoTotalKgActual;
+      $('rCoefInfo').textContent = 'Costo actual: ' + money(costoTotalKgActual) + '/kg - ' + (g >= 0 ? 'Ganancia: +' : 'Perdida: ') + money(Math.abs(g)) + '/kg';
+      $('rCoefInfo').style.color = '#64748b';
+    }
   }
   if ($('rAvisoTecho')) { $('rAvisoTecho').textContent = avisoTecho; $('rAvisoTecho').style.color = '#b91c1c'; }
   if ($('rAvisoMargen')) {
-    const mr = margenReal * 100;
-    $('rAvisoMargen').textContent = mr >= 0 ? 'Margen real: +' + mr.toFixed(1) + '%' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%';
-    $('rAvisoMargen').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
+    if (__costoCero) {
+      $('rAvisoMargen').textContent = '';
+    } else {
+      const mr = margenReal * 100;
+      $('rAvisoMargen').textContent = mr >= 0 ? 'Margen real: +' + mr.toFixed(1) + '%' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%';
+      $('rAvisoMargen').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
+    }
   }
   $('rPETubos').textContent = isFinite(peTubos) ? peTubos.toLocaleString('es-AR') : '—';
   $('rPEKg').textContent = isFinite(peKg) ? peKg.toFixed(1) : '—';
