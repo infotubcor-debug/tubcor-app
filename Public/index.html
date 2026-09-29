@@ -1058,10 +1058,10 @@ function recalcular(){
   const costoFlete = (compraPrinc+compraRell+compraTapa+compraPastaInt+compraPastaTapa)*cf;
   const metrosLineales = (long/1000)*cant;
   const horasProd = metrosLineales/25;
-  const kwhMensual = N($('kwhMensual')?.value) || 973;
-  const costoKwh = N($('costoKwh')?.value) || 536;
-  const prodKgMesEnergia = N($('prodMensual')?.value) || 1;
-  const costoEnergiaKg = prodKgMesEnergia > 0 ? (kwhMensual * costoKwh) / prodKgMesEnergia : 0;
+  const kwhMensual = N($('kwhMensual')?.value);
+  const costoKwh = N($('costoKwh')?.value);
+  const prodKgMesEnergia = N($('prodMensual')?.value);
+  const costoEnergiaKg = (prodKgMesEnergia > 0 && kwhMensual > 0 && costoKwh > 0) ? (kwhMensual * costoKwh) / prodKgMesEnergia : 0;
   const costoEnergia = costoEnergiaKg * pesoLoteKg;
   const costoVariableTotal = costoCarton + costoAdhInt + costoAdhTapa + costoFlete + costoEnergia;
   const costoVariableUnit = costoVariableTotal / cant;
@@ -1085,8 +1085,13 @@ function recalcular(){
   const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
   const margenInputVal = $('ingMargenMostrado') ? N($('ingMargenMostrado').value) : 0;
   const forzandoManual = window.__tubcorForzandoManual === true;
+  const __sinDatos = costoTotalKgActual < 0.01;
 
-  if (modoSeg === 'margen') {
+  if (__sinDatos) {
+    coefAplicado = 0;
+    margenMostrado = 0;
+    avisoTecho = '';
+  } else if (modoSeg === 'margen') {
     const margenPct = (forzandoManual && margenInputVal !== 0) ? margenInputVal : (segCfg ? segCfg.margen : 30);
     const margenDec = Math.min(0.95, Math.max(0, margenPct / 100));
     const coefCalc = margenDec < 0.99 ? costoTotalKgActual / (1 - margenDec) : costoTotalKgActual;
@@ -1139,10 +1144,11 @@ function recalcular(){
   $('rEsp').textContent = (m.espesor*fp).toFixed(2)+' mm';
   $('rPesoU').textContent = pesoUnitG.toFixed(1)+' g';
   $('rPesoL').textContent = pesoLoteKg.toFixed(2)+' kg';
-  $('rCostoVU').textContent = money(costoVariableUnit);
-  $('rCostoFU').textContent = money(gfUnit);
-  $('rCostoU').textContent = money(costoTotalUnit);
-  $('rCostoKg').textContent = money(costoTotalKg);
+  const __costoVU_Vacio = costoTotalKgActual < 0.01;
+  $('rCostoVU').textContent = __costoVU_Vacio ? '\u2014' : money(costoVariableUnit);
+  $('rCostoFU').textContent = __costoVU_Vacio ? '\u2014' : money(gfUnit);
+  $('rCostoU').textContent = __costoVU_Vacio ? '\u2014' : money(costoTotalUnit);
+  $('rCostoKg').textContent = __costoVU_Vacio ? '\u2014' : money(costoTotalKg);
   const __precioVacio = precioKg < 0.01;
   $('rPrecioKg').textContent = __precioVacio ? '\u2014' : money(precioKg);
   const __precioUVacio = precioUnitSinIva < 0.01;
