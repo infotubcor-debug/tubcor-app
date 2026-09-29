@@ -903,28 +903,7 @@ async function load(){
   if (!r.ok) throw new Error('Error ' + r.status);
   const data = await r.json();
   Object.keys(LS).forEach(k => {
-    STATE[k] = data.state[k] !== const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
-  const forzandoManual = window.__tubcorForzandoManual === true;
-  const __sinDatos = costoTotalKgActual < 0.01;
-  let adicionalCNC = 0;
-  let coefAplicado = 0;
-  let margenMostrado = 0;
-  let avisoTecho = '';
-  /* adicional CNC */
-  if (!__sinDatos) {
-    coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
-    margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
-    if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
-      avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
-    }
-    if (long > 0 && long < 750) {
-      const adicionalInput = $('ingAdicionalCNC') ? N($('ingAdicionalCNC').value) : 0;
-      const adicionalGuardado = (STATE.config.adicionalesCNC && STATE.config.adicionalesCNC[segKey] != null) ? N(STATE.config.adicionalesCNC[segKey]) : null;
-      adicionalCNC = adicionalInput > 0 ? adicionalInput : (adicionalGuardado != null ? adicionalGuardado : (segCfg ? segCfg.adicionalCNC : 0));
-    }
-  }
-  window.__tubcorForzandoManual = false;
-  const precioKg = coefAplicado; ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
+    STATE[k] = data.state[k] !== undefined ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
   });
   CURRENT_VERSION = data.version;
 }
@@ -1167,10 +1146,11 @@ function recalcular(){
   let coefAplicado = 0;
   let margenMostrado = 0;
   let avisoTecho = '';
+  let adicionalCNC = 0;
   const coefInputVal = $('ingCoefManual') ? N($('ingCoefManual').value) : 0;
   const forzandoManual = window.__tubcorForzandoManual === true;
   const __sinDatos = costoTotalKgActual < 0.01;
-  /* nuevo calculo tipo/mercado */
+  /* adicional CNC */
   if (__sinDatos) {
     coefAplicado = 0;
     margenMostrado = 0;
@@ -1179,6 +1159,11 @@ function recalcular(){
     margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
     if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
       avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
+    }
+    if (long > 0 && long < 750) {
+      const adicionalInput = $('ingAdicionalCNC') ? N($('ingAdicionalCNC').value) : 0;
+      const adicionalGuardado = (STATE.config.adicionalesCNC && STATE.config.adicionalesCNC[segKey] != null) ? N(STATE.config.adicionalesCNC[segKey]) : null;
+      adicionalCNC = adicionalInput > 0 ? adicionalInput : (adicionalGuardado != null ? adicionalGuardado : (segCfg ? segCfg.adicionalCNC : 0));
     }
   }
   window.__tubcorForzandoManual = false;
