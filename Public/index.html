@@ -1143,15 +1143,18 @@ function recalcular(){
   $('rCostoFU').textContent = money(gfUnit);
   $('rCostoU').textContent = money(costoTotalUnit);
   $('rCostoKg').textContent = money(costoTotalKg);
-  $('rPrecioKg').textContent = money(precioKg);
-  $('rPrecioU').textContent = money(precioUnitSinIva);
+  const __precioVacio = precioKg < 0.01;
+  $('rPrecioKg').textContent = __precioVacio ? '\u2014' : money(precioKg);
+  const __precioUVacio = precioUnitSinIva < 0.01;
+  $('rPrecioU').textContent = __precioUVacio ? '\u2014' : money(precioUnitSinIva);
   if ($('rSegLabel')) $('rSegLabel').textContent = modoSeg === 'margen' ? 'Tubo liviano (margen fijo)' : (segKey === 'semipesado' ? 'Tubo semipesado (coef fijo)' : 'Tubo pesado (coef fijo)');
   const __costoCero = costoTotalKgActual < 0.01;
   if ($('ingCoefManual') && document.activeElement !== $('ingCoefManual')) {
     $('ingCoefManual').value = (modoSeg === 'margen' && __costoCero) ? '' : coefAplicado.toFixed(0);
   }
   if ($('ingMargenMostrado') && document.activeElement !== $('ingMargenMostrado')) {
-    $('ingMargenMostrado').value = (modoSeg !== 'margen' && __costoCero) ? '' : margenMostrado.toFixed(1);
+    const __margenVacio = __costoCero;
+    $('ingMargenMostrado').value = __margenVacio ? '' : margenMostrado.toFixed(1);
   }
   if ($('rCoefInfo')) {
     if (__costoCero) {
@@ -1178,7 +1181,13 @@ function recalcular(){
   $('rPEVen').textContent = isFinite(peVentas) ? money(peVentas) : '—';
   /* Tipo de corte */
   if ($('rCorteValor')) {
-    if (long < 750) {
+    const __corteVacio = long < 1;
+    if (__corteVacio) {
+      $('rCorteValor').textContent = '\u2014';
+      $('rCorteValor').style.color = '#94a3b8';
+      if ($('rCorteDetalle')) $('rCorteDetalle').textContent = 'Carga la longitud para determinar el tipo de corte';
+      if ($('rCorteInfo')) { $('rCorteInfo').style.background = '#f8fafc'; $('rCorteInfo').style.borderColor = '#e2e8f0'; }
+    } else if (long < 750) {
       $('rCorteValor').textContent = 'Requiere corte adicional en CNC';
       $('rCorteValor').style.color = '#b45309';
       if ($('rCorteDetalle')) $('rCorteDetalle').textContent = 'Longitud < 750 mm - pasa por cortador secundario';
