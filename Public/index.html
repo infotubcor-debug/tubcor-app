@@ -324,7 +324,7 @@ table tbody tr:hover{background:#f8fafc}
         <div class="grid grid-cols-3 gap-2">
           <div><label>Ø Int (mm)</label><input id="calDiam" type="number" value="76" oninput="calPrevia()"/></div>
           <div><label>Long (mm)</label><input id="calLong" type="number" value="1200" oninput="calPrevia()"/></div>
-          <div><label>Cantidad pesada (unidades)</label><input id="calCant" type="number" value="1" min="1" title="Poné 1 si pesaste un tubo, o el total si pesaste un paquete (ej: 37)"/></div>
+          <div><label>Cantidad pesada (unidades)</label><input id="calCant" type="number" min="1" title="Poné 1 si pesaste un tubo, o el total si pesaste un paquete (ej: 37)"/></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal</div>
@@ -1235,9 +1235,9 @@ function calPrevia(){
 function limpiarCalibrador(){
   const limpiar = (id) => { const el = $(id); if (el) el.value = ''; };
   limpiar('calRef'); limpiar('calDiam'); limpiar('calLong');
-  const cant = $('calCant'); if (cant) cant.value = '1';
+  const cant = $('calCant'); if (cant) cant.value = '';
   limpiar('calPA'); limpiar('calPG');
-  const rc = $('calRC'); if (rc) rc.value = '0';
+  const rc = $('calRC'); if (rc) rc.value = '';
   limpiar('calRA'); limpiar('calRG');
   limpiar('calTA'); limpiar('calTG');
   limpiar('calEspR'); limpiar('calPeso');
