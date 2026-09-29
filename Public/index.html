@@ -1217,6 +1217,18 @@ function calPrevia(){
   $('calTeorico').textContent = (papel+adhSeco).toFixed(1)+' g';
   $('calEspT').textContent = m.espesor.toFixed(2)+' mm';
 }
+function limpiarCalibrador(){
+  const limpiar = (id) => { const el = $(id); if (el) el.value = ''; };
+  limpiar('calRef'); limpiar('calDiam'); limpiar('calLong');
+  const cant = $('calCant'); if (cant) cant.value = '1';
+  limpiar('calPA'); limpiar('calPG');
+  const rc = $('calRC'); if (rc) rc.value = '0';
+  limpiar('calRA'); limpiar('calRG');
+  limpiar('calTA'); limpiar('calTG');
+  limpiar('calEspR'); limpiar('calPeso');
+  try { calPrevia(); } catch(_){}
+}
+
 function recalcularFactorProceso(){
   if (!STATE.pesajes.length){
     STATE.config.factorProceso = 1;
@@ -1280,7 +1292,7 @@ function registrarPesaje(){
     tg:N($('calTG').value), ta:N($('calTA').value), tc:$('calTC').value
   });
   save(['pesajes']);
-  $('calPeso').value = ''; $('calEspR').value = '';
+  try { limpiarCalibrador(); } catch(_){} /* registrarPesaje */
   recalcularFactorProceso(); renderCalibrador(); recalcular();
   toast('Pesaje registrado · factor recalibrado','ok');
 }
@@ -1475,6 +1487,7 @@ function nuevoPedido(){
   confirmar('¿Comenzar un nuevo pedido? Se vaciará la lista actual.').then(ok=>{
     if (!ok) return;
     STATE.pendientes = []; save(['pendientes']); renderPendientes();
+    try { limpiarIngenieria(); } catch(_){} /* nuevoPedido */
     toast('Nuevo pedido iniciado','ok');
   });
 }
@@ -3297,6 +3310,26 @@ async function cerrarSesion(){
   location.reload();
 }
 
+function limpiarIngenieria(){
+  const limpiar = (id) => { const el = $(id); if (el) el.value = ''; };
+  const selCli = $('ingCliente'); if (selCli) selCli.value = '';
+  limpiar('ingDiam'); limpiar('ingLong'); limpiar('ingCant');
+  const paq = $('ingPaquete'); if (paq) paq.value = '37';
+  const seg = $('ingSegmento'); if (seg) seg.value = 'liviano';
+  limpiar('ingPrincAncho'); limpiar('ingPrincGram');
+  const rellCant = $('ingRellCant'); if (rellCant) rellCant.value = '0';
+  limpiar('ingRellAncho'); limpiar('ingRellGram');
+  limpiar('ingTapaAncho'); limpiar('ingTapaGram');
+  limpiar('precioCP'); limpiar('precioCR'); limpiar('precioCT'); limpiar('precioFlete');
+  const desp = $('ingDesperdicio'); if (desp) desp.value = '10';
+  limpiar('precioAdh'); limpiar('precioAdhTapa');
+  limpiar('solidosAdh'); limpiar('pctAdhSeco'); limpiar('pctAdhTapa');
+  ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro'].forEach(limpiar);
+  limpiar('prodMensual');
+  limpiar('kwhMensual'); limpiar('costoKwh');
+  try { recalcular(); } catch(_){}
+}
+
 function arrancarApp(){
   if (!$('bancoMovFecha').value) $('bancoMovFecha').value = today();
   if (!$('prFecha').value) $('prFecha').value = today();
@@ -3304,6 +3337,8 @@ function arrancarApp(){
   if (!$('pagoFecha').value) $('pagoFecha').value = today();
   if (!$('heFecha').value) $('heFecha').value = today();
   $('calFactor').value = N(STATE.config.factorProceso).toFixed(3) || '1.000';
+  try { limpiarIngenieria(); } catch(_){} /* arrancarApp */
+  try { limpiarCalibrador(); } catch(_){} /* arrancarApp */
   cargarSelectoresClientes();
   cargarSelectoresBancos();
   cargarProveedores();
