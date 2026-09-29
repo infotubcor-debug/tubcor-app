@@ -51,6 +51,9 @@ window.tubcorGuardarKwh = function(){
 
 function cargarKwhGuardado(){
   const st = getState(); if (!st) return;
+  const tocados = (typeof window.__tubcorCamposTocados !== 'undefined') ? window.__tubcorCamposTocados : new Set();
+  if (tocados.has('costoKwh')) return;
+  if (tocados.has('kwhMensual')) return;
   const v = N(st.config?.costoKwh) || 536;
   if ($id('costoKwh') && $id('costoKwh').value !== String(v)) $id('costoKwh').value = v;
   const k = N(st.config?.kwhMensual) || 973;
@@ -262,7 +265,7 @@ function cargarMesActualAuto(){
 }
 
 /* ============ PRECIOS DE INSUMOS POR MES ============ */
-const CAMPOS_PRECIOS = ['precioCP','precioCR','precioCT','precioFlete','precioAdh','precioAdhTapa','solidosAdh','pctAdhSeco','pctAdhTapa','ingDesperdicio'];
+const CAMPOS_PRECIOS = ['precioCP','precioCR','precioCT','precioFlete','precioAdh','precioAdhTapa','solidosAdh','pctAdhSeco','pctAdhTapa','ingDesperdicio','kwhMensual','costoKwh'];
 
 function leerPreciosUI(){
   const out = {};
