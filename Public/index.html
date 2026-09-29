@@ -163,6 +163,9 @@ table tbody tr:hover{background:#f8fafc}
               <option value="19">19 un.</option>
               <option value="37">37 un. (Hexagonal)</option>
               <option value="61">61 un.</option>
+              <option value="palet_vert">Paletizado tubo vertical</option>
+              <option value="palet_horiz">Paletizado tubo horizontal</option>
+              <option value="palet_vert_sep">Paletizado tubo vertical con separador</option>
               <option value="1" selected>Sin empaquetar</option>
             </select>
           </div>
@@ -1694,6 +1697,19 @@ function contactoConTelefono(p){
   return partes.join(' · ') || '—';
 }
 
+function etiquetaPaquete(v){
+  const map = {
+    '19': '19 un.',
+    '37': '37 un. (Hexagonal)',
+    '61': '61 un.',
+    '1': 'Sin empaquetar',
+    'palet_vert': 'Paletizado tubo vertical',
+    'palet_horiz': 'Paletizado tubo horizontal',
+    'palet_vert_sep': 'Paletizado tubo vertical con separador'
+  };
+  return map[String(v)] || (v + ' un.');
+}
+
 function renderPaperPresupuesto(p){
   const items = p.items||[];
   const subtotal = items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
@@ -1818,8 +1834,7 @@ function renderPaperOF(p){
       <thead><tr><th style="width:12%">Cantidad</th><th>Medidas y proceso</th><th>Formato de fajas</th></tr></thead>
       <tbody>
         ${items.map(x=>{
-          const n = parseInt(x.tipoPaquete)||37;
-          const pack = n===37?'37 un. (Hexagonal)':n===19?'19 un.':n===61?'61 un.':n===1?'Sin empaquetar':n+' un.';
+          const pack = etiquetaPaquete(x.tipoPaquete);
           const corte = N(x.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
           return `<tr>
             <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
@@ -2197,8 +2212,7 @@ async function pdfOF(p){
   y += 7;
 
   p.items.forEach((it, idx) => {
-    const n = parseInt(it.tipoPaquete)||37;
-    const pack = n===37?'37 un. (Hexagonal)':n===19?'19 un.':n===61?'61 un.':n===1?'Sin empaquetar':n+' un.';
+    const pack = etiquetaPaquete(it.tipoPaquete);
     const corte = N(it.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
     const rowH = 18;
 
