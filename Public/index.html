@@ -523,6 +523,13 @@ table tbody tr:hover{background:#f8fafc}
         <span class="badge badge-gray" id="ofCount">0</span>
       </div>
       <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Totales del mes</div>
+          <input id="ofTotalesMes" type="month" onchange="renderTotalesMesOF()" style="width:auto;font-size:11px;padding:4px 8px"/>
+        </div>
+        <div id="ofTotalesMesLista"><div class="empty">Selecciona un mes.</div></div>
+      </div>
     </div>
     <div class="card lg:col-span-2">
       <div id="ofVacio" class="empty">Seleccioná una orden de la lista.</div>
@@ -1627,6 +1634,7 @@ function generarPresupuesto(){
   STATE.config.ultimoPresupuestoId = pres.id;
   save(['presupuestos','pendientes','config']);
   renderPendientes(); renderPresupuestos(); renderOF();
+  try { renderTotalesMesOF(); } catch(_){} /* refresh-totales-generar */
   switchTab('presupuestos');
   toast('Presupuesto '+numPres+' y OF '+numOF+' generados','ok');
 }
@@ -1798,6 +1806,87 @@ function renderOF(){
 function seleccionarOF(id){
   STATE.config.ultimoPresupuestoId = id; save(['config']); renderOF();
 }
+window.renderTotalesMesOF = function(){
+  const cont = $('ofTotalesMesLista');
+  const mesInput = $('ofTotalesMes');
+  if (!cont || !mesInput) return;
+  if (!mesInput.value) mesInput.value = today().slice(0,7);
+  const mes = mesInput.value;
+
+  const presMes = (STATE.presupuestos||[]).filter(p => (p.fecha||'').slice(0,7) === mes);
+  if (!presMes.length) {
+    cont.innerHTML = '<div class="empty">Sin OF en este mes.</div>';
+    return;
+  }
+
+  const map = {};
+  let kgPapelTotal = 0;
+  presMes.forEach(p=>{
+    (p.items||[]).forEach(it=>{
+      const cant = Math.max(0, N(it.cantidad)||0);
+      if (N(it.anchoPrinc) > 0 && N(it.gramajePrinc) > 0) {
+        const k = 'P|' + N(it.anchoPrinc) + '|' + N(it.gramajePrinc);
+        if (!map[k]) map[k] = { tipo:'Principal', ancho:N(it.anchoPrinc), gramaje:N(it.gramajePrinc), kg:0, tubos:0, pres:new Set() };
+        const kg = N(it.kgPrinc) * cant;
+        map[k].kg += kg;
+        map[k].tubos += cant;
+        map[k].pres.add(p.numero);
+        kgPapelTotal += kg;
+      }
+      if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
+        const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
+        if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0, tubos:0, pres:new Set() };
+        const kg = N(it.kgRell) * cant;
+        map[k].kg += kg;
+        map[k].tubos += cant;
+        map[k].pres.add(p.numero);
+        kgPapelTotal += kg;
+      }
+      if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
+        const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
+        if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0, tubos:0, pres:new Set() };
+        const kg = N(it.kgTapa) * cant;
+        map[k].kg += kg;
+        map[k].tubos += cant;
+        map[k].pres.add(p.numero);
+        kgPapelTotal += kg;
+      }
+    });
+  });
+
+  const lista = Object.values(map).sort((a,b)=>(a.tipo+a.gramaje).localeCompare(b.tipo+b.gramaje));
+  const mermaPct = N($('ingDesperdicio') ? $('ingDesperdicio').value : 10)/100;
+
+  cont.innerHTML = `
+    <div class="grid grid-cols-2 gap-2 mb-2">
+      <div class="kpi"><div class="k-label">Papel total del mes</div><div class="k-value text-[14px]">${kgPapelTotal.toFixed(1)} kg</div></div>
+      <div class="kpi"><div class="k-label">Con merma (${(mermaPct*100).toFixed(0)}%)</div><div class="k-value text-[14px]" style="color:#b45309">${(kgPapelTotal*(1+mermaPct)).toFixed(1)} kg</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Tipo</th><th>Ancho (mm)</th><th>Gramaje</th><th class="num">Kg necesarios</th><th class="num">Con merma</th><th class="num">OFs</th></tr>
+      </thead>
+      <tbody>
+        ${lista.map(c=>`
+          <tr>
+            <td>${esc(c.tipo)}</td>
+            <td>${c.ancho}</td>
+            <td>${c.gramaje} g/m²</td>
+            <td class="num"><b>${c.kg.toFixed(2)}</b></td>
+            <td class="num" style="color:#b45309">${(c.kg*(1+mermaPct)).toFixed(2)} kg</td>
+            <td class="num">${c.pres.size}</td>
+          </tr>`).join('')}
+        <tr style="background:#f0fdf4;font-weight:700">
+          <td colspan="3">TOTAL</td>
+          <td class="num">${kgPapelTotal.toFixed(2)} kg</td>
+          <td class="num" style="color:#b45309">${(kgPapelTotal*(1+mermaPct)).toFixed(2)} kg</td>
+          <td class="num">${presMes.length}</td>
+        </tr>
+      </tbody>
+    </table>
+  `;
+};
+
 function renderPreviewOF(){
   const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
   if (!p){ $('ofVacio').style.display='block'; $('ofPreview').style.display='none'; return; }
@@ -1805,6 +1894,29 @@ function renderPreviewOF(){
   $('ofPreview').style.display='block';
   $('ofPaper').innerHTML = renderPaperOF(p);
 }
+function resumenConsumosOF(items){
+  const map = {};
+  (items||[]).forEach(it=>{
+    const cant = Math.max(0, N(it.cantidad)||0);
+    if (N(it.anchoPrinc) > 0 && N(it.gramajePrinc) > 0) {
+      const k = 'P|' + N(it.anchoPrinc) + '|' + N(it.gramajePrinc);
+      if (!map[k]) map[k] = { tipo:'Principal', ancho:N(it.anchoPrinc), gramaje:N(it.gramajePrinc), kg:0 };
+      map[k].kg += N(it.kgPrinc) * cant;
+    }
+    if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
+      const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
+      if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0 };
+      map[k].kg += N(it.kgRell) * cant;
+    }
+    if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
+      const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
+      if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0 };
+      map[k].kg += N(it.kgTapa) * cant;
+    }
+  });
+  return Object.values(map).sort((a,b)=>(a.tipo+a.gramaje).localeCompare(b.tipo+b.gramaje));
+}
+
 function renderPaperOF(p){
   const items = p.items||[];
   return `<div class="paper">
@@ -1852,6 +1964,21 @@ function renderPaperOF(p){
         }).join('')}
       </tbody>
     </table>
+    <div class="paper-section">Consumos de papel por gramaje</div>
+    <table class="paper-table" id="ofConsumosWrap">
+      <thead>
+        <tr><th>Tipo de faja</th><th>Ancho (mm)</th><th>Gramaje (g/m²)</th><th>Kg totales</th></tr>
+      </thead>
+      <tbody>
+        ${resumenConsumosOF(items).map(c=>`<tr>
+          <td>${esc(c.tipo)}</td>
+          <td class="right">${c.ancho}</td>
+          <td class="right">${c.gramaje}</td>
+          <td class="right"><b>${c.kg.toFixed(2)} kg</b></td>
+        </tr>`).join('') || '<tr><td colspan="4" class="empty">Sin consumos cargados.</td></tr>'}
+      </tbody>
+    </table>
+    
     ${p.observacionesOF?`<div class="paper-obs"><b>OBSERVACIONES DE PLANTA</b><br/>${esc(p.observacionesOF).replace(/\n/g,'<br/>')}</div>`:''}
     <div class="paper-footer">TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar</div>
   </div>`;
@@ -1873,6 +2000,7 @@ function editarPresupuesto(){
   p.clienteRazonSocial = razon.trim()||p.clienteRazonSocial;
   p.condicionPago = pago.trim();
   save(['presupuestos']); renderPreviewPresupuesto();
+  try { renderTotalesMesOF(); } catch(_){} /* refresh-totales-editar */
   toast('Presupuesto actualizado','ok');
 }
 
@@ -1883,6 +2011,7 @@ function eliminarPresupuesto(){
     STATE.presupuestos = STATE.presupuestos.filter(x=>x.id!==id);
     if (STATE.config.ultimoPresupuestoId===id) STATE.config.ultimoPresupuestoId=null;
     save(['presupuestos','config']); renderPresupuestos(); renderOF();
+    try { renderTotalesMesOF(); } catch(_){} /* refresh-totales-eliminar */
     toast('Presupuesto eliminado','ok');
   });
 }
@@ -3294,7 +3423,7 @@ function switchTab(name){
   const sec = document.getElementById('tab-' + name);
   if (sec) sec.classList.add('active');
   if (name === 'presupuestos') renderPresupuestos();
-  if (name === 'of') renderOF();
+  if (name === 'of') { renderOF(); try { renderTotalesMesOF(); } catch(_){} }
   if (name === 'produccion') renderProduccion();
   if (name === 'finanzas'){ renderFinanzas(); renderFinBancos(); renderFinEcheqs(); renderFinCobrar(); renderFinPagar(); renderFinConciliacion(); }
   if (name === 'calibrador'){ calPrevia(); renderCalibrador(); }
