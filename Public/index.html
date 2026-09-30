@@ -1550,7 +1550,7 @@ function agregarItemPendiente(){
     clienteContacto: cli.contacto, clienteTelefono: cli.telefono,
     clienteEmail: cli.email, condicionPago: cli.condicionPago || '',
     diametro: r.diam, longitud: r.long, cantidad: r.cant,
-    espesor: r.espesor, tipoPaquete: parseInt($('ingPaquete').value)||37,
+    espesor: r.espesor, tipoPaquete: $('ingPaquete').value || '1',
     anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), colorPrinc: $('ingPrincColor').value,
     cantRelleno: Math.max(0, parseInt($('ingRellCant').value)||0),
     anchoRell: N($('ingRellAncho').value), gramajeRell: N($('ingRellGram').value),
