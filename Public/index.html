@@ -3595,7 +3595,7 @@ function arrancarApp(){
   if (!$('heFecha').value) $('heFecha').value = today();
   /* obs-presupuesto-default */
   if ($('obsPresupuesto')){
-    STATE.config.obsPresupuestoDefault = STATE.config.obsPresupuestoDefault || "Condiciones comerciales:\n- El pago es 100% por adelantado (efectivo o transferencia bancaria).\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envios.\n- El retiro es por planta: Camino Santa Barbara 1448, CP 5014, Cordoba.\n- Precios expresados en pesos, netos + IVA.";
+    STATE.config.obsPresupuestoDefault = "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envios.\n- El retiro es por planta: Camino Santa Barbara 1448, CP 5014, Cordoba.\n- Precios expresados en pesos, netos + IVA.";
     if (!$('obsPresupuesto').value.trim()) $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault;
     if (!$('obsPresupuesto').__obsHooked){
       $('obsPresupuesto').addEventListener('input', function(){
