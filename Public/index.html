@@ -1972,9 +1972,9 @@ function renderPaperOF(p){
       <tbody>
         ${resumenConsumosOF(items).map(c=>`<tr>
           <td>${esc(c.tipo)}</td>
-          <td class="right">${c.ancho}</td>
-          <td class="right">${c.gramaje}</td>
-          <td class="right"><b>${c.kg.toFixed(2)} kg</b></td>
+          <td>${c.ancho}</td>
+          <td>${c.gramaje}</td>
+          <td><b>${c.kg.toFixed(2)} kg</b></td>
         </tr>`).join('') || '<tr><td colspan="4" class="empty">Sin consumos cargados.</td></tr>'}
       </tbody>
     </table>
