@@ -1827,7 +1827,7 @@ window.renderTotalesMesOF = function(){
       if (N(it.anchoPrinc) > 0 && N(it.gramajePrinc) > 0) {
         const k = 'P|' + N(it.anchoPrinc) + '|' + N(it.gramajePrinc);
         if (!map[k]) map[k] = { tipo:'Principal', ancho:N(it.anchoPrinc), gramaje:N(it.gramajePrinc), kg:0, tubos:0, pres:new Set() };
-        const kg = N(it.kgPrinc) * cant;
+        const kg = (N(it.kgPrinc)/1000) * cant;
         map[k].kg += kg;
         map[k].tubos += cant;
         map[k].pres.add(p.numero);
@@ -1836,7 +1836,7 @@ window.renderTotalesMesOF = function(){
       if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
         const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
         if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0, tubos:0, pres:new Set() };
-        const kg = N(it.kgRell) * cant;
+        const kg = (N(it.kgRell)/1000) * cant;
         map[k].kg += kg;
         map[k].tubos += cant;
         map[k].pres.add(p.numero);
@@ -1845,7 +1845,7 @@ window.renderTotalesMesOF = function(){
       if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
         const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
         if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0, tubos:0, pres:new Set() };
-        const kg = N(it.kgTapa) * cant;
+        const kg = (N(it.kgTapa)/1000) * cant;
         map[k].kg += kg;
         map[k].tubos += cant;
         map[k].pres.add(p.numero);
@@ -1901,17 +1901,17 @@ function resumenConsumosOF(items){
     if (N(it.anchoPrinc) > 0 && N(it.gramajePrinc) > 0) {
       const k = 'P|' + N(it.anchoPrinc) + '|' + N(it.gramajePrinc);
       if (!map[k]) map[k] = { tipo:'Principal', ancho:N(it.anchoPrinc), gramaje:N(it.gramajePrinc), kg:0 };
-      map[k].kg += N(it.kgPrinc) * cant;
+      map[k].kg += (N(it.kgPrinc)/1000) * cant;
     }
     if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
       const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
       if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0 };
-      map[k].kg += N(it.kgRell) * cant;
+      map[k].kg += (N(it.kgRell)/1000) * cant;
     }
     if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
       const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
       if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0 };
-      map[k].kg += N(it.kgTapa) * cant;
+      map[k].kg += (N(it.kgTapa)/1000) * cant;
     }
   });
   return Object.values(map).sort((a,b)=>(a.tipo+a.gramaje).localeCompare(b.tipo+b.gramaje));
