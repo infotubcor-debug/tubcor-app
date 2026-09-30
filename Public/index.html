@@ -937,6 +937,7 @@ window.tubcorMatriz = {
 };
 
 window.__tubcorForzandoManual = false;
+window.__tubcorCoefManual = null; /* coeficiente manual persistente */
 
 window.cambiarTipoMercado = function(){
   const tipo = $('ingTipoTubo') ? $('ingTipoTubo').value : 'liviano';
@@ -949,6 +950,7 @@ window.cambiarTipoMercado = function(){
     info.textContent = 'Coef sugerido: ' + money(cfg.coef) + '/kg - techo ' + money(cfg.techo) + '/kg';
   }
   if ($('ingCoefManual')) $('ingCoefManual').value = '';
+  window.__tubcorCoefManual = null; /* cambiarTipoMercado */
   window.__tubcorForzandoManual = false;
   recalcular();
 };
@@ -957,6 +959,7 @@ window.cambiarCoefManual = function(){
   if (!$('ingCoefManual')) return;
   const coef = N($('ingCoefManual').value);
   if (!(coef > 0)) return;
+  window.__tubcorCoefManual = coef;
   window.__tubcorForzandoManual = true;
   recalcular();
   window.__tubcorForzandoManual = false;
@@ -1165,7 +1168,8 @@ function recalcular(){
     coefAplicado = 0;
     margenMostrado = 0;
   } else {
-    coefAplicado = (forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0);
+    const coefManualPersistente = (typeof window.__tubcorCoefManual === 'number' && window.__tubcorCoefManual > 0) ? window.__tubcorCoefManual : 0;
+    coefAplicado = coefManualPersistente > 0 ? coefManualPersistente : ((forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0));
     margenMostrado = coefAplicado > 0 ? (1 - costoTotalKgActual / coefAplicado) * 100 : 0;
     if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
       avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
@@ -3579,6 +3583,7 @@ function limpiarIngenieria(){
   ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro'].forEach(limpiar);
   limpiar('prodMensual');
   limpiar('kwhMensual'); limpiar('costoKwh');
+  window.__tubcorCoefManual = null; /* limpiarIngenieria */
   try { recalcular(); } catch(_){}
 }
 
