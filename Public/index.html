@@ -1166,7 +1166,7 @@ function modeloFisico({diametroInterno, longitud, capas}){
       const Lm = L / 1000;
       const masa = circ * Lm * g;
       papel += masa;
-      detalle.push({tipo:c.tipo, gramaje:g, masa});
+      detalle.push({tipo:c.tipo, gramaje:g, masa, grupoIdx:c.grupoIdx});
       d += 2*t; espesorTotal += t;
     }
   });
@@ -1648,6 +1648,13 @@ function recalcular(){
     else if (x.tipo==='Relleno') gRell += x.masa;
     else if (x.tipo==='Tapa') gTapa += x.masa;
   });
+  const gRellByGroup = {};
+  m.detalle.forEach(x=>{
+    if (x.tipo === 'Relleno'){
+      const gi = x.grupoIdx || 1;
+      gRellByGroup[gi] = (gRellByGroup[gi] || 0) + x.masa;
+    }
+  });
   const papelTotal = gPrinc + gRell + gTapa;
   const adhSecoInterno = (gPrinc + gRell) * pctAdhSeco;
   const adhSecoTapa = gTapa * pctAdhTapa;
@@ -1832,7 +1839,17 @@ function recalcular(){
   }
   const rows = [
     ['Papel principal ('+$('ingPrincAncho').value+' / '+$('ingPrincGram').value+')', gPrinc/1000*cant, compraPrinc],
-    ['Papel relleno ('+$('ingRellAncho').value+' / '+$('ingRellGram').value+') × '+$('ingRellCant').value, gRell/1000*cant, compraRell],
+    ...Object.keys(gRellByGroup).sort((a,b)=>parseInt(a)-parseInt(b)).map(gi => {
+      const idx = (parseInt(gi) === 1) ? '' : String(gi);
+      const cantEl = $('ingRell'+idx+'Cant');
+      const anchoEl = $('ingRell'+idx+'Ancho');
+      const gramEl = $('ingRell'+idx+'Gram');
+      const cantG = cantEl ? (parseInt(cantEl.value)||0) : 0;
+      const anchoG = anchoEl ? N(anchoEl.value) : 0;
+      const gramG = gramEl ? N(gramEl.value) : 0;
+      const compraG = (gRellByGroup[gi]/1000)*cant*(1+merma);
+      return ['Papel relleno' + (parseInt(gi) > 1 ? ' G'+gi : '') + ' (' + anchoG + ' / ' + gramG + ') \u00d7 ' + cantG, gRellByGroup[gi]/1000*cant, compraG];
+    }),
     ['Papel tapa ('+$('ingTapaAncho').value+' / '+$('ingTapaGram').value+')', gTapa/1000*cant, compraTapa],
     ['Adhesivo incorporado', adhSecoInterno*cant/1000, compraPastaInt],
     ['Adhesivo tapa', adhSecoTapa*cant/1000, compraPastaTapa]
