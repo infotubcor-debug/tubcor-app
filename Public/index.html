@@ -1505,7 +1505,8 @@ window.calcularReceta = function(){
   const resultado = [];
 
   const dMedioPrinc = dActual + espPrinc / 2;
-  resultado.push({ tipo: 'Principal', capas: 1, dMedio: dMedioPrinc, ancho: round5(10 * Math.sqrt(dMedioPrinc)), gramaje: gramPrinc });
+  const anchoTeoricoPrinc = 10 * Math.sqrt(dMedioPrinc);
+  resultado.push({ tipo: 'Principal', capas: 1, dMedio: dMedioPrinc, anchoTeorico: anchoTeoricoPrinc, ancho: round5(anchoTeoricoPrinc), gramaje: gramPrinc });
   dActual += espPrinc;
 
   let ultimoRellenoAncho = resultado[0].ancho;
@@ -1514,9 +1515,10 @@ window.calcularReceta = function(){
     const dInicio = dActual;
     dActual += capas * espRell;
     const dMedio = (dInicio + dActual) / 2;
-    const anchoR = round5(10 * Math.sqrt(dMedio));
+    const anchoTeoricoR = 10 * Math.sqrt(dMedio);
+    const anchoR = round5(anchoTeoricoR);
     ultimoRellenoAncho = anchoR;
-    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: anchoR, gramaje: gramRell });
+    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, anchoTeorico: anchoTeoricoR, ancho: anchoR, gramaje: gramRell });
   });
 
   const dMedioTapa = dActual + espTapa / 2;
