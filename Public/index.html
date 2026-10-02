@@ -352,6 +352,31 @@ table tbody tr:hover{background:#f8fafc}
   </div>
 
   <div class="card mt-3">
+    <button type="button" onclick="toggleCalculadoraReceta()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
+      <div style="font-size:12px;font-weight:800;color:#0f172a;text-transform:uppercase;letter-spacing:.4px"><i class="fa-solid fa-calculator" style="color:#16a34a"></i> Calculadora de receta (sugerencia de anchos)</div>
+      <span id="calcRecetaChevron" style="color:#64748b;font-weight:800;font-size:18px">+</span>
+    </button>
+    <div id="calculadoraRecetaContenido" style="display:none;margin-top:12px;padding-top:12px;border-top:1px solid #e2e8f0">
+      <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
+        <div><label>Diametro interno (mm)</label><input id="calcDiam" type="number" step="0.5"/></div>
+        <div><label>Espesor final (mm)</label><input id="calcEsp" type="number" step="0.1"/></div>
+        <div><label>Grupos de relleno</label>
+          <select id="calcGrupos">
+            <option value="1">1</option>
+            <option value="2">2</option>
+            <option value="3" selected>3</option>
+            <option value="4">4</option>
+          </select>
+        </div>
+        <div><label>Gramaje principal y rellenos</label><input id="calcGramPrinc" type="number" value="357"/></div>
+        <div><label>Gramaje tapa</label><input id="calcGramTapa" type="number" value="170"/></div>
+        <div class="flex items-end"><button class="btn btn-primary w-full" onclick="calcularReceta()"><i class="fa-solid fa-calculator"></i> Calcular</button></div>
+      </div>
+      <div id="calcRecetaResultado"><div class="empty">Carga los datos y aprieta Calcular.</div></div>
+    </div>
+  </div>
+
+  <div class="card mt-3">
     <div class="flex items-center justify-between mb-2">
       <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-list-check" style="color:#16a34a"></i> Tubos cargados para el próximo presupuesto</div>
       <span class="badge badge-gray" id="pendCount">0 items</span>
@@ -1235,6 +1260,136 @@ window.eliminarGramajeEspesor = function(gramaje){
   save(['config']);
   window.renderTablasEspesores();
   try { recalcular(); } catch(_){}
+};
+
+/* ============ CALCULADORA DE RECETA ============ */
+window.__recetaCalculada = null;
+
+window.toggleCalculadoraReceta = function(){
+  const c = $('calculadoraRecetaContenido');
+  const ch = $('calcRecetaChevron');
+  if (!c) return;
+  const abierto = c.style.display === 'block';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '+' : '-';
+};
+
+window.calcularReceta = function(){
+  const diam = N($('calcDiam').value);
+  const espFinal = N($('calcEsp').value);
+  const numGrupos = parseInt($('calcGrupos').value) || 3;
+  const gramPrinc = N($('calcGramPrinc').value) || 357;
+  const gramTapa = N($('calcGramTapa').value) || 170;
+
+  const cont = $('calcRecetaResultado');
+  if (!cont) return;
+
+  if (diam <= 0 || espFinal <= 0) {
+    cont.innerHTML = '<div class="empty">Carga diametro y espesor final.</div>';
+    return;
+  }
+
+  const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130:0.15, 170:0.20, 246:0.30, 357:0.50, 408:0.70 };
+  const espPorGram = (g) => tabla[String(g)] != null ? N(tabla[String(g)]) : (g / 720);
+
+  const espPrinc = espPorGram(gramPrinc);
+  const espTapa = espPorGram(gramTapa);
+  const espRellenos = espFinal - espPrinc - espTapa;
+
+  if (espRellenos <= 0) {
+    cont.innerHTML = '<div class="empty">El espesor es muy chico para esas capas.</div>';
+    return;
+  }
+
+  const capasRellenoTotal = Math.max(1, Math.round(espRellenos / espPrinc));
+
+  const grupos = [];
+  const base = Math.floor(capasRellenoTotal / numGrupos);
+  const extra = capasRellenoTotal - base * numGrupos;
+  for (let i = 0; i < numGrupos; i++) {
+    grupos.push(base + (i < extra ? 1 : 0));
+  }
+
+  let dActual = diam;
+  const resultado = [];
+
+  const dMedioPrinc = dActual + espPrinc / 2;
+  resultado.push({ tipo: 'Principal', capas: 1, dMedio: dMedioPrinc, ancho: Math.round(10 * Math.sqrt(dMedioPrinc)), gramaje: gramPrinc });
+  dActual += espPrinc;
+
+  grupos.forEach((capas, idx) => {
+    const dInicio = dActual;
+    dActual += capas * espPrinc;
+    const dMedio = (dInicio + dActual) / 2;
+    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: Math.round(10 * Math.sqrt(dMedio)), gramaje: gramPrinc });
+  });
+
+  const dMedioTapa = dActual + espTapa / 2;
+  resultado.push({ tipo: 'Tapa', capas: 1, dMedio: dMedioTapa, ancho: Math.round(10 * Math.sqrt(dMedioTapa)) + 5, gramaje: gramTapa });
+
+  window.__recetaCalculada = resultado;
+
+  const espTotal = espPrinc + capasRellenoTotal * espPrinc + espTapa;
+  let h = '<table><thead><tr><th>Grupo</th><th>Capas</th><th>D medio</th><th>Ancho sugerido</th><th>Gramaje</th></tr></thead><tbody>';
+  resultado.forEach(r => {
+    h += '<tr><td><b>' + r.tipo + '</b></td><td>' + r.capas + '</td><td>' + r.dMedio.toFixed(1) + ' mm</td><td><b style="color:#15803d">' + r.ancho + ' mm</b></td><td>' + r.gramaje + ' g/m2</td></tr>';
+  });
+  h += '</tbody></table>';
+  h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: ancho = 10 x raiz cuadrada del diametro medio</div>';
+  h += '<button class="btn btn-primary w-full mt-2" onclick="aplicarReceta()"><i class="fa-solid fa-check"></i> Aplicar a la carga</button>';
+
+  cont.innerHTML = h;
+};
+
+window.aplicarReceta = function(){
+  const receta = window.__recetaCalculada;
+  if (!receta) return;
+
+  const princ = receta.find(r => r.tipo === 'Principal');
+  if (princ) {
+    if ($('ingPrincAncho')) $('ingPrincAncho').value = princ.ancho;
+    if ($('ingPrincGram')) $('ingPrincGram').value = princ.gramaje;
+  }
+
+  const rellenos = receta.filter(r => r.tipo.startsWith('Relleno'));
+
+  if (rellenos[0]) {
+    if ($('ingRellCant')) $('ingRellCant').value = rellenos[0].capas;
+    if ($('ingRellAncho')) $('ingRellAncho').value = rellenos[0].ancho;
+    if ($('ingRellGram')) $('ingRellGram').value = rellenos[0].gramaje;
+  }
+
+  for (let i = 1; i < 4; i++) {
+    const g = rellenos[i];
+    const cantEl = $('ingRell'+(i+1)+'Cant');
+    const anchoEl = $('ingRell'+(i+1)+'Ancho');
+    const gramEl = $('ingRell'+(i+1)+'Gram');
+    if (g) {
+      if (cantEl) cantEl.value = g.capas;
+      if (anchoEl) anchoEl.value = g.ancho;
+      if (gramEl) gramEl.value = g.gramaje;
+    } else {
+      if (cantEl) cantEl.value = '';
+      if (anchoEl) anchoEl.value = '';
+      if (gramEl) gramEl.value = '';
+    }
+  }
+
+  if (rellenos.length > 1) {
+    const c = $('gruposRellenoExtras');
+    if (c) c.style.display = 'block';
+    const ch = $('gruposRellenoExtrasChevron');
+    if (ch) ch.textContent = '-';
+  }
+
+  const tapa = receta.find(r => r.tipo === 'Tapa');
+  if (tapa) {
+    if ($('ingTapaAncho')) $('ingTapaAncho').value = tapa.ancho;
+    if ($('ingTapaGram')) $('ingTapaGram').value = tapa.gramaje;
+  }
+
+  try { recalcular(); } catch(_){}
+  try { toast('Receta aplicada a la carga', 'ok'); } catch(_){}
 };
 
 function recalcular(){
