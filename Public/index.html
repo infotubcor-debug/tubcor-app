@@ -187,7 +187,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal (interior)</div>
           <div><label>Ancho (mm)</label><input id="ingPrincAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingPrincGram" type="number" oninput="recalcular()"/></div>
-          <div><label>Color</label><select id="ingPrincColor"><option>Marrón</option><option>Blanco</option></select></div>
+          <div><label>Color</label><select id="ingPrincColor"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Fajas de relleno (intermedias) - Grupo 1</div>
@@ -225,7 +225,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja de tapa (exterior)</div>
           <div><label>Ancho (mm)</label><input id="ingTapaAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingTapaGram" type="number" oninput="recalcular()"/></div>
-          <div><label>Color</label><select id="ingTapaColor"><option>Marrón</option><option>Blanco</option></select></div>
+          <div><label>Color</label><select id="ingTapaColor"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
       </div>
       <div id="tablaEspesoresIng" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
@@ -426,7 +426,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal</div>
           <div><label>Ancho</label><input id="calPA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calPG" type="number" oninput="calPrevia()"/></div>
-          <div><label>Color</label><select id="calPC"><option>Marrón</option><option>Blanco</option></select></div>
+          <div><label>Color</label><select id="calPC"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno</div>
@@ -438,7 +438,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Tapa</div>
           <div><label>Ancho</label><input id="calTA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calTG" type="number" oninput="calPrevia()"/></div>
-          <div><label>Color</label><select id="calTC"><option>Marrón</option><option>Blanco</option></select></div>
+          <div><label>Color</label><select id="calTC"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div><label>Espesor real (mm)</label><input id="calEspR" type="number" step="0.01" value=""/></div>
@@ -2312,6 +2312,33 @@ function etiquetaPaquete(v){
   return map[String(v)] || (v + ' un.');
 }
 
+function describirColorTubo(item){
+  const cp = String(item.colorPrinc || '').trim();
+  const ct = String(item.colorTapa || '').trim();
+  if (!cp && !ct) return '';
+  const cpLow = cp.toLowerCase().replace(/\s*impreso/i, '').trim();
+  const ctLow = ct.toLowerCase().replace(/\s*impreso/i, '').trim();
+  const cpTieneImp = cp.toLowerCase().indexOf('impreso') >= 0;
+  const ctTieneImp = ct.toLowerCase().indexOf('impreso') >= 0;
+  if (cpLow === ctLow && cpTieneImp === ctTieneImp) {
+    if (cpTieneImp) return ' color ' + cpLow + ' con impresi\u00f3n en su interior y exterior';
+    return ' color ' + cpLow;
+  }
+  function bloque(color, ubicacion){
+    if (!color) return '';
+    const tieneImp = color.toLowerCase().indexOf('impreso') >= 0;
+    const colorLimpio = color.replace(/\s*impreso/i, '').trim().toLowerCase();
+    if (tieneImp) return colorLimpio + ' con impresi\u00f3n en su ' + ubicacion;
+    return colorLimpio + ' (' + ubicacion + ')';
+  }
+  const p1 = bloque(cp, 'interior');
+  const p2 = bloque(ct, 'exterior');
+  const partes = [];
+  if (p1) partes.push(p1);
+  if (p2) partes.push(p2);
+  return ' color ' + partes.join(' y ');
+}
+
 function renderPaperPresupuesto(p){
   const items = p.items||[];
   const subtotal = items.reduce((s,x)=>s+N(x.precioVentaTotal),0);
@@ -2350,7 +2377,7 @@ function renderPaperPresupuesto(p){
       <tbody>
         ${items.map(x=>`<tr>
           <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
-          <td class="left"><b>Tubo espiralado Ø${x.diametro} × ${x.longitud} mm</b><br/><span style="font-size:9px;color:#64748b;">Espesor ${N(x.espesor).toFixed(2)} mm</span></td>
+          <td class="left"><b>Tubo espiralado Ø${x.diametro} × ${x.longitud} mm${describirColorTubo(x)}</b><br/><span style="font-size:9px;color:#64748b;">Espesor ${N(x.espesor).toFixed(2)} mm</span></td>
           <td class="right">${money(x.precioVentaUnitario)}</td>
           <td class="right">${money(x.precioVentaTotal)}</td>
         </tr>`).join('')}
@@ -2552,7 +2579,7 @@ function renderPaperOF(p){
           const corte = N(x.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
           return `<tr>
             <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
-            <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm</b><br/><span style="font-size:9px;color:#64748b;">Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
+            <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm${describirColorTubo(x)}</b><br/><span style="font-size:9px;color:#64748b;">Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
             <td class="left" style="font-size:9.5px;">
               <b>Principal:</b> ${x.anchoPrinc} mm / ${x.gramajePrinc} g/m²<br/>
               ${/* renderPaperOF multi */''}<b>Rellenos:</b> ${(x.rellenos||[{cant:x.cantRelleno,ancho:x.anchoRell,gramaje:x.gramajeRell}]).filter(r=>r.cant>0).map(r=>r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²').join('<br/>')}<br/>
@@ -2740,7 +2767,7 @@ async function pdfPresupuesto(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 5);
+    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm'+describirColorTubo(it), x + 3, y + 5);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
     doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 8.5);
     x += colW[1];
@@ -2958,7 +2985,7 @@ async function pdfOF(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 5);
+    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm'+describirColorTubo(it), x + 3, y + 5);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
     doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 8.5);
     doc.text('Empaquetado: '+pack, x + 3, y + 11.5);
