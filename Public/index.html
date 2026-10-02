@@ -1310,22 +1310,31 @@ window.calcularReceta = function(){
     grupos.push(base + (i < extra ? 1 : 0));
   }
 
+  /* redondeo a multiplos de 5 */
+  const round5 = (n) => Math.round(n/5) * 5;
+
   let dActual = diam;
   const resultado = [];
 
   const dMedioPrinc = dActual + espPrinc / 2;
-  resultado.push({ tipo: 'Principal', capas: 1, dMedio: dMedioPrinc, ancho: Math.round(10 * Math.sqrt(dMedioPrinc)), gramaje: gramPrinc });
+  resultado.push({ tipo: 'Principal', capas: 1, dMedio: dMedioPrinc, ancho: round5(10 * Math.sqrt(dMedioPrinc)), gramaje: gramPrinc });
   dActual += espPrinc;
+
+  let ultimoRellenoAncho = resultado[0].ancho;
 
   grupos.forEach((capas, idx) => {
     const dInicio = dActual;
     dActual += capas * espPrinc;
     const dMedio = (dInicio + dActual) / 2;
-    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: Math.round(10 * Math.sqrt(dMedio)), gramaje: gramPrinc });
+    const anchoR = round5(10 * Math.sqrt(dMedio));
+    ultimoRellenoAncho = anchoR;
+    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: anchoR, gramaje: gramPrinc });
   });
 
   const dMedioTapa = dActual + espTapa / 2;
-  resultado.push({ tipo: 'Tapa', capas: 1, dMedio: dMedioTapa, ancho: Math.round(10 * Math.sqrt(dMedioTapa)) + 5, gramaje: gramTapa });
+  let anchoTapa = round5(10 * Math.sqrt(dMedioTapa));
+  if (anchoTapa <= ultimoRellenoAncho) anchoTapa = ultimoRellenoAncho + 5;
+  resultado.push({ tipo: 'Tapa', capas: 1, dMedio: dMedioTapa, ancho: anchoTapa, gramaje: gramTapa });
 
   window.__recetaCalculada = resultado;
 
@@ -1335,7 +1344,7 @@ window.calcularReceta = function(){
     h += '<tr><td><b>' + r.tipo + '</b></td><td>' + r.capas + '</td><td>' + r.dMedio.toFixed(1) + ' mm</td><td><b style="color:#15803d">' + r.ancho + ' mm</b></td><td>' + r.gramaje + ' g/m2</td></tr>';
   });
   h += '</tbody></table>';
-  h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: ancho = 10 x raiz cuadrada del diametro medio</div>';
+  h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: 10 x raiz cuadrada del diametro medio, redondeado a multiplos de 5 mm</div>';
   h += '<button class="btn btn-primary w-full mt-2" onclick="aplicarReceta()"><i class="fa-solid fa-check"></i> Aplicar a la carga</button>';
 
   cont.innerHTML = h;
