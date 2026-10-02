@@ -176,6 +176,13 @@ table tbody tr:hover{background:#f8fafc}
         <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-layer-group" style="color:#16a34a"></i> 2. Fajas de cartón</div>
       </div>
       <div style="display:grid;gap:8px">
+        <div id="selectorRecetasWrap" style="display:none;padding:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
+          <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#15803d">Cargar receta guardada</label>
+          <div style="display:flex;gap:6px;margin-top:4px">
+            <select id="selectorRecetas" style="flex:1"><option value="">— Elegir receta —</option></select>
+            <button class="btn btn-primary btn-sm" type="button" onclick="cargarRecetaSeleccionada()">Cargar</button>
+          </div>
+        </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal (interior)</div>
           <div><label>Ancho (mm)</label><input id="ingPrincAncho" type="number" oninput="recalcular()"/></div>
@@ -345,6 +352,7 @@ table tbody tr:hover{background:#f8fafc}
       </div>
       <div class="flex gap-2 mt-3">
         <button class="btn btn-secondary flex-1" onclick="agregarItemPendiente()"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
+        <button class="btn btn-secondary" onclick="guardarRecetaDesdeForm()" title="Guardar esta receta"><i class="fa-solid fa-bookmark"></i></button>
         <button class="btn btn-primary flex-1" onclick="generarPresupuesto()"><i class="fa-solid fa-file-invoice"></i> Generar presupuesto</button>
       </div>
       <div class="mt-2 text-center"><button class="btn btn-secondary btn-sm" onclick="nuevoPedido()">↺ Nuevo pedido</button></div>
@@ -373,6 +381,11 @@ table tbody tr:hover{background:#f8fafc}
         <div class="flex items-end"><button class="btn btn-primary w-full" onclick="calcularReceta()"><i class="fa-solid fa-calculator"></i> Calcular</button></div>
       </div>
       <div id="calcRecetaResultado"><div class="empty">Carga los datos y aprieta Calcular.</div></div>
+
+      <div id="listaRecetasCard" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
+        <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide mb-2">Mis recetas guardadas</div>
+        <div id="listaRecetasBody"><div class="empty">Sin recetas guardadas.</div></div>
+      </div>
     </div>
   </div>
 
@@ -1265,6 +1278,174 @@ window.eliminarGramajeEspesor = function(gramaje){
 /* ============ CALCULADORA DE RECETA ============ */
 window.__recetaCalculada = null;
 
+/* ============ RECETAS GUARDADAS ============ */
+window.__recetaEditandoId = null;
+
+window.renderSelectorRecetas = function(){
+  const sel = $('selectorRecetas');
+  const wrap = $('selectorRecetasWrap');
+  if (!sel || !wrap) return;
+  const recetas = (STATE.config && STATE.config.recetas) || [];
+  if (!recetas.length) { wrap.style.display = 'none'; return; }
+  wrap.style.display = 'block';
+  const cur = sel.value;
+  sel.innerHTML = '<option value="">\u2014 Elegir receta \u2014</option>' +
+    recetas.map(r => '<option value="' + r.id + '">' + esc(r.nombre) + ' - \u00d8' + r.diam + ' \u00d7 ' + r.espesor + ' mm</option>').join('');
+  if (cur && recetas.some(r => r.id === cur)) sel.value = cur;
+};
+
+window.renderListaRecetas = function(){
+  const cont = $('listaRecetasBody');
+  if (!cont) return;
+  const recetas = (STATE.config && STATE.config.recetas) || [];
+  if (!recetas.length) {
+    cont.innerHTML = '<div class="empty">Sin recetas guardadas.</div>';
+    return;
+  }
+  cont.innerHTML = recetas.map(r =>
+    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f1f5f9;gap:8px">' +
+      '<div style="flex:1;min-width:0">' +
+        '<div style="font-size:12px;font-weight:700;color:#0f172a">' + esc(r.nombre) + '</div>' +
+        '<div style="font-size:10.5px;color:#64748b">\u00d8' + r.diam + ' mm \u00b7 ' + r.espesor + ' mm \u00b7 ' + r.fajas.totalCapas + ' capas</div>' +
+      '</div>' +
+      '<button class="btn btn-secondary btn-sm" onclick="cargarReceta(\'' + r.id + '\')" title="Cargar"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>' +
+      '<button class="btn btn-secondary btn-sm" onclick="editarReceta(\'' + r.id + '\')" title="Editar"><i class="fa-solid fa-pen"></i></button>' +
+      '<button class="btn btn-danger btn-sm" onclick="eliminarReceta(\'' + r.id + '\')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>' +
+    '</div>'
+  ).join('');
+};
+
+window.capturarRecetaDelForm = function(){
+  const rellenos = [];
+  const c1 = Math.max(0, parseInt($('ingRellCant').value)||0);
+  if (c1 > 0) rellenos.push({ cant: c1, ancho: N($('ingRellAncho').value), gramaje: N($('ingRellGram').value) });
+  for (let i = 2; i <= 4; i++) {
+    const cEl = $('ingRell'+i+'Cant');
+    if (!cEl) continue;
+    const cant = Math.max(0, parseInt(cEl.value)||0);
+    const ancho = N($('ingRell'+i+'Ancho').value);
+    const gram = N($('ingRell'+i+'Gram').value);
+    if (cant > 0) rellenos.push({ cant: cant, ancho: ancho, gramaje: gram });
+  }
+  const principal = { ancho: N($('ingPrincAncho').value), gramaje: N($('ingPrincGram').value) };
+  const tapa = { ancho: N($('ingTapaAncho').value), gramaje: N($('ingTapaGram').value) };
+  const totalCapas = 1 + rellenos.reduce((s, r) => s + r.cant, 0) + 1;
+  return { principal: principal, rellenos: rellenos, tapa: tapa, totalCapas: totalCapas };
+};
+
+window.aplicarRecetaAlForm = function(fajas){
+  if (!fajas) return;
+  if (fajas.principal) {
+    if ($('ingPrincAncho')) $('ingPrincAncho').value = fajas.principal.ancho;
+    if ($('ingPrincGram')) $('ingPrincGram').value = fajas.principal.gramaje;
+  }
+  const rell = fajas.rellenos || [];
+  if (rell[0]) {
+    if ($('ingRellCant')) $('ingRellCant').value = rell[0].cant;
+    if ($('ingRellAncho')) $('ingRellAncho').value = rell[0].ancho;
+    if ($('ingRellGram')) $('ingRellGram').value = rell[0].gramaje;
+  } else {
+    if ($('ingRellCant')) $('ingRellCant').value = '';
+    if ($('ingRellAncho')) $('ingRellAncho').value = '';
+    if ($('ingRellGram')) $('ingRellGram').value = '';
+  }
+  for (let i = 1; i <= 3; i++) {
+    const r = rell[i];
+    const cEl = $('ingRell'+(i+1)+'Cant');
+    const aEl = $('ingRell'+(i+1)+'Ancho');
+    const gEl = $('ingRell'+(i+1)+'Gram');
+    if (r) {
+      if (cEl) cEl.value = r.cant;
+      if (aEl) aEl.value = r.ancho;
+      if (gEl) gEl.value = r.gramaje;
+    } else {
+      if (cEl) cEl.value = '';
+      if (aEl) aEl.value = '';
+      if (gEl) gEl.value = '';
+    }
+  }
+  if (rell.length > 1) {
+    const wrap = $('gruposRellenoExtras');
+    if (wrap) wrap.style.display = 'block';
+    const ch = $('gruposRellenoExtrasChevron');
+    if (ch) ch.textContent = '-';
+  }
+  if (fajas.tapa) {
+    if ($('ingTapaAncho')) $('ingTapaAncho').value = fajas.tapa.ancho;
+    if ($('ingTapaGram')) $('ingTapaGram').value = fajas.tapa.gramaje;
+  }
+  try { recalcular(); } catch(_){}
+};
+
+window.guardarRecetaDesdeForm = function(){
+  const fajas = window.capturarRecetaDelForm();
+  if (!fajas.principal.ancho || !fajas.principal.gramaje) {
+    toast('Carga al menos la faja principal antes de guardar', 'err');
+    return;
+  }
+  const diam = N($('ingDiam').value);
+  const long = N($('ingLong').value);
+  const espActual = (STATE.resultados && STATE.resultados.espesor) ? STATE.resultados.espesor : 0;
+  const nombreBase = prompt('Nombre de la receta (se agrega \u00d8 y espesor autom\u00e1ticamente):', '');
+  if (nombreBase === null) return;
+  const nombreFinal = (nombreBase.trim() || 'Receta') + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm';
+  STATE.config.recetas = STATE.config.recetas || [];
+  const id = (window.__recetaEditandoId) || uid('rec');
+  const existente = STATE.config.recetas.findIndex(r => r.id === id);
+  const receta = {
+    id: id,
+    nombre: nombreFinal,
+    diam: diam,
+    espesor: Number(espActual.toFixed(2)),
+    fajas: fajas,
+    guardada: new Date().toISOString()
+  };
+  if (existente >= 0) {
+    STATE.config.recetas[existente] = receta;
+    toast('Receta actualizada', 'ok');
+  } else {
+    STATE.config.recetas.push(receta);
+    toast('Receta guardada', 'ok');
+  }
+  window.__recetaEditandoId = null;
+  save(['config']);
+  try { renderSelectorRecetas(); } catch(_){}
+  try { renderListaRecetas(); } catch(_){}
+};
+
+window.cargarRecetaSeleccionada = function(){
+  const sel = $('selectorRecetas');
+  if (!sel || !sel.value) return;
+  window.cargarReceta(sel.value);
+};
+
+window.cargarReceta = function(id){
+  const recetas = (STATE.config && STATE.config.recetas) || [];
+  const r = recetas.find(x => x.id === id);
+  if (!r) return;
+  window.aplicarRecetaAlForm(r.fajas);
+  if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
+  toast('Receta cargada', 'ok');
+};
+
+window.editarReceta = function(id){
+  const recetas = (STATE.config && STATE.config.recetas) || [];
+  const r = recetas.find(x => x.id === id);
+  if (!r) return;
+  window.aplicarRecetaAlForm(r.fajas);
+  window.__recetaEditandoId = id;
+  toast('Receta cargada para editar. Ajusta y volvé a guardar', 'ok');
+};
+
+window.eliminarReceta = function(id){
+  if (!confirm('Eliminar esta receta?')) return;
+  STATE.config.recetas = (STATE.config.recetas || []).filter(r => r.id !== id);
+  save(['config']);
+  try { renderSelectorRecetas(); } catch(_){}
+  try { renderListaRecetas(); } catch(_){}
+  toast('Receta eliminada', 'ok');
+};
+
 window.toggleCalculadoraReceta = function(){
   const c = $('calculadoraRecetaContenido');
   const ch = $('calcRecetaChevron');
@@ -1345,7 +1526,10 @@ window.calcularReceta = function(){
   });
   h += '</tbody></table>';
   h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: 10 x raiz cuadrada del diametro medio, redondeado a multiplos de 5 mm</div>';
-  h += '<button class="btn btn-primary w-full mt-2" onclick="aplicarReceta()"><i class="fa-solid fa-check"></i> Aplicar a la carga</button>';
+  h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
+  h += '<button class="btn btn-primary" onclick="aplicarReceta()"><i class="fa-solid fa-check"></i> Aplicar a la carga</button>';
+  h += '<button class="btn btn-secondary" onclick="guardarRecetaDesdeForm()"><i class="fa-solid fa-bookmark"></i> Guardar receta</button>';
+  h += '</div>';
 
   cont.innerHTML = h;
 };
@@ -3951,6 +4135,8 @@ function arrancarApp(){
   renderEmpleados();
   renderCalibrador();
   try { renderTablasEspesores(); } catch(_){} /* hook-tabla-espesores */
+  try { renderSelectorRecetas(); } catch(_){} /* hook-recetas-arranque */
+  try { renderListaRecetas(); } catch(_){} /* hook-recetas-arranque */
   recalcular();
   calPrevia();
   if (STATE.config.empleadoSeleccionadoId) seleccionarEmpleado(STATE.config.empleadoSeleccionadoId);
