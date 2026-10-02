@@ -2179,7 +2179,22 @@ function generarPresupuesto(){
     clienteEmail: first.clienteEmail, condicionPago: first.condicionPago || '',
     items: JSON.parse(JSON.stringify(STATE.pendientes)),
     observacionesPresupuesto: $('obsPresupuesto').value.trim(),
-    observacionesOF: '', creado: new Date().toISOString()
+    observacionesOF: '', creado: new Date().toISOString(),
+    notasPrivadas: (function(){
+      const r = STATE.resultados || {};
+      const partes = [];
+      const tipoMap = { liviano: 'Liviano', semipesado: 'Semipesado', pesado: 'Pesado' };
+      const mercMap = { cautivo: 'Cautivo', semicautivo: 'Semi-cautivo', competitivo: 'Competitivo' };
+      const segArr = (r.segmento || '').split('_');
+      const tipoTxt = tipoMap[segArr[0]] || segArr[0] || '';
+      const mercTxt = mercMap[segArr[1]] || segArr[1] || '';
+      if (tipoTxt) partes.push('Tipo: ' + tipoTxt);
+      if (mercTxt) partes.push('Mercado: ' + mercTxt);
+      if (r.prodKgMes) partes.push('Prod mensual: ' + Number(r.prodKgMes).toLocaleString('es-AR') + ' kg');
+      if (r.coefAplicado) partes.push('Coef: ' + Number(r.coefAplicado).toLocaleString('es-AR') + ' \$\/kg');
+      if (r.margenReal != null) partes.push('Margen: ' + (r.margenReal >= 0 ? '+' : '') + (r.margenReal*100).toFixed(1) + '%');
+      return partes.join(' - ');
+    })()
   };
   STATE.presupuestos.push(pres);
   STATE.config.obsPresupuestoDefault = $('obsPresupuesto').value; /* obs-presupuesto-guardar */
