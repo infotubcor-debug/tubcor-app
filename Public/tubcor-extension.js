@@ -624,4 +624,106 @@ if (document.readyState === 'loading') {
 
 /* Chequeo de 500ms desactivado */
 
+/* ==== NOTAS PRIVADAS ==== */
+(function(){
+  function getNotas(id){
+    const st = (typeof getState === 'function') ? getState() : null;
+    if (!st) return '';
+    st.config = st.config || {};
+    st.config.notasPrivadasPorPresupuesto = st.config.notasPrivadasPorPresupuesto || {};
+    return st.config.notasPrivadasPorPresupuesto[id] || '';
+  }
+
+  function setNotas(id, texto){
+    const st = (typeof getState === 'function') ? getState() : null;
+    if (!st) return;
+    st.config = st.config || {};
+    st.config.notasPrivadasPorPresupuesto = st.config.notasPrivadasPorPresupuesto || {};
+    st.config.notasPrivadasPorPresupuesto[id] = texto;
+    if (typeof saveState === 'function') saveState(['config']);
+  }
+
+  function inyectarPanel(){
+    const prev = document.getElementById('presPreview');
+    const paper = document.getElementById('presPaper');
+    if (!prev || !paper) return;
+
+    // Si el panel ya esta, solo actualizar
+    let panel = document.getElementById('notasPrivadasPanelExt');
+    const st = (typeof getState === 'function') ? getState() : null;
+    if (!st) return;
+
+    const idActual = st.config && st.config.ultimoPresupuestoId;
+    if (!idActual) {
+      if (panel) panel.remove();
+      return;
+    }
+
+    if (!panel) {
+      panel = document.createElement('div');
+      panel.id = 'notasPrivadasPanelExt';
+      panel.style = 'margin-top:12px;padding:12px;background:#fef3c7;border-left:4px solid #f59e0b;border-radius:6px';
+      paper.parentNode.insertBefore(panel, paper.nextSibling);
+    }
+
+    const notas = getNotas(idActual);
+    const texto = notas && notas.trim() ? notas : '(sin notas)';
+
+    panel.innerHTML = '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">' +
+        '<div style="font-size:11px;font-weight:800;color:#92400e;text-transform:uppercase;letter-spacing:.4px">\u{1F512} Notas privadas (solo vos, no salen en el PDF)</div>' +
+        '<button class="btn btn-secondary btn-sm" type="button" id="notasPrivadasEditBtn">Editar</button>' +
+      '</div>' +
+      '<div style="font-size:12px;color:#78350f;white-space:pre-wrap;font-family:monospace">' + (typeof esc === 'function' ? esc(texto) : texto) + '</div>';
+
+    const btn = document.getElementById('notasPrivadasEditBtn');
+    if (btn && !btn.__hooked){
+      btn.addEventListener('click', function(){
+        const st2 = (typeof getState === 'function') ? getState() : null;
+        if (!st2 || !st2.config.ultimoPresupuestoId) return;
+        const id = st2.config.ultimoPresupuestoId;
+        const actual = getNotas(id);
+        const bg = document.createElement('div');
+        bg.className = 'modal-bg';
+        bg.style.zIndex = '6000';
+        bg.innerHTML = '<div class="modal" style="max-width:620px">' +
+          '<div style="font-size:14px;font-weight:800;color:#92400e;margin-bottom:6px">\u{1F512} Notas privadas</div>' +
+          '<div style="font-size:11px;color:#78350f;margin-bottom:10px">Solo las ves vos en la app. No aparecen en el PDF ni en la OF.</div>' +
+          '<textarea id="notasPrivadasExt" rows="8" style="width:100%;font-family:monospace;font-size:12px;padding:8px;border:1px solid #f59e0b;border-radius:6px">' + (typeof esc === 'function' ? esc(actual) : actual) + '</textarea>' +
+          '<div style="display:flex;justify-content:flex-end;gap:8px;margin-top:12px">' +
+            '<button class="btn btn-secondary" id="notasPrivadasCancel">Cancelar</button>' +
+            '<button class="btn btn-primary" id="notasPrivadasSave">Guardar</button>' +
+          '</div>' +
+        '</div>';
+        document.body.appendChild(bg);
+        bg.querySelector('#notasPrivadasCancel').onclick = function(){ bg.remove(); };
+        bg.querySelector('#notasPrivadasSave').onclick = function(){
+          const t = bg.querySelector('#notasPrivadasExt').value;
+          setNotas(id, t);
+          bg.remove();
+          if (typeof toastMsg === 'function') toastMsg('Notas guardadas', 'ok');
+          setTimeout(inyectarPanel, 200);
+        };
+        setTimeout(function(){ bg.querySelector('#notasPrivadasExt').focus(); }, 50);
+      });
+      btn.__hooked = true;
+    }
+  }
+
+  // Refresco periodico
+  setInterval(function(){ try { inyectarPanel(); } catch(_){} }, 800);
+
+  // Hook al switchTab
+  if (typeof window.switchTab === 'function' && !window.switchTab.__notasHooked) {
+    const orig = window.switchTab;
+    const wrapped = function(name){
+      const r = orig.apply(this, arguments);
+      if (name === 'presupuestos') setTimeout(inyectarPanel, 300);
+      return r;
+    };
+    wrapped.__notasHooked = true;
+    window.switchTab = wrapped;
+  }
+})();
+/* ==== /NOTAS PRIVADAS ==== */
+
 })();
