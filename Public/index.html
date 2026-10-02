@@ -1388,7 +1388,7 @@ window.guardarRecetaDesdeForm = function(){
   const espActual = (STATE.resultados && STATE.resultados.espesor) ? STATE.resultados.espesor : 0;
   const nombreBase = prompt('Nombre de la receta (se agrega \u00d8 y espesor autom\u00e1ticamente):', '');
   if (nombreBase === null) return;
-  const nombreFinal = (nombreBase.trim() || 'Receta') + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm';
+  const nombreFinal = (nombreBase.trim() || 'Receta') + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm \u00d7 ' + (long || '?') + ' mm';
   STATE.config.recetas = STATE.config.recetas || [];
   const id = (window.__recetaEditandoId) || uid('rec');
   const existente = STATE.config.recetas.findIndex(r => r.id === id);
