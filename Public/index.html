@@ -1498,7 +1498,8 @@ window.calcularReceta = function(){
   }
 
   /* redondeo a multiplos de 5 */
-  const round5 = (n) => Math.round(n/5) * 5;
+  /* floor para redondeo hacia abajo */
+  const round5 = (n) => Math.floor(n/5) * 5;
 
   let dActual = diam;
   const resultado = [];
