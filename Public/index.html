@@ -1113,7 +1113,11 @@ function modeloFisico({diametroInterno, longitud, capas}){
     const g = N(c.gramaje); if (!(g>0)) return;
     const reps = Math.max(1, parseInt(c.cantidad)||1);
     /* usar tabla de espesores */
-    const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || {};
+    /* defaults espesores modelo */
+    if (STATE.config && (!STATE.config.espesoresPorGramaje || Object.keys(STATE.config.espesoresPorGramaje).length === 0)) {
+      STATE.config.espesoresPorGramaje = { 130: 0.15, 170: 0.20, 246: 0.30, 357: 0.50, 408: 0.70 };
+    }
+    const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130: 0.15, 170: 0.20, 246: 0.30, 357: 0.50, 408: 0.70 };
     const espesorPorTabla = tabla[String(g)] != null ? N(tabla[String(g)]) : (g / DENSIDAD_CARTON);
     for (let i=0;i<reps;i++){
       const t = espesorPorTabla;
@@ -1147,7 +1151,13 @@ function capasDesdeIngenieria(){
 /* ============ TABLA DE ESPESORES POR GRAMAJE ============ */
 window.renderTablasEspesores = function(){
   /* render tabla espesores readonly */
-  const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130:0.15, 170:0.20, 246:0.30, 357:0.50, 408:0.70 };
+  /* defaults espesores */
+  STATE.config = STATE.config || {};
+  if (!STATE.config.espesoresPorGramaje || Object.keys(STATE.config.espesoresPorGramaje).length === 0) {
+    STATE.config.espesoresPorGramaje = { 130: 0.15, 170: 0.20, 246: 0.30, 357: 0.50, 408: 0.70 };
+    try { save(['config']); } catch(_){}
+  }
+  const tabla = STATE.config.espesoresPorGramaje;
   const gramajes = Object.keys(tabla).sort((a,b)=>N(a)-N(b));
 
   const tbIng = $('tablaEspesoresBody');
