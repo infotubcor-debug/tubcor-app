@@ -183,10 +183,28 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Color</label><select id="ingPrincColor"><option>Marrón</option><option>Blanco</option></select></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
-          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Fajas de relleno (intermedias)</div>
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Fajas de relleno (intermedias) - Grupo 1</div>
           <div><label>Cantidad</label><input id="ingRellCant" type="number" oninput="recalcular()"/></div>
           <div><label>Ancho (mm)</label><input id="ingRellAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingRellGram" type="number" oninput="recalcular()"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 2 (opcional)</div>
+          <div><label>Cantidad</label><input id="ingRell2Cant" type="number" oninput="recalcular()"/></div>
+          <div><label>Ancho (mm)</label><input id="ingRell2Ancho" type="number" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingRell2Gram" type="number" oninput="recalcular()"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 3 (opcional)</div>
+          <div><label>Cantidad</label><input id="ingRell3Cant" type="number" oninput="recalcular()"/></div>
+          <div><label>Ancho (mm)</label><input id="ingRell3Ancho" type="number" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingRell3Gram" type="number" oninput="recalcular()"/></div>
+        </div>
+        <div class="grid grid-cols-3 gap-2 items-end">
+          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 4 (opcional)</div>
+          <div><label>Cantidad</label><input id="ingRell4Cant" type="number" oninput="recalcular()"/></div>
+          <div><label>Ancho (mm)</label><input id="ingRell4Ancho" type="number" oninput="recalcular()"/></div>
+          <div><label>Gramaje (g/m²)</label><input id="ingRell4Gram" type="number" oninput="recalcular()"/></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja de tapa (exterior)</div>
@@ -194,6 +212,17 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Gramaje (g/m²)</label><input id="ingTapaGram" type="number" oninput="recalcular()"/></div>
           <div><label>Color</label><select id="ingTapaColor"><option>Marrón</option><option>Blanco</option></select></div>
         </div>
+      </div>
+      <div id="tablaEspesoresIng" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
+        <div class="flex items-center justify-between mb-2">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Espesor por gramaje (mm)</div>
+          <button type="button" class="btn btn-secondary btn-sm" onclick="agregarGramajeEspesor()"><i class="fa-solid fa-plus"></i> Agregar</button>
+        </div>
+        <table>
+          <thead><tr><th>Gramaje (g/m²)</th><th>Espesor (mm)</th><th style="width:40px"></th></tr></thead>
+          <tbody id="tablaEspesoresBody"></tbody>
+        </table>
+        <div class="hint" style="margin-top:6px;text-align:left">Los valores se guardan automáticamente y se usan en todos los cálculos de espesor.</div>
       </div>
     </div>
 
@@ -371,6 +400,10 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Peso real del tubo (g)</label><input id="calPeso" type="number" step="0.1" value="" title="Peso unitario. Si pesaste varios, poné el total y el sistema divide por la cantidad."/></div>
         </div>
         <button class="btn btn-primary w-full" onclick="registrarPesaje()"><i class="fa-solid fa-plus"></i> Registrar pesaje</button>
+        <div id="tablaEspesoresCal" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide mb-2">Espesor por gramaje (mm)</div>
+          <div id="tablaEspesoresCalBody"></div>
+        </div>
       </div>
     </div>
     <div class="card lg:col-span-2">
@@ -890,7 +923,14 @@ let STATE = {
   clientes:[], presupuestos:[], pendientes:[], pesajes:[], produccion:[],
   bancos:[], movBancos:[], echeqs:[], obligaciones:[],
   empleados:[], recibos:[], pagosEmpleado:[], horasExtras:[], archivosEmpleado:[],
-  config:{ factorProceso:1.000, ultimoPresupuestoId:null, clienteSeleccionadoId:null, empleadoSeleccionadoId:null }
+  config:{
+    factorProceso:1.000,
+    factorProcesoPorSegmento: { liviano: 0.822, semipesado: 1.000, pesado: 1.000 },
+    espesoresPorGramaje: { 130: 0.15, 170: 0.20, 246: 0.30, 357: 0.50, 408: 0.70 },
+    ultimoPresupuestoId:null,
+    clienteSeleccionadoId:null,
+    empleadoSeleccionadoId:null
+  }
 };
 
 const $ = id => document.getElementById(id);
@@ -1062,8 +1102,11 @@ function modeloFisico({diametroInterno, longitud, capas}){
   capas.forEach(c=>{
     const g = N(c.gramaje); if (!(g>0)) return;
     const reps = Math.max(1, parseInt(c.cantidad)||1);
+    /* usar tabla de espesores */
+    const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || {};
+    const espesorPorTabla = tabla[String(g)] != null ? N(tabla[String(g)]) : (g / DENSIDAD_CARTON);
     for (let i=0;i<reps;i++){
-      const t = g / DENSIDAD_CARTON;
+      const t = espesorPorTabla;
       const dMedio = d + t;
       const circ = Math.PI * dMedio / 1000;
       const Lm = L / 1000;
@@ -1079,12 +1122,74 @@ function capasDesdeIngenieria(){
   const capas = [];
   capas.push({tipo:'Principal', gramaje:N($('ingPrincGram').value), cantidad:1});
   const cr = Math.max(0, parseInt($('ingRellCant').value)||0);
-  if (cr>0) capas.push({tipo:'Relleno', gramaje:N($('ingRellGram').value), cantidad:cr});
+  if (cr>0) capas.push({tipo:'Relleno', gramaje:N($('ingRellGram').value), cantidad:cr, grupoIdx:1});
+  /* grupos de relleno adicionales */
+  for (let i=2; i<=4; i++){
+    const cant = Math.max(0, parseInt($('ingRell'+i+'Cant') ? $('ingRell'+i+'Cant').value : 0)||0);
+    const gram = $('ingRell'+i+'Gram') ? N($('ingRell'+i+'Gram').value) : 0;
+    if (cant > 0 && gram > 0) capas.push({tipo:'Relleno', gramaje:gram, cantidad:cant, grupoIdx:i});
+  }
   capas.push({tipo:'Tapa', gramaje:N($('ingTapaGram').value), cantidad:1});
   return capas.filter(c=>c.gramaje>0);
 }
 
 /* ========== Ingeniería ========== */
+/* ============ TABLA DE ESPESORES POR GRAMAJE ============ */
+window.renderTablasEspesores = function(){
+  const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130:0.15, 170:0.20, 246:0.30, 357:0.50, 408:0.70 };
+  const gramajes = Object.keys(tabla).sort((a,b)=>N(a)-N(b));
+
+  const tbIng = $('tablaEspesoresBody');
+  if (tbIng){
+    tbIng.innerHTML = gramajes.map(g => '<tr>' +
+      '<td><b>' + g + ' g/m\u00b2</b></td>' +
+      '<td><input type="number" step="0.01" min="0" value="' + N(tabla[g]).toFixed(2) + '" oninput="cambiarEspesor(\'' + g + '\', this.value)" style="max-width:120px;margin:0 auto"/></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="eliminarGramajeEspesor(\'' + g + '\')"><i class="fa-solid fa-trash"></i></button></td>' +
+    '</tr>').join('');
+  }
+
+  const tbCal = $('tablaEspesoresCalBody');
+  if (tbCal){
+    tbCal.innerHTML = gramajes.map(g => '<div style="display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #f1f5f9">' +
+      '<span style="font-size:11px"><b>' + g + ' g/m\u00b2</b></span>' +
+      '<span style="font-size:11px;color:#15803d;font-weight:700">' + N(tabla[g]).toFixed(2) + ' mm</span>' +
+    '</div>').join('');
+  }
+};
+
+window.cambiarEspesor = function(gramaje, valor){
+  const v = N(valor);
+  if (!(v > 0)) return;
+  STATE.config.espesoresPorGramaje = STATE.config.espesoresPorGramaje || {};
+  STATE.config.espesoresPorGramaje[String(gramaje)] = v;
+  save(['config']);
+  try { window.renderTablasEspesores(); } catch(_){}
+  try { recalcular(); } catch(_){}
+  try { calPrevia(); } catch(_){}
+};
+
+window.agregarGramajeEspesor = function(){
+  const gram = prompt('Gramaje (g/m\u00b2):');
+  if (!gram) return;
+  const g = N(gram);
+  if (!(g > 0)) return;
+  const esp = N(prompt('Espesor real medido (mm):'));
+  if (!(esp > 0)) return;
+  STATE.config.espesoresPorGramaje = STATE.config.espesoresPorGramaje || {};
+  STATE.config.espesoresPorGramaje[String(g)] = esp;
+  save(['config']);
+  window.renderTablasEspesores();
+  try { recalcular(); } catch(_){}
+};
+
+window.eliminarGramajeEspesor = function(gramaje){
+  if (!confirm('Eliminar el gramaje ' + gramaje + ' g/m\u00b2?')) return;
+  if (STATE.config.espesoresPorGramaje) delete STATE.config.espesoresPorGramaje[String(gramaje)];
+  save(['config']);
+  window.renderTablasEspesores();
+  try { recalcular(); } catch(_){}
+};
+
 function recalcular(){
   if (!STATE.config.factorProcesoPorSegmento) {
     const fg = N(STATE.config.factorProceso);
@@ -3430,7 +3535,7 @@ function switchTab(name){
   if (name === 'of') { renderOF(); try { renderTotalesMesOF(); } catch(_){} }
   if (name === 'produccion') renderProduccion();
   if (name === 'finanzas'){ renderFinanzas(); renderFinBancos(); renderFinEcheqs(); renderFinCobrar(); renderFinPagar(); renderFinConciliacion(); }
-  if (name === 'calibrador'){ calPrevia(); renderCalibrador(); }
+  if (name === 'calibrador'){ calPrevia(); renderCalibrador(); try { renderTablasEspesores(); } catch(_){} }
   if (name === 'clientes'){ renderClientes(); cargarSelectoresClientes(); }
   if (name === 'empleados'){ renderEmpleados(); llenarSelectPeriodos(); llenarSelectCuentasPago(); }
   window.scrollTo({top:0, behavior:'smooth'});
@@ -3624,6 +3729,7 @@ function arrancarApp(){
   renderClientes();
   renderEmpleados();
   renderCalibrador();
+  try { renderTablasEspesores(); } catch(_){} /* hook-tabla-espesores */
   recalcular();
   calPrevia();
   if (STATE.config.empleadoSeleccionadoId) seleccionarEmpleado(STATE.config.empleadoSeleccionadoId);
