@@ -368,14 +368,7 @@ table tbody tr:hover{background:#f8fafc}
       <div class="grid grid-cols-2 md:grid-cols-3 gap-2 mb-2">
         <div><label>Diametro interno (mm)</label><input id="calcDiam" type="number" step="0.5"/></div>
         <div><label>Espesor final (mm)</label><input id="calcEsp" type="number" step="0.1"/></div>
-        <div><label>Grupos de relleno</label>
-          <select id="calcGrupos">
-            <option value="1">1</option>
-            <option value="2">2</option>
-            <option value="3" selected>3</option>
-            <option value="4">4</option>
-          </select>
-        </div>
+        
         <div><label>Gramaje faja principal</label><input id="calcGramPrinc" type="number" value="357"/></div>
         <div><label>Gramaje rellenos</label><input id="calcGramRell" type="number" value="357"/></div>
         <div><label>Gramaje tapa</label><input id="calcGramTapa" type="number" value="170"/></div>
@@ -1462,7 +1455,7 @@ window.toggleCalculadoraReceta = function(){
 window.calcularReceta = function(){
   const diam = N($('calcDiam').value);
   const espFinal = N($('calcEsp').value);
-  const numGrupos = parseInt($('calcGrupos').value) || 3;
+  /* sin selector de grupos: el algoritmo decide solo */
   const gramPrinc = N($('calcGramPrinc').value) || 357;
   const gramRell = N($('calcGramRell') ? $('calcGramRell').value : 0) || gramPrinc;
   const gramTapa = N($('calcGramTapa').value) || 170;
@@ -1490,11 +1483,45 @@ window.calcularReceta = function(){
 
   const capasRellenoTotal = Math.max(1, Math.round(espRellenos / espRell));
 
+  /* algoritmo natural por capa */
+  const __round5 = (n) => Math.floor(n/5) * 5;
+  const __layers = [];
+  let __dTmp = diam + espPrinc;
+  for (let i = 0; i < capasRellenoTotal; i++) {
+    const dIni = __dTmp;
+    __dTmp += espRell;
+    const dMed = (dIni + __dTmp) / 2;
+    const anchoTeo = 10 * Math.sqrt(dMed);
+    __layers.push({ dMedio: dMed, anchoTeorico: anchoTeo, ancho: __round5(anchoTeo) });
+  }
   const grupos = [];
-  const base = Math.floor(capasRellenoTotal / numGrupos);
-  const extra = capasRellenoTotal - base * numGrupos;
-  for (let i = 0; i < numGrupos; i++) {
-    grupos.push(base + (i < extra ? 1 : 0));
+  let __cur = null;
+  __layers.forEach(l => {
+    if (!__cur || __cur.ancho !== l.ancho) {
+      if (__cur) grupos.push(__cur);
+      __cur = { capas: 1, ancho: l.ancho, dMedioSum: l.dMedio, anchoTeoricoSum: l.anchoTeorico };
+    } else {
+      __cur.capas++;
+      __cur.dMedioSum += l.dMedio;
+      __cur.anchoTeoricoSum += l.anchoTeorico;
+    }
+  });
+  if (__cur) grupos.push(__cur);
+
+  // Si da mas de 4 grupos, fusionar los mas chicos
+  while (grupos.length > 4) {
+    let minIdx = 0, minCapas = Infinity;
+    for (let i = 0; i < grupos.length - 1; i++) {
+      const suma = grupos[i].capas + grupos[i+1].capas;
+      if (suma < minCapas) { minCapas = suma; minIdx = i; }
+    }
+    const a = grupos[minIdx], b = grupos[minIdx + 1];
+    grupos.splice(minIdx, 2, {
+      capas: a.capas + b.capas,
+      ancho: Math.max(a.ancho, b.ancho),
+      dMedioSum: a.dMedioSum + b.dMedioSum,
+      anchoTeoricoSum: a.anchoTeoricoSum + b.anchoTeoricoSum
+    });
   }
 
   /* redondeo a multiplos de 5 */
@@ -1511,14 +1538,13 @@ window.calcularReceta = function(){
 
   let ultimoRellenoAncho = resultado[0].ancho;
 
-  grupos.forEach((capas, idx) => {
-    const dInicio = dActual;
+  grupos.forEach((g, idx) => {
+    const capas = g.capas;
+    const dMedio = g.dMedioSum / capas;
+    const anchoTeoricoR = g.anchoTeoricoSum / capas;
     dActual += capas * espRell;
-    const dMedio = (dInicio + dActual) / 2;
-    const anchoTeoricoR = 10 * Math.sqrt(dMedio);
-    const anchoR = round5(anchoTeoricoR);
-    ultimoRellenoAncho = anchoR;
-    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, anchoTeorico: anchoTeoricoR, ancho: anchoR, gramaje: gramRell });
+    ultimoRellenoAncho = g.ancho;
+    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, anchoTeorico: anchoTeoricoR, ancho: g.ancho, gramaje: gramRell });
   });
 
   const dMedioTapa = dActual + espTapa / 2;
