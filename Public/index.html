@@ -188,23 +188,31 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Ancho (mm)</label><input id="ingRellAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingRellGram" type="number" oninput="recalcular()"/></div>
         </div>
-        <div class="grid grid-cols-3 gap-2 items-end">
-          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 2 (opcional)</div>
-          <div><label>Cantidad</label><input id="ingRell2Cant" type="number" oninput="recalcular()"/></div>
-          <div><label>Ancho (mm)</label><input id="ingRell2Ancho" type="number" oninput="recalcular()"/></div>
-          <div><label>Gramaje (g/m²)</label><input id="ingRell2Gram" type="number" oninput="recalcular()"/></div>
-        </div>
-        <div class="grid grid-cols-3 gap-2 items-end">
-          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 3 (opcional)</div>
-          <div><label>Cantidad</label><input id="ingRell3Cant" type="number" oninput="recalcular()"/></div>
-          <div><label>Ancho (mm)</label><input id="ingRell3Ancho" type="number" oninput="recalcular()"/></div>
-          <div><label>Gramaje (g/m²)</label><input id="ingRell3Gram" type="number" oninput="recalcular()"/></div>
-        </div>
-        <div class="grid grid-cols-3 gap-2 items-end">
-          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 4 (opcional)</div>
-          <div><label>Cantidad</label><input id="ingRell4Cant" type="number" oninput="recalcular()"/></div>
-          <div><label>Ancho (mm)</label><input id="ingRell4Ancho" type="number" oninput="recalcular()"/></div>
-          <div><label>Gramaje (g/m²)</label><input id="ingRell4Gram" type="number" oninput="recalcular()"/></div>
+        <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1">
+          <button type="button" onclick="toggleGruposRellenoExtras()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.4px">+ Más grupos de relleno (opcional)</div>
+            <span id="gruposRellenoExtrasChevron" style="color:#64748b;font-weight:800;font-size:18px">+</span>
+          </button>
+          <div id="gruposRellenoExtras" style="display:none;margin-top:10px">
+            <div class="grid grid-cols-3 gap-2 items-end">
+              <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 2</div>
+              <div><label>Cantidad</label><input id="ingRell2Cant" type="number" oninput="recalcular()"/></div>
+              <div><label>Ancho (mm)</label><input id="ingRell2Ancho" type="number" oninput="recalcular()"/></div>
+              <div><label>Gramaje (g/m²)</label><input id="ingRell2Gram" type="number" oninput="recalcular()"/></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
+              <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 3</div>
+              <div><label>Cantidad</label><input id="ingRell3Cant" type="number" oninput="recalcular()"/></div>
+              <div><label>Ancho (mm)</label><input id="ingRell3Ancho" type="number" oninput="recalcular()"/></div>
+              <div><label>Gramaje (g/m²)</label><input id="ingRell3Gram" type="number" oninput="recalcular()"/></div>
+            </div>
+            <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
+              <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 4</div>
+              <div><label>Cantidad</label><input id="ingRell4Cant" type="number" oninput="recalcular()"/></div>
+              <div><label>Ancho (mm)</label><input id="ingRell4Ancho" type="number" oninput="recalcular()"/></div>
+              <div><label>Gramaje (g/m²)</label><input id="ingRell4Gram" type="number" oninput="recalcular()"/></div>
+            </div>
+          </div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja de tapa (exterior)</div>
@@ -1176,6 +1184,15 @@ window.renderTablasEspesores = function(){
       '<span style="font-size:11px;color:#15803d;font-weight:700">' + N(tabla[g]).toFixed(2) + ' mm</span>' +
     '</div>').join('');
   }
+};
+
+window.toggleGruposRellenoExtras = function(){
+  const c = $('gruposRellenoExtras');
+  const ch = $('gruposRellenoExtrasChevron');
+  if (!c) return;
+  const abierto = c.style.display === 'block';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '+' : '-';
 };
 
 window.toggleTablaEspesores = function(){
@@ -3710,6 +3727,16 @@ function limpiarIngenieria(){
   limpiar('ingPrincAncho'); limpiar('ingPrincGram');
   const rellCant = $('ingRellCant'); if (rellCant) rellCant.value = '';
   limpiar('ingRellAncho'); limpiar('ingRellGram');
+  /* limpiar grupos extras */
+  [2,3,4].forEach(i => {
+    limpiar('ingRell'+i+'Cant');
+    limpiar('ingRell'+i+'Ancho');
+    limpiar('ingRell'+i+'Gram');
+  });
+  const gruposExt = $('gruposRellenoExtras');
+  if (gruposExt) gruposExt.style.display = 'none';
+  const chev = $('gruposRellenoExtrasChevron');
+  if (chev) chev.textContent = '+';
   limpiar('ingTapaAncho'); limpiar('ingTapaGram');
   limpiar('precioCP'); limpiar('precioCR'); limpiar('precioCT'); limpiar('precioFlete');
   const desp = $('ingDesperdicio'); if (desp) desp.value = '10';
