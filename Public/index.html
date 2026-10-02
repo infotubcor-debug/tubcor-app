@@ -214,15 +214,21 @@ table tbody tr:hover{background:#f8fafc}
         </div>
       </div>
       <div id="tablaEspesoresIng" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Espesor por gramaje (mm)</div>
-          <button type="button" class="btn btn-secondary btn-sm" onclick="agregarGramajeEspesor()"><i class="fa-solid fa-plus"></i> Agregar</button>
+        /* tabla espesores collapsible */
+        <button type="button" onclick="window.toggleTablaEspesores()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
+          <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.4px">Espesor por gramaje (mm)</div>
+          <span id="tablaEspesoresChevron" style="color:#64748b;font-weight:800;font-size:18px">+</span>
+        </button>
+        <div id="tablaEspesoresContenido" style="display:none;margin-top:10px">
+          <div class="flex justify-end mb-2">
+            <button type="button" class="btn btn-secondary btn-sm" onclick="agregarGramajeEspesor()"><i class="fa-solid fa-plus"></i> Agregar gramaje</button>
+          </div>
+          <table>
+            <thead><tr><th>Gramaje (g/m²)</th><th>Espesor (mm)</th><th style="width:40px"></th></tr></thead>
+            <tbody id="tablaEspesoresBody"></tbody>
+          </table>
+          <div class="hint" style="margin-top:6px;text-align:left">Los valores se usan en todos los cálculos de espesor. No se editan una vez cargados.</div>
         </div>
-        <table>
-          <thead><tr><th>Gramaje (g/m²)</th><th>Espesor (mm)</th><th style="width:40px"></th></tr></thead>
-          <tbody id="tablaEspesoresBody"></tbody>
-        </table>
-        <div class="hint" style="margin-top:6px;text-align:left">Los valores se guardan automáticamente y se usan en todos los cálculos de espesor.</div>
       </div>
     </div>
 
@@ -401,8 +407,14 @@ table tbody tr:hover{background:#f8fafc}
         </div>
         <button class="btn btn-primary w-full" onclick="registrarPesaje()"><i class="fa-solid fa-plus"></i> Registrar pesaje</button>
         <div id="tablaEspesoresCal" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
-          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide mb-2">Espesor por gramaje (mm)</div>
-          <div id="tablaEspesoresCalBody"></div>
+          /* cal espesores collapsible */
+          <button type="button" onclick="window.toggleTablaEspesoresCal()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
+            <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.4px">Espesor por gramaje (mm)</div>
+            <span id="tablaEspesoresCalChevron" style="color:#64748b;font-weight:800;font-size:18px">+</span>
+          </button>
+          <div id="tablaEspesoresCalContenido" style="display:none;margin-top:10px">
+            <div id="tablaEspesoresCalBody"></div>
+          </div>
         </div>
       </div>
     </div>
@@ -1136,6 +1148,7 @@ function capasDesdeIngenieria(){
 /* ========== Ingeniería ========== */
 /* ============ TABLA DE ESPESORES POR GRAMAJE ============ */
 window.renderTablasEspesores = function(){
+  /* render tabla espesores readonly */
   const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130:0.15, 170:0.20, 246:0.30, 357:0.50, 408:0.70 };
   const gramajes = Object.keys(tabla).sort((a,b)=>N(a)-N(b));
 
@@ -1143,8 +1156,8 @@ window.renderTablasEspesores = function(){
   if (tbIng){
     tbIng.innerHTML = gramajes.map(g => '<tr>' +
       '<td><b>' + g + ' g/m\u00b2</b></td>' +
-      '<td><input type="number" step="0.01" min="0" value="' + N(tabla[g]).toFixed(2) + '" oninput="cambiarEspesor(\'' + g + '\', this.value)" style="max-width:120px;margin:0 auto"/></td>' +
-      '<td><button class="btn btn-danger btn-sm" onclick="eliminarGramajeEspesor(\'' + g + '\')"><i class="fa-solid fa-trash"></i></button></td>' +
+      '<td><b>' + N(tabla[g]).toFixed(2) + ' mm</b></td>' +
+      '<td><button class="btn btn-danger btn-sm" onclick="eliminarGramajeEspesor(\'' + g + '\')" title="Eliminar"><i class="fa-solid fa-trash"></i></button></td>' +
     '</tr>').join('');
   }
 
@@ -1157,16 +1170,25 @@ window.renderTablasEspesores = function(){
   }
 };
 
-window.cambiarEspesor = function(gramaje, valor){
-  const v = N(valor);
-  if (!(v > 0)) return;
-  STATE.config.espesoresPorGramaje = STATE.config.espesoresPorGramaje || {};
-  STATE.config.espesoresPorGramaje[String(gramaje)] = v;
-  save(['config']);
-  try { window.renderTablasEspesores(); } catch(_){}
-  try { recalcular(); } catch(_){}
-  try { calPrevia(); } catch(_){}
+window.toggleTablaEspesores = function(){
+  const c = $('tablaEspesoresContenido');
+  const ch = $('tablaEspesoresChevron');
+  if (!c) return;
+  const abierto = c.style.display === 'block';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '+' : '-';
 };
+
+window.toggleTablaEspesoresCal = function(){
+  const c = $('tablaEspesoresCalContenido');
+  const ch = $('tablaEspesoresCalChevron');
+  if (!c) return;
+  const abierto = c.style.display === 'block';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '+' : '-';
+};
+
+/* cambiarEspesor eliminada (ahora readonly) */
 
 window.agregarGramajeEspesor = function(){
   const gram = prompt('Gramaje (g/m\u00b2):');
