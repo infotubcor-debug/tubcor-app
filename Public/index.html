@@ -2313,31 +2313,36 @@ function etiquetaPaquete(v){
 }
 
 function describirColorTubo(item){
-  const cp = String(item.colorPrinc || '').trim();
-  const ct = String(item.colorTapa || '').trim();
-  if (!cp && !ct) return '';
-  const cpLow = cp.toLowerCase().replace(/\s*impreso/i, '').trim();
-  const ctLow = ct.toLowerCase().replace(/\s*impreso/i, '').trim();
-  const cpTieneImp = cp.toLowerCase().indexOf('impreso') >= 0;
-  const ctTieneImp = ct.toLowerCase().indexOf('impreso') >= 0;
-  if (cpLow === ctLow && cpTieneImp === ctTieneImp) {
-    if (cpTieneImp) return ' color ' + cpLow + ' con impresi\u00f3n en su interior y exterior';
-    return ' color ' + cpLow;
+  const cpRaw = String(item.colorPrinc || '').trim();
+  const ctRaw = String(item.colorTapa || '').trim();
+  if (!cpRaw && !ctRaw) return '';
+
+  const cpLow = cpRaw.toLowerCase();
+  const ctLow = ctRaw.toLowerCase();
+  const cpImp = cpLow.indexOf('impreso') >= 0;
+  const ctImp = ctLow.indexOf('impreso') >= 0;
+  const cpColor = cpLow.replace(/\s*impreso/i, '').trim();
+  const ctColor = ctLow.replace(/\s*impreso/i, '').trim();
+
+  function etiqueta(color, imp, ubicacion){
+    if (imp) return color + ' con impresi\u00f3n en su ' + ubicacion;
+    return color;
   }
-  function bloque(color, ubicacion){
-    if (!color) return '';
-    const tieneImp = color.toLowerCase().indexOf('impreso') >= 0;
-    const colorLimpio = color.replace(/\s*impreso/i, '').trim().toLowerCase();
-    if (tieneImp) return colorLimpio + ' con impresi\u00f3n en su ' + ubicacion;
-    return colorLimpio + ' (' + ubicacion + ')';
+
+  // Mismo color base
+  if (cpColor === ctColor) {
+    if (!cpImp && !ctImp) return ' color ' + cpColor;
+    if (cpImp && ctImp) return ' color ' + cpColor + ' con impresi\u00f3n en su interior y exterior';
+    if (cpImp) return ' color ' + cpColor + ' con impresi\u00f3n en su interior';
+    return ' color ' + cpColor + ' con impresi\u00f3n en su exterior';
   }
-  const p1 = bloque(cp, 'interior');
-  const p2 = bloque(ct, 'exterior');
-  const partes = [];
-  if (p1) partes.push(p1);
-  if (p2) partes.push(p2);
-  return ' color ' + partes.join(' y ');
+
+  // Distintos colores
+  const p1 = etiqueta(cpColor, cpImp, 'interior');
+  const p2 = etiqueta(ctColor, ctImp, 'exterior');
+  return ' color ' + p1 + ' (interior) y ' + p2 + ' (exterior)';
 }
+
 
 function renderPaperPresupuesto(p){
   const items = p.items||[];
