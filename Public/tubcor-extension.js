@@ -629,6 +629,10 @@ if (document.readyState === 'loading') {
   function getNotas(id){
     const st = (typeof getState === 'function') ? getState() : null;
     if (!st) return '';
+    // 1. Buscar en el presupuesto (auto-generadas)
+    const pres = (st.presupuestos || []).find(p => p.id === id);
+    if (pres && pres.notasPrivadas && pres.notasPrivadas.trim()) return pres.notasPrivadas;
+    // 2. Buscar en config (editadas manualmente)
     st.config = st.config || {};
     st.config.notasPrivadasPorPresupuesto = st.config.notasPrivadasPorPresupuesto || {};
     return st.config.notasPrivadasPorPresupuesto[id] || '';
@@ -637,10 +641,18 @@ if (document.readyState === 'loading') {
   function setNotas(id, texto){
     const st = (typeof getState === 'function') ? getState() : null;
     if (!st) return;
-    st.config = st.config || {};
-    st.config.notasPrivadasPorPresupuesto = st.config.notasPrivadasPorPresupuesto || {};
-    st.config.notasPrivadasPorPresupuesto[id] = texto;
-    if (typeof saveState === 'function') saveState(['config']);
+    // 1. Guardar en el presupuesto (sobreescribe la auto-generada)
+    const pres = (st.presupuestos || []).find(p => p.id === id);
+    if (pres) {
+      pres.notasPrivadas = texto;
+      if (typeof saveState === 'function') saveState(['presupuestos']);
+    } else {
+      // 2. Si no se encuentra, guardar en config
+      st.config = st.config || {};
+      st.config.notasPrivadasPorPresupuesto = st.config.notasPrivadasPorPresupuesto || {};
+      st.config.notasPrivadasPorPresupuesto[id] = texto;
+      if (typeof saveState === 'function') saveState(['config']);
+    }
   }
 
   function inyectarPanel(){
