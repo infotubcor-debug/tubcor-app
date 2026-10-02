@@ -376,7 +376,8 @@ table tbody tr:hover{background:#f8fafc}
             <option value="4">4</option>
           </select>
         </div>
-        <div><label>Gramaje principal y rellenos</label><input id="calcGramPrinc" type="number" value="357"/></div>
+        <div><label>Gramaje faja principal</label><input id="calcGramPrinc" type="number" value="357"/></div>
+        <div><label>Gramaje rellenos</label><input id="calcGramRell" type="number" value="357"/></div>
         <div><label>Gramaje tapa</label><input id="calcGramTapa" type="number" value="170"/></div>
         <div class="flex items-end"><button class="btn btn-primary w-full" onclick="calcularReceta()"><i class="fa-solid fa-calculator"></i> Calcular</button></div>
       </div>
@@ -1438,8 +1439,11 @@ window.editarReceta = function(id){
 };
 
 window.eliminarReceta = function(id){
-  if (!confirm('Eliminar esta receta?')) return;
-  STATE.config.recetas = (STATE.config.recetas || []).filter(r => r.id !== id);
+  /* eliminar-receta-confirm */
+  const r = (STATE.config.recetas || []).find(x => x.id === id);
+  const nombre = r ? r.nombre : 'esta receta';
+  if (!confirm('\u00bfEliminar la receta "' + nombre + '"?\n\nEsta accion no se puede deshacer.\n\nApret\u00e1 OK para confirmar.')) return;
+  STATE.config.recetas = (STATE.config.recetas || []).filter(x => x.id !== id);
   save(['config']);
   try { renderSelectorRecetas(); } catch(_){}
   try { renderListaRecetas(); } catch(_){}
@@ -1460,6 +1464,7 @@ window.calcularReceta = function(){
   const espFinal = N($('calcEsp').value);
   const numGrupos = parseInt($('calcGrupos').value) || 3;
   const gramPrinc = N($('calcGramPrinc').value) || 357;
+  const gramRell = N($('calcGramRell') ? $('calcGramRell').value : 0) || gramPrinc;
   const gramTapa = N($('calcGramTapa').value) || 170;
 
   const cont = $('calcRecetaResultado');
@@ -1475,6 +1480,7 @@ window.calcularReceta = function(){
 
   const espPrinc = espPorGram(gramPrinc);
   const espTapa = espPorGram(gramTapa);
+  const espRell = espPorGram(gramRell);
   const espRellenos = espFinal - espPrinc - espTapa;
 
   if (espRellenos <= 0) {
@@ -1482,7 +1488,7 @@ window.calcularReceta = function(){
     return;
   }
 
-  const capasRellenoTotal = Math.max(1, Math.round(espRellenos / espPrinc));
+  const capasRellenoTotal = Math.max(1, Math.round(espRellenos / espRell));
 
   const grupos = [];
   const base = Math.floor(capasRellenoTotal / numGrupos);
@@ -1505,11 +1511,11 @@ window.calcularReceta = function(){
 
   grupos.forEach((capas, idx) => {
     const dInicio = dActual;
-    dActual += capas * espPrinc;
+    dActual += capas * espRell;
     const dMedio = (dInicio + dActual) / 2;
     const anchoR = round5(10 * Math.sqrt(dMedio));
     ultimoRellenoAncho = anchoR;
-    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: anchoR, gramaje: gramPrinc });
+    resultado.push({ tipo: 'Relleno ' + (idx+1), capas: capas, dMedio: dMedio, ancho: anchoR, gramaje: gramRell });
   });
 
   const dMedioTapa = dActual + espTapa / 2;
