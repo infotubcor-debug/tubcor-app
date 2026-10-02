@@ -1520,16 +1520,18 @@ window.calcularReceta = function(){
   });
 
   const dMedioTapa = dActual + espTapa / 2;
-  let anchoTapa = round5(10 * Math.sqrt(dMedioTapa));
-  if (anchoTapa <= ultimoRellenoAncho) anchoTapa = ultimoRellenoAncho + 5;
-  resultado.push({ tipo: 'Tapa', capas: 1, dMedio: dMedioTapa, ancho: anchoTapa, gramaje: gramTapa });
+  /* tapa simple +5 */
+  const anchoTeoricoTapa = 10 * Math.sqrt(dMedioTapa);
+  const anchoTapa = ultimoRellenoAncho + 5;
+  resultado.push({ tipo: 'Tapa', capas: 1, dMedio: dMedioTapa, anchoTeorico: anchoTeoricoTapa, ancho: anchoTapa, gramaje: gramTapa });
 
   window.__recetaCalculada = resultado;
 
   const espTotal = espPrinc + capasRellenoTotal * espPrinc + espTapa;
-  let h = '<table><thead><tr><th>Grupo</th><th>Capas</th><th>D medio</th><th>Ancho sugerido</th><th>Gramaje</th></tr></thead><tbody>';
+  let h = '<table><thead><tr><th>Grupo</th><th>Capas</th><th>D medio</th><th>Te\u00f3rico</th><th>Ancho sugerido</th><th>Gramaje</th></tr></thead><tbody>';
   resultado.forEach(r => {
-    h += '<tr><td><b>' + r.tipo + '</b></td><td>' + r.capas + '</td><td>' + r.dMedio.toFixed(1) + ' mm</td><td><b style="color:#15803d">' + r.ancho + ' mm</b></td><td>' + r.gramaje + ' g/m2</td></tr>';
+    const teo = (r.anchoTeorico != null) ? r.anchoTeorico : r.ancho;
+    h += '<tr><td><b>' + r.tipo + '</b></td><td>' + r.capas + '</td><td>' + r.dMedio.toFixed(1) + ' mm</td><td style="color:#64748b">' + teo.toFixed(1) + ' mm</td><td><b style="color:#15803d">' + r.ancho + ' mm</b></td><td>' + r.gramaje + ' g/m2</td></tr>';
   });
   h += '</tbody></table>';
   h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: 10 x raiz cuadrada del diametro medio, redondeado a multiplos de 5 mm</div>';
