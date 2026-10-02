@@ -1346,7 +1346,7 @@ function recalcular(){
   const peVentas = contribUnit>0 ? peTubos*precioUnitSinIva : Infinity;
   STATE.resultados = {
     diam, long, cant, capas,
-    espesor: m.espesor*fp,
+    espesor: m.espesor, /* sin factor - solo peso lleva factor */
     pesoUnitG, pesoUnitKg, pesoLoteKg,
     papelTotalG:papelTotal, adhSecoG:adhSecoTotal, pastaTotalG:pastaTotal, solidos,
     gPrinc, gRell, gTapa,
@@ -1366,7 +1366,7 @@ function recalcular(){
     peTubos, peKg, peVentas, gf, prodKgMes,
     requiereCNC: long<750, metrosLineales
   };
-  $('rEsp').textContent = (m.espesor*fp).toFixed(2)+' mm';
+  $('rEsp').textContent = m.espesor.toFixed(2)+' mm';
   $('rPesoU').textContent = pesoUnitG.toFixed(1)+' g';
   $('rPesoL').textContent = pesoLoteKg.toFixed(2)+' kg';
   const __costoVU_Vacio = costoTotalKgActual < 0.01;
