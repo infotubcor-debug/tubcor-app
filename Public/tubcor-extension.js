@@ -599,6 +599,12 @@ async function boot(){
     window.switchTab = wrapped;
   }
 
+  /* refresh historial periodic */
+  setInterval(() => {
+    try { renderHistGF(); } catch(_){}
+    try { renderHistPrecios(); } catch(_){}
+  }, 5000);
+
   setInterval(() => {
     inyectarKwh();
     inyectarAyuda();
