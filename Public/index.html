@@ -2193,6 +2193,10 @@ function generarPresupuesto(){
       if (r.prodKgMes) partes.push('Prod mensual: ' + Number(r.prodKgMes).toLocaleString('es-AR') + ' kg');
       if (r.coefAplicado) partes.push('Coef: ' + Number(r.coefAplicado).toLocaleString('es-AR') + ' \$\/kg');
       if (r.margenReal != null) partes.push('Margen: ' + (r.margenReal >= 0 ? '+' : '') + (r.margenReal*100).toFixed(1) + '%');
+      const __mesP = (function(){ try { const el = document.getElementById('preciosMesExt'); return el && el.value ? el.value : ''; } catch(_){ return ''; } })();
+      const __mesG = (function(){ try { const el = document.getElementById('gfMesExt'); return el && el.value ? el.value : ''; } catch(_){ return ''; } })();
+      if (__mesP) partes.push('Costos: ' + __mesP);
+      if (__mesG) partes.push('GF: ' + __mesG);
       return partes.join(' - ');
     })()
   };
