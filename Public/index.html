@@ -2095,6 +2095,19 @@ function agregarItemPendiente(){
     anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), colorPrinc: $('ingPrincColor').value,
     cantRelleno: Math.max(0, parseInt($('ingRellCant').value)||0),
     anchoRell: N($('ingRellAncho').value), gramajeRell: N($('ingRellGram').value),
+    /* rellenos array */
+    rellenos: (function(){
+      const arr = [];
+      const c1 = Math.max(0, parseInt($('ingRellCant').value)||0);
+      if (c1 > 0) arr.push({ cant: c1, ancho: N($('ingRellAncho').value), gramaje: N($('ingRellGram').value) });
+      for (let i = 2; i <= 4; i++) {
+        const cEl = $('ingRell'+i+'Cant');
+        if (!cEl) continue;
+        const cc = Math.max(0, parseInt(cEl.value)||0);
+        if (cc > 0) arr.push({ cant: cc, ancho: N($('ingRell'+i+'Ancho').value), gramaje: N($('ingRell'+i+'Gram').value) });
+      }
+      return arr;
+    })(),
     anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), colorTapa: $('ingTapaColor').value,
     pesoUnitG: r.pesoUnitG, pesoUnitKg: r.pesoUnitKg, pesoLoteKg: r.pesoLoteKg,
     papelKg: r.papelTotalG/1000, adhSecoKg: r.adhSecoG/1000, pastaTotalKg: r.pastaTotalG/1000,
@@ -2129,7 +2142,7 @@ function renderPendientes(){
     <td>${i+1}</td>
     <td>${esc(x.clienteRazonSocial||'')}</td>
     <td>Ø${x.diametro} × ${x.longitud}</td>
-    <td><div class="hint">P: ${x.anchoPrinc}/${x.gramajePrinc} · R: ${x.cantRelleno}×${x.anchoRell}/${x.gramajeRell} · T: ${x.anchoTapa}/${x.gramajeTapa}</div></td>
+    <td><div class="hint">P: ${x.anchoPrinc}/${x.gramajePrinc}<br>R: ${(x.rellenos||[{cant:x.cantRelleno,ancho:x.anchoRell,gramaje:x.gramajeRell}]).filter(r=>r.cant>0).map(r=>r.cant+'×'+r.ancho+'/'+r.gramaje).join(' + ')}<br>T: ${x.anchoTapa}/${x.gramajeTapa}</div></td>
     <td>${x.cantidad.toLocaleString('es-AR')}</td>
     <td>${(x.pesoUnitG).toFixed(1)} g</td>
     <td>${money(x.precioVentaUnitario)}</td>
@@ -2374,15 +2387,19 @@ window.renderTotalesMesOF = function(){
         map[k].pres.add(p.numero);
         kgPapelTotal += kg;
       }
-      if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
-        const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
-        if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0, tubos:0, pres:new Set() };
-        const kg = (N(it.kgRell)/1000) * cant;
-        map[k].kg += kg;
-        map[k].tubos += cant;
-        map[k].pres.add(p.numero);
-        kgPapelTotal += kg;
-      }
+      /* renderTotalesMesOF multi */
+      const totalCapasRell = (it.rellenos || [{cant:it.cantRelleno}]).reduce((s,r)=>s+(parseInt(r.cant)||0),0) || 1;
+      (it.rellenos || [{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).forEach(rr => {
+        if (N(rr.ancho) > 0 && N(rr.gramaje) > 0 && (parseInt(rr.cant)||0) > 0) {
+          const k = 'R|' + N(rr.ancho) + '|' + N(rr.gramaje);
+          if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(rr.ancho), gramaje:N(rr.gramaje), kg:0, tubos:0, pres:new Set() };
+          const kg = (N(it.kgRell) * (parseInt(rr.cant)||0) / totalCapasRell / 1000) * cant;
+          map[k].kg += kg;
+          map[k].tubos += cant;
+          map[k].pres.add(p.numero);
+          kgPapelTotal += kg;
+        }
+      });
       if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
         const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
         if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0, tubos:0, pres:new Set() };
@@ -2444,11 +2461,15 @@ function resumenConsumosOF(items){
       if (!map[k]) map[k] = { tipo:'Principal', ancho:N(it.anchoPrinc), gramaje:N(it.gramajePrinc), kg:0 };
       map[k].kg += (N(it.kgPrinc)/1000) * cant;
     }
-    if (N(it.anchoRell) > 0 && N(it.gramajeRell) > 0 && (parseInt(it.cantRelleno)||0) > 0) {
-      const k = 'R|' + N(it.anchoRell) + '|' + N(it.gramajeRell);
-      if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(it.anchoRell), gramaje:N(it.gramajeRell), kg:0 };
-      map[k].kg += (N(it.kgRell)/1000) * cant;
-    }
+    /* resumenConsumosOF multi */
+    (it.rellenos || [{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).forEach(rr => {
+      if (N(rr.ancho) > 0 && N(rr.gramaje) > 0 && (parseInt(rr.cant)||0) > 0) {
+        const k = 'R|' + N(rr.ancho) + '|' + N(rr.gramaje);
+        const kgR = N(it.kgRell) * (parseInt(rr.cant)||0) / ((it.rellenos || [{cant:it.cantRelleno}]).reduce((s,r)=>s+(parseInt(r.cant)||0),0) || 1);
+        if (!map[k]) map[k] = { tipo:'Relleno', ancho:N(rr.ancho), gramaje:N(rr.gramaje), kg:0 };
+        map[k].kg += (kgR/1000) * cant;
+      }
+    });
     if (N(it.anchoTapa) > 0 && N(it.gramajeTapa) > 0) {
       const k = 'T|' + N(it.anchoTapa) + '|' + N(it.gramajeTapa);
       if (!map[k]) map[k] = { tipo:'Tapa', ancho:N(it.anchoTapa), gramaje:N(it.gramajeTapa), kg:0 };
@@ -2498,7 +2519,7 @@ function renderPaperOF(p){
             <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm</b><br/><span style="font-size:9px;color:#64748b;">Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
             <td class="left" style="font-size:9.5px;">
               <b>Principal:</b> ${x.anchoPrinc} mm / ${x.gramajePrinc} g/m²<br/>
-              <b>Relleno:</b> ${x.cantRelleno} × ${x.anchoRell} mm / ${x.gramajeRell} g/m²<br/>
+              ${/* renderPaperOF multi */''}<b>Rellenos:</b> ${(x.rellenos||[{cant:x.cantRelleno,ancho:x.anchoRell,gramaje:x.gramajeRell}]).filter(r=>r.cant>0).map(r=>r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²').join('<br/>')}<br/>
               <b>Tapa:</b> ${x.anchoTapa} mm / ${x.gramajeTapa} g/m²
             </td>
           </tr>`;
@@ -2910,7 +2931,14 @@ async function pdfOF(p){
 
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
     doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x + 3, y + 5);
-    doc.text('Relleno: '+it.cantRelleno+' × '+it.anchoRell+' mm / '+it.gramajeRell+' g/m²', x + 3, y + 8.5);
+    (function(){ /* pdfOF multi */
+      const rs = (it.rellenos||[{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).filter(r=>r.cant>0);
+      let yy = y + 8.5;
+      rs.forEach((r, i) => {
+        doc.text('Relleno' + (rs.length>1 ? ' '+(i+1) : '') + ': '+r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²', x + 3, yy);
+        yy += 3;
+      });
+    })();
     doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x + 3, y + 12);
 
     y += rowH;
