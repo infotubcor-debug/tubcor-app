@@ -3030,6 +3030,58 @@ async function pdfOF(p){
   doc.line(M, y, W - M, y);
   y += 8;
 
+  // Tabla de consumos por gramaje
+  (function(){
+    const consumos = (typeof resumenConsumosOF === 'function') ? resumenConsumosOF(p.items||[]) : [];
+    if (!consumos.length) return;
+
+    doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.text('CONSUMOS DE PAPEL POR GRAMAJE', M, y);
+    y += 3;
+    doc.setDrawColor(VERDE[0],VERDE[1],VERDE[2]); doc.setLineWidth(0.4);
+    doc.line(M, y, W - M, y);
+    y += 5;
+
+    const cW = [40, 40, 40, 60];
+    const cX = [M, M + cW[0], M + cW[0] + cW[1], M + cW[0] + cW[1] + cW[2]];
+    const totalW = cW[0] + cW[1] + cW[2] + cW[3];
+
+    doc.setFillColor(VERDE[0],VERDE[1],VERDE[2]);
+    doc.rect(M, y, totalW, 6, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(7.5); doc.setTextColor(255,255,255);
+    doc.text('TIPO DE FAJA', cX[0] + cW[0]/2, y + 4, {align:'center'});
+    doc.text('ANCHO (MM)', cX[1] + cW[1]/2, y + 4, {align:'center'});
+    doc.text('GRAMAJE (G/M2)', cX[2] + cW[2]/2, y + 4, {align:'center'});
+    doc.text('KG TOTALES', cX[3] + cW[3]/2, y + 4, {align:'center'});
+    y += 6;
+
+    let totalKg = 0;
+    consumos.forEach((c, i) => {
+      if (i % 2 === 1){
+        doc.setFillColor(250,251,252);
+        doc.rect(M, y, totalW, 5.5, 'F');
+      }
+      doc.setFont('helvetica','bold'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+      doc.text(String(c.tipo||''), cX[0] + cW[0]/2, y + 4, {align:'center'});
+      doc.text(String(c.ancho||''), cX[1] + cW[1]/2, y + 4, {align:'center'});
+      doc.text(String(c.gramaje||''), cX[2] + cW[2]/2, y + 4, {align:'center'});
+      doc.text(c.kg.toFixed(2) + ' kg', cX[3] + cW[3]/2, y + 4, {align:'center'});
+      totalKg += c.kg;
+      y += 5.5;
+    });
+
+    doc.setFillColor(220, 252, 231);
+    doc.rect(M, y, totalW, 6, 'F');
+    doc.setFont('helvetica','bold'); doc.setFontSize(8.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
+    doc.text('TOTAL', cX[0] + cW[0]/2, y + 4, {align:'center'});
+    doc.text(totalKg.toFixed(2) + ' kg', cX[3] + cW[3]/2, y + 4, {align:'center'});
+    y += 6;
+
+    doc.setDrawColor(GRIS_BORDE[0],GRIS_BORDE[1],GRIS_BORDE[2]); doc.setLineWidth(0.2);
+    doc.line(M, y, M + totalW, y);
+    y += 8;
+  })();
+
   if (p.observacionesOF){
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(VERDE[0],VERDE[1],VERDE[2]);
     doc.text('OBSERVACIONES DE PLANTA', M, y);
