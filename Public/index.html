@@ -2760,7 +2760,7 @@ async function pdfPresupuesto(p){
   y += 7;
 
   p.items.forEach((it, idx) => {
-    const rowH = 15;
+    const rowH = 18;
     if (idx % 2 === 1){
       doc.setFillColor(250,251,252);
       doc.rect(M, y, W - 2*M, rowH, 'F');
@@ -2772,11 +2772,11 @@ async function pdfPresupuesto(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 5);
+    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 6);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
     const __colorTxt = describirColorTubo(it).trim();
-    if (__colorTxt) doc.text(__colorTxt, x + 3, y + 7);
-    doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 10.5);
+    if (__colorTxt) doc.text(__colorTxt, x + 3, y + 9.5);
+    doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 13);
     x += colW[1];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
@@ -2980,7 +2980,7 @@ async function pdfOF(p){
     const pack = etiquetaPaquete(it.tipoPaquete);
     const corte = N(it.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
     const rs_ = (it.rellenos||[{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).filter(r=>r.cant>0);
-    const rowH = Math.max(22, 12 + rs_.length * 4);
+    const rowH = Math.max(26, 16 + rs_.length * 4);
 
     if (idx % 2 === 1){
       doc.setFillColor(250,251,252);
@@ -2993,20 +2993,20 @@ async function pdfOF(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 3.5);
+    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 6);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
     const __colorTxt2 = describirColorTubo(it).trim();
-    if (__colorTxt2) doc.text(__colorTxt2, x + 3, y + 7);
+    if (__colorTxt2) doc.text(__colorTxt2, x + 3, y + 9.5);
     doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 11);
-    doc.text('Empaquetado: '+pack, x + 3, y + 14.5);
-    doc.text(corte, x + 3, y + 18);
+    doc.text('Empaquetado: '+pack, x + 3, y + 16);
+    doc.text(corte, x + 3, y + 19.5);
     x += colW[1];
 
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x + 3, y + 5);
+    doc.text('Principal: '+it.anchoPrinc+' mm / '+it.gramajePrinc+' g/m²', x + 3, y + 6);
     (function(){ /* pdfOF multi */
       const rs = (it.rellenos||[{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).filter(r=>r.cant>0);
-      let yy = y + 8.5;
+      let yy = y + 9.5;
       rs.forEach((r, i) => {
         doc.text('Relleno' + (rs.length>1 ? ' '+(i+1) : '') + ': '+r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²', x + 3, yy);
         yy += 4;
@@ -3014,7 +3014,7 @@ async function pdfOF(p){
     })();
     (function(){
       const rsT = (it.rellenos||[{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).filter(r=>r.cant>0);
-      const yTapa = y + 8.5 + rsT.length * 4 + 1;
+      const yTapa = y + 9.5 + rsT.length * 4 + 0.5;
       doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x + 3, yTapa);
     })();
 
