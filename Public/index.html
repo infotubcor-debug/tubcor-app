@@ -2760,7 +2760,7 @@ async function pdfPresupuesto(p){
   y += 7;
 
   p.items.forEach((it, idx) => {
-    const rowH = 14;
+    const rowH = 15;
     if (idx % 2 === 1){
       doc.setFillColor(250,251,252);
       doc.rect(M, y, W - 2*M, rowH, 'F');
@@ -2772,9 +2772,11 @@ async function pdfPresupuesto(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm'+describirColorTubo(it), x + 3, y + 5);
+    doc.text('Tubo espiralado Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 3.5);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
-    doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 8.5);
+    const __colorTxt = describirColorTubo(it).trim();
+    if (__colorTxt) doc.text(__colorTxt, x + 3, y + 7);
+    doc.text('Espesor '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 10.5);
     x += colW[1];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
@@ -2977,7 +2979,7 @@ async function pdfOF(p){
   p.items.forEach((it, idx) => {
     const pack = etiquetaPaquete(it.tipoPaquete);
     const corte = N(it.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
-    const rowH = 18;
+    const rowH = 22;
 
     if (idx % 2 === 1){
       doc.setFillColor(250,251,252);
@@ -2990,9 +2992,11 @@ async function pdfOF(p){
     x += colW[0];
 
     doc.setFont('helvetica','bold'); doc.setFontSize(9.5); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
-    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm'+describirColorTubo(it), x + 3, y + 5);
+    doc.text('Ø'+it.diametro+' × '+it.longitud+' mm', x + 3, y + 3.5);
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
-    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 8.5);
+    const __colorTxt2 = describirColorTubo(it).trim();
+    if (__colorTxt2) doc.text(__colorTxt2, x + 3, y + 7);
+    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 10.5);
     doc.text('Empaquetado: '+pack, x + 3, y + 11.5);
     doc.text(corte, x + 3, y + 14.5);
     x += colW[1];
