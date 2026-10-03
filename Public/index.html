@@ -2997,9 +2997,9 @@ async function pdfOF(p){
     doc.setFont('helvetica','normal'); doc.setFontSize(7.5); doc.setTextColor(GRIS_LABEL[0],GRIS_LABEL[1],GRIS_LABEL[2]);
     const __colorTxt2 = describirColorTubo(it).trim();
     if (__colorTxt2) doc.text(__colorTxt2, x + 3, y + 9.5);
-    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 11);
-    doc.text('Empaquetado: '+pack, x + 3, y + 16);
-    doc.text(corte, x + 3, y + 19.5);
+    doc.text('Espesor: '+N(it.espesor).toFixed(2)+' mm', x + 3, y + 13);
+    doc.text('Empaquetado: '+pack, x + 3, y + 16.5);
+    doc.text(corte, x + 3, y + 20);
     x += colW[1];
 
     doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(NEGRO[0],NEGRO[1],NEGRO[2]);
@@ -3009,12 +3009,12 @@ async function pdfOF(p){
       let yy = y + 9.5;
       rs.forEach((r, i) => {
         doc.text('Relleno' + (rs.length>1 ? ' '+(i+1) : '') + ': '+r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²', x + 3, yy);
-        yy += 4;
+        yy += 3.5;
       });
     })();
     (function(){
       const rsT = (it.rellenos||[{cant:it.cantRelleno,ancho:it.anchoRell,gramaje:it.gramajeRell}]).filter(r=>r.cant>0);
-      const yTapa = y + 9.5 + rsT.length * 4 + 0.5;
+      const yTapa = y + 9.5 + rsT.length * 3.5;
       doc.text('Tapa: '+it.anchoTapa+' mm / '+it.gramajeTapa+' g/m²', x + 3, yTapa);
     })();
 
@@ -4299,7 +4299,7 @@ function arrancarApp(){
   if (!$('heFecha').value) $('heFecha').value = today();
   /* obs-presupuesto-default */
   if ($('obsPresupuesto')){
-    STATE.config.obsPresupuestoDefault = "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envios.\n- El retiro es por planta: Camino Santa Barbara 1448, CP 5014, Cordoba.\n- Precios expresados en pesos, netos + IVA.";
+    STATE.config.obsPresupuestoDefault = "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni env\u00edos.\n- El retiro es por planta: Camino Santa B\u00e1rbara 1448, CP 5014, C\u00f3rdoba.\n- Precios expresados en pesos, netos + IVA.";
     if (!$('obsPresupuesto').value.trim()) $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault;
     if (!$('obsPresupuesto').__obsHooked){
       $('obsPresupuesto').addEventListener('input', function(){
