@@ -1284,7 +1284,7 @@ window.renderSelectorRecetas = function(){
   wrap.style.display = 'block';
   const cur = sel.value;
   sel.innerHTML = '<option value="">\u2014 Elegir receta \u2014</option>' +
-    recetas.map(r => '<option value="' + r.id + '">' + esc(r.nombre) + ' - \u00d8' + r.diam + ' \u00d7 ' + r.espesor + ' mm</option>').join('');
+    recetas.map(r => '<option value="' + r.id + '">' + esc(r.nombre) + '</option>').join('');
   if (cur && recetas.some(r => r.id === cur)) sel.value = cur;
 };
 
