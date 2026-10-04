@@ -462,9 +462,6 @@ table tbody tr:hover{background:#f8fafc}
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Tapa</div>
-        </div>
-        <div class="grid grid-cols-3 gap-2 items-end">
-          <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Tapa</div>
           <div><label>Ancho</label><input id="calTA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calTG" type="number" oninput="calPrevia()"/></div>
           <div><label>Color</label><select id="calTC"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
@@ -1259,6 +1256,15 @@ window.toggleGruposRellenoExtras = function(){
 window.toggleTablaEspesores = function(){
   const c = $('tablaEspesoresContenido');
   const ch = $('tablaEspesoresChevron');
+  if (!c) return;
+  const abierto = c.style.display === 'block';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '+' : '-';
+};
+
+window.toggleGruposRellenoExtrasCal = function(){
+  const c = $('gruposRellenoExtrasCal');
+  const ch = $('gruposRellenoExtrasCalChevron');
   if (!c) return;
   const abierto = c.style.display === 'block';
   c.style.display = abierto ? 'none' : 'block';
