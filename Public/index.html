@@ -1545,15 +1545,17 @@ window.mostrarBannerEdicionReceta = function(receta){
   const sp = b.querySelector('.recetaEditandoNombre');
   if (sp) sp.textContent = (receta && receta.nombre) || '';
   const espInput = document.getElementById('recetaEditandoEspesor');
-  const __extraerDelNombre = (nombre, pos) => {
+  const __extraerDelNombre = (nombre, tipo) => {
     if (!nombre) return 0;
-    const matches = String(nombre).match(/(\d+(?:[.,]\d+)?)\s*mm/g) || [];
-    if (!matches[pos]) return 0;
-    return parseFloat(matches[pos].replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+    const matches = String(nombre).match(/\u00d7\s*([\d]+(?:[.,][\d]+)?)\s*mm/g) || [];
+    const nums = matches.map(m => parseFloat(m.replace(/[^\d.,]/g, '').replace(',', '.'))).filter(n => !isNaN(n));
+    if (tipo === 'espesor') return nums[0] || 0;
+    if (tipo === 'largo') return nums[1] || 0;
+    return 0;
   };
   if (espInput && receta) {
     let esp = Number(receta.espesor) || 0;
-    if (esp <= 0) esp = __extraerDelNombre(receta.nombre, 1);
+    if (esp <= 0) esp = __extraerDelNombre(receta.nombre, 'espesor');
     espInput.value = esp > 0 ? esp : '';
   }
   const longWrap = document.getElementById('recetaEditandoLargoWrap');
@@ -1562,7 +1564,7 @@ window.mostrarBannerEdicionReceta = function(receta){
     if (esTubo) {
       longWrap.style.display = 'flex';
       let lg = Number(receta.long) || 0;
-      if (lg <= 0) lg = __extraerDelNombre(receta.nombre, 2);
+      if (lg <= 0) lg = __extraerDelNombre(receta.nombre, 'largo');
       longInput.value = lg > 0 ? lg : '';
     } else {
       longWrap.style.display = 'none';
