@@ -1676,9 +1676,9 @@ function recalcular(){
   if ($('factorBadge')) $('factorBadge').textContent = 'x ' + fp.toFixed(3) + ' (' + tipoKey + ')';
   const diam = N($('ingDiam').value), long = N($('ingLong').value), cant = Math.max(1, parseInt($('ingCant').value)||1);
   const capas = capasDesdeIngenieria();
-  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
-  const pctAdhSeco = N($('pctAdhSeco').value)/100;
-  const pctAdhTapa = N($('pctAdhTapa').value)/100;
+  const solidos = Math.max(0.10, Math.min(0.90, (N($('solidosAdh').value) || 41)/100));
+  const pctAdhSeco = (N($('pctAdhSeco').value) || 15)/100;
+  const pctAdhTapa = (N($('pctAdhTapa').value) || 8)/100;
   const m = modeloFisico({diametroInterno:diam, longitud:long, capas});
   let gPrinc=0, gRell=0, gTapa=0;
   m.detalle.forEach(x=>{
@@ -1917,9 +1917,9 @@ function calPrevia(){
     }).filter(Boolean)),
     {gramaje:N($('calTG').value), cantidad:1, tipo:'Tapa'}
   ].filter(c=>c.gramaje>0 && c.cantidad>0);
-  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
-  const pctInt = N($('pctAdhSeco').value)/100;
-  const pctTap = N($('pctAdhTapa').value)/100;
+  const solidos = Math.max(0.10, Math.min(0.90, (N($('solidosAdh').value) || 41)/100));
+  const pctInt = (N($('pctAdhSeco').value) || 15)/100;
+  const pctTap = (N($('pctAdhTapa').value) || 8)/100;
   const m = modeloFisico({diametroInterno:N($('calDiam').value), longitud:N($('calLong').value), capas});
   let gP=0, gR=0, gT=0;
   m.detalle.forEach(x=>{
@@ -1955,9 +1955,9 @@ function limpiarCalibrador(){
 
 function recalcularFactoresPorSegmento(){
   if (!STATE.pesajes || !STATE.pesajes.length) return;
-  const solidos = Math.max(0.10, Math.min(0.90, N($('solidosAdh').value)/100));
-  const pctInt = N($('pctAdhSeco').value)/100;
-  const pctTap = N($('pctAdhTapa').value)/100;
+  const solidos = Math.max(0.10, Math.min(0.90, (N($('solidosAdh').value) || 41)/100));
+  const pctInt = (N($('pctAdhSeco').value) || 15)/100;
+  const pctTap = (N($('pctAdhTapa').value) || 8)/100;
 
   const porSegmento = { liviano: [], semipesado: [], pesado: [] };
 
@@ -2130,8 +2130,8 @@ function renderCalibrador(){
     $('calDesvio').textContent = '0.00 %';
     return;
   }
-  const pctInt = N($('pctAdhSeco').value)/100;
-  const pctTap = N($('pctAdhTapa').value)/100;
+  const pctInt = (N($('pctAdhSeco').value) || 15)/100;
+  const pctTap = (N($('pctAdhTapa').value) || 8)/100;
   let suma = 0;
   tb.innerHTML = list.map(p=>{
     const __relP = (p.rellenos && p.rellenos.length > 0) ? p.rellenos : [{cant:p.rc||0, ancho:p.ra, gramaje:p.rg}];
@@ -4426,7 +4426,7 @@ function limpiarIngenieria(){
   limpiar('precioCP'); limpiar('precioCR'); limpiar('precioCT'); limpiar('precioFlete');
   const desp = $('ingDesperdicio'); if (desp) desp.value = '10';
   limpiar('precioAdh'); limpiar('precioAdhTapa');
-  limpiar('solidosAdh'); limpiar('pctAdhSeco'); limpiar('pctAdhTapa');
+  /* solidosAdh, pctAdhSeco, pctAdhTapa NO se limpian (parametros tecnicos fijos) */
   ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro'].forEach(limpiar);
   limpiar('prodMensual');
   limpiar('kwhMensual'); limpiar('costoKwh');
