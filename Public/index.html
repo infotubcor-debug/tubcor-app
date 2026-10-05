@@ -2041,7 +2041,7 @@ function recalcular(){
   };
   $('rEsp').textContent = m.espesor.toFixed(2)+' mm';
   $('rPesoU').textContent = pesoUnitG.toFixed(1)+' g';
-  $('rPesoL').textContent = pesoLoteKg.toFixed(2)+' kg';
+  $('rPesoL').textContent = (pesoLoteKg >= 1) ? (pesoLoteKg.toFixed(2)+' kg') : ((pesoLoteKg*1000).toFixed(1)+' g');
   const __costoVU_Vacio = costoTotalKgActual < 0.01;
   $('rCostoVU').textContent = __costoVU_Vacio ? '\u2014' : money(costoVariableUnit);
   $('rCostoFU').textContent = __costoVU_Vacio ? '\u2014' : money(gfUnit);
