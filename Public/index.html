@@ -1673,7 +1673,7 @@ window.ocultarBannerEdicionReceta = function(){
 };
 
 window.actualizarBotonGuardarReceta = function(editando){
-  const btns = Array.from(document.querySelectorAll('button[onclick^="guardarRecetaDesdeForm"]'));
+  const btns = Array.from(document.querySelectorAll('button[onclick^="guardarRecetaDesdeForm"]')).filter(b => !b.closest('#recetaEditandoBanner'));
   btns.forEach(b => {
     if (editando) {
       if (b.dataset.displayOriginal === undefined) {
