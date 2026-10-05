@@ -1418,11 +1418,20 @@ window.guardarRecetaDesdeForm = function(){
   const diam = N($('ingDiam').value);
   const long = N($('ingLong').value);
   const espActual = (STATE.resultados && STATE.resultados.espesor) ? STATE.resultados.espesor : 0;
-  const nombreBase = prompt('Nombre de la receta (se agrega \u00d8 y espesor autom\u00e1ticamente):', '');
-  if (nombreBase === null) return;
-  const nombreFinal = (nombreBase.trim() || 'Receta') + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm \u00d7 ' + (long || '?') + ' mm';
   STATE.config.recetas = STATE.config.recetas || [];
-  const id = (window.__recetaEditandoId) || uid('rec');
+
+  const idEditando = window.__recetaEditandoId;
+  let nombreFinal;
+  if (idEditando) {
+    const existente = STATE.config.recetas.find(r => r.id === idEditando);
+    nombreFinal = existente ? existente.nombre : 'Receta';
+  } else {
+    const nombreBase = prompt('Nombre de la receta (se agrega Ø y espesor automáticamente):', '');
+    if (nombreBase === null) return;
+    nombreFinal = (nombreBase.trim() || 'Receta') + ' - Ø' + (diam || '?') + ' × ' + espActual.toFixed(2) + ' mm × ' + (long || '?') + ' mm';
+  }
+
+  const id = idEditando || uid('rec');
   const existente = STATE.config.recetas.findIndex(r => r.id === id);
   const receta = {
     id: id,
@@ -1440,36 +1449,90 @@ window.guardarRecetaDesdeForm = function(){
     toast('Receta guardada', 'ok');
   }
   window.__recetaEditandoId = null;
+  try { window.ocultarBannerEdicionReceta(); } catch(_){}
+  try { window.actualizarBotonGuardarReceta(false); } catch(_){}
   save(['config']);
   try { renderSelectorRecetas(); } catch(_){}
   try { renderListaRecetas(); } catch(_){}
 };
 
-window.cargarRecetaSeleccionada = function(){
-  const sel = $('selectorRecetas');
-  if (!sel || !sel.value) return;
-  window.cargarReceta(sel.value);
-};
-
-window.cargarReceta = function(id){
+cargarReceta = function(id){
   const recetas = (STATE.config && STATE.config.recetas) || [];
   const r = recetas.find(x => x.id === id);
   if (!r) return;
   window.aplicarRecetaAlForm(r.fajas);
   if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
+  /* cancelar cualquier edicion en curso al cargar otra receta */
+  window.__recetaEditandoId = null;
+  try { window.ocultarBannerEdicionReceta(); } catch(_){}
+  try { window.actualizarBotonGuardarReceta(false); } catch(_){}
+  try { recalcular(); } catch(_){}
   toast('Receta cargada', 'ok');
 };
 
-window.editarReceta = function(id){
+editarReceta = function(id){
   const recetas = (STATE.config && STATE.config.recetas) || [];
   const r = recetas.find(x => x.id === id);
   if (!r) return;
   window.aplicarRecetaAlForm(r.fajas);
+  if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
   window.__recetaEditandoId = id;
-  toast('Receta cargada para editar. Ajusta y volvé a guardar', 'ok');
+  try { window.mostrarBannerEdicionReceta(r.nombre); } catch(_){}
+  try { window.actualizarBotonGuardarReceta(true); } catch(_){}
+  try { recalcular(); } catch(_){}
+  toast('Editando: ' + r.nombre + ' — ajustá y apretá "Actualizar receta"', 'ok');
 };
 
-window.eliminarReceta = function(id){
+window.mostrarBannerEdicionReceta = function(nombre){
+  const wrap = document.getElementById('selectorRecetasWrap');
+  if (!wrap) return;
+  let b = document.getElementById('recetaEditandoBanner');
+  if (!b) {
+    b = document.createElement('div');
+    b.id = 'recetaEditandoBanner';
+    b.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-top:6px;font-size:12px;color:#78350f';
+    b.innerHTML = '<i class="fa-solid fa-pen"></i><span style="flex:1"><b>Editando receta:</b> <span class="recetaEditandoNombre"></span></span><button class="btn btn-secondary btn-sm" type="button" onclick="cancelarEdicionReceta()"><i class="fa-solid fa-xmark"></i> Cancelar</button>';
+    wrap.parentNode.insertBefore(b, wrap.nextSibling);
+  }
+  b.style.display = 'flex';
+  const sp = b.querySelector('.recetaEditandoNombre');
+  if (sp) sp.textContent = nombre || '';
+};
+
+window.ocultarBannerEdicionReceta = function(){
+  const b = document.getElementById('recetaEditandoBanner');
+  if (b) b.style.display = 'none';
+};
+
+window.actualizarBotonGuardarReceta = function(editando){
+  const btns = document.querySelectorAll('button[onclick="guardarRecetaDesdeForm()"]');
+  btns.forEach(b => {
+    if (editando) {
+      if (!b.dataset.textoOriginal) b.dataset.textoOriginal = b.innerHTML;
+      b.innerHTML = '<i class="fa-solid fa-pen"></i> Actualizar receta';
+      b.title = 'Actualizar la receta en edición';
+      b.classList.remove('btn-secondary');
+      b.classList.add('btn-primary');
+    } else {
+      if (b.dataset.textoOriginal) {
+        b.innerHTML = b.dataset.textoOriginal;
+        delete b.dataset.textoOriginal;
+      }
+      b.title = 'Guardar esta receta';
+      b.classList.remove('btn-primary');
+      b.classList.add('btn-secondary');
+    }
+  });
+};
+
+window.cancelarEdicionReceta = function(){
+  window.__recetaEditandoId = null;
+  try { window.ocultarBannerEdicionReceta(); } catch(_){}
+  try { window.actualizarBotonGuardarReceta(false); } catch(_){}
+  toast('Edición cancelada', 'ok');
+};
+
+eliminarReceta = function(id){
   /* eliminar-receta-confirm */
   const r = (STATE.config.recetas || []).find(x => x.id === id);
   const nombre = r ? r.nombre : 'esta receta';
@@ -2436,7 +2499,7 @@ function contactoConTelefono(p){
   const d = datosClienteActual(p);
   const partes = [];
   if (d.contacto) partes.push(d.contacto);
-  if (d.telefono) partes.push(d.telefono);
+  /* telefono removido del PDF a pedido del usuario */
   return partes.join(' · ') || '—';
 }
 
