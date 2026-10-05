@@ -2310,9 +2310,7 @@ function renderPendientes(){
     <td><button class="btn btn-danger btn-sm" onclick="eliminarPendiente('${x.itemId}')"><i class="fa-solid fa-xmark"></i></button></td>
   </tr>`).join('');
 }
-function nuevoPedido(){
-  if (!STATE.pendientes.length) return;
-  confirmar('¿Comenzar un nuevo pedido? Se vaciará la lista actual.').then(ok=>{
+function nuevoPedido(){  confirmar('¿Comenzar un nuevo pedido? Se vaciará la lista actual.').then(ok=>{
     if (!ok) return;
     STATE.pendientes = []; save(['pendientes']); renderPendientes();
     try { limpiarIngenieria(); } catch(_){} /* nuevoPedido */
@@ -4423,6 +4421,12 @@ function limpiarIngenieria(){
   const chev = $('gruposRellenoExtrasChevron');
   if (chev) chev.textContent = '+';
   limpiar('ingTapaAncho'); limpiar('ingTapaGram');
+  /* resets agregados: colores, adicional CNC, coef manual, recetas */
+  const _colP = $('ingPrincColor'); if (_colP) _colP.selectedIndex = 0;
+  const _colT = $('ingTapaColor'); if (_colT) _colT.selectedIndex = 0;
+  const _addCnc = $('ingAdicionalCNC'); if (_addCnc) _addCnc.value = '';
+  const _coefM = $('ingCoefManual'); if (_coefM) _coefM.value = '';
+  const _selRec = $('selectorRecetas'); if (_selRec) _selRec.selectedIndex = 0;
   limpiar('precioCP'); limpiar('precioCR'); limpiar('precioCT'); limpiar('precioFlete');
   const desp = $('ingDesperdicio'); if (desp) desp.value = '10';
   limpiar('precioAdh'); limpiar('precioAdhTapa');
