@@ -1522,11 +1522,6 @@ cargarReceta = function(id){
   toast('Editando: ' + r.nombre + ' \u2014 ajust\u00e1 y apret\u00e1 "Actualizar receta"', 'ok');
 };
 
-window.mostrarBannerEdicionReceta(r.nombre); } catch(_){}
-  try { window.actualizarBotonGuardarReceta(true); } catch(_){}
-  try { recalcular(); } catch(_){}
-  toast('Editando: ' + r.nombre + ' — ajustá y apretá "Actualizar receta"', 'ok');
-};
 
 window.mostrarBannerEdicionReceta = function(receta){
   const wrap = document.getElementById('selectorRecetasWrap');
