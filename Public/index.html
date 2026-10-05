@@ -508,7 +508,7 @@ table tbody tr:hover{background:#f8fafc}
       <div class="overflow-auto" style="max-height:420px">
         <table>
           <thead>
-            <tr><th>Referencia</th><th>Medidas</th><th>Fajas</th><th>Peso real</th><th>Peso teórico</th><th>Desvío</th><th style="width:50px"></th></tr>
+            <tr><th>Referencia</th><th>Medidas</th><th>Fajas</th><th>Esp. Real</th><th>Peso real</th><th>Peso teórico</th><th>Desvío</th><th style="width:50px"></th></tr>
           </thead>
           <tbody id="calLista"><tr><td colspan="7" class="empty">Sin pesajes registrados.</td></tr></tbody>
         </table>
@@ -1972,8 +1972,8 @@ function recalcularFactoresPorSegmento(){
     if (!(m.espesor > 0)) return;
 
     let seg;
-    if (m.espesor < 1.5) seg = 'liviano';
-    else if (m.espesor <= 4) seg = 'semipesado';
+    if (m.espesor < 2) seg = 'liviano';
+    else if (m.espesor <= 5) seg = 'semipesado';
     else seg = 'pesado';
 
     let gP=0, gR=0, gT=0;
@@ -2126,7 +2126,7 @@ function renderCalibrador(){
   const list = STATE.pesajes.slice().reverse();
   const tb = $('calLista');
   if (!list.length){
-    tb.innerHTML = '<tr><td colspan="7" class="empty">Sin pesajes registrados.</td></tr>';
+    tb.innerHTML = '<tr><td colspan="8" class="empty">Sin pesajes registrados.</td></tr>';
     $('calDesvio').textContent = '0.00 %';
     return;
   }
@@ -2134,12 +2134,14 @@ function renderCalibrador(){
   const pctTap = N($('pctAdhTapa').value)/100;
   let suma = 0;
   tb.innerHTML = list.map(p=>{
-    const capas = [
-      {gramaje:p.pg, cantidad:1, tipo:'Principal'},
-      {gramaje:p.rg, cantidad:p.rc||0, tipo:'Relleno'},
-      {gramaje:p.tg, cantidad:1, tipo:'Tapa'}
-    ].filter(c=>c.gramaje>0 && c.cantidad>0);
-    const m = modeloFisico({diametroInterno:p.diametro, longitud:p.longitud, capas});
+    const __relP = (p.rellenos && p.rellenos.length > 0) ? p.rellenos : [{cant:p.rc||0, ancho:p.ra, gramaje:p.rg}];
+    const capas = [{gramaje:p.pg, cantidad:1, tipo:'Principal'}];
+    __relP.filter(r=>r.cant>0 && r.gramaje>0).forEach((r, i) => {
+      capas.push({gramaje:r.gramaje, cantidad:r.cant, tipo:'Relleno', grupoIdx:i+1});
+    });
+    capas.push({gramaje:p.tg, cantidad:1, tipo:'Tapa'});
+    const __capasF = capas.filter(c=>c.gramaje>0 && c.cantidad>0);
+    const m = modeloFisico({diametroInterno:p.diametro, longitud:p.longitud, capas: __capasF});
     let gP=0, gR=0, gT=0;
     m.detalle.forEach(x=>{
       if (x.tipo==='Principal') gP += x.masa;
@@ -2148,13 +2150,16 @@ function renderCalibrador(){
     });
     const papel = gP+gR+gT;
     const adhSeco = (gP+gR)*pctInt + gT*pctTap;
-    const teorico = (papel + adhSeco) * STATE.config.factorProceso;
-    const desv = p.pesoReal>0 ? ((teorico-p.pesoReal)/p.pesoReal)*100 : 0;
+    const teorico = papel + adhSeco;
+    const desv = p.pesoReal>0 ? ((teorico - p.pesoReal)/p.pesoReal)*100 : 0;
     suma += Math.abs(desv);
+    const espRealTxt = p.espesorReal > 0 ? p.espesorReal.toFixed(2) + ' mm' : '\u2014';
+    const fajasHtml = __relP.filter(r=>r.cant>0).map((r, i) => (__relP.filter(x=>x.cant>0).length > 1 ? 'R' + (i+1) + ': ' + r.cant + '\u00d7 ' + r.ancho + '/' + r.gramaje : 'R: ' + r.cant + '\u00d7 ' + r.ancho + '/' + r.gramaje)).join('<br>');
     return `<tr>
       <td><b>${esc(p.referencia)}</b><div class="hint">${esc(p.fecha)}</div></td>
       <td>Ø${p.diametro} × ${p.longitud}</td>
-      <td><div class="hint">P: ${p.pa}/${p.pg}<br>R: ${p.rc}× ${p.ra}/${p.rg}<br>T: ${p.ta}/${p.tg}</div></td>
+      <td><div class="hint">P: ${p.pa}/${p.pg}<br>${fajasHtml}<br>T: ${p.ta}/${p.tg}</div></td>
+      <td>${espRealTxt}</td>
       <td>${p.pesoReal.toFixed(1)} g</td>
       <td>${teorico.toFixed(1)} g</td>
       <td style="color:${Math.abs(desv)>3?'#d97706':'#15803d'};font-weight:700">${desv>0?'+':''}${desv.toFixed(2)}%</td>
@@ -2164,7 +2169,6 @@ function renderCalibrador(){
   $('calDesvio').textContent = (suma/list.length).toFixed(2)+' %';
 }
 
-/* ========== Clientes ========== */
 function renderClientes(){
   const q = ($('cliBuscar').value||'').toLowerCase().trim();
   const list = STATE.clientes.filter(c=>!q || (c.razonSocial+' '+(c.cuit||'')+' '+(c.localidad||'')).toLowerCase().includes(q));
