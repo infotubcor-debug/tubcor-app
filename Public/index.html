@@ -1537,6 +1537,7 @@ window.mostrarBannerEdicionReceta = function(receta){
       '<label style="display:flex;align-items:center;gap:4px;font-weight:700">Espesor (mm) <input id="recetaEditandoEspesor" type="number" step="0.01" style="width:70px;padding:2px 4px;border:1px solid #fcd34d;border-radius:4px"/></label>' +
       '<label id="recetaEditandoLargoWrap" style="display:none;align-items:center;gap:4px;font-weight:700">Largo (mm) <input id="recetaEditandoLargo" type="number" step="1" style="width:80px;padding:2px 4px;border:1px solid #fcd34d;border-radius:4px"/></label>' +
       '<button class="btn btn-primary btn-sm" type="button" onclick="recalcularRecetaDesdeEdicion()"><i class="fa-solid fa-rotate"></i> Recalcular receta</button>' +
+      '<button class="btn btn-primary btn-sm" type="button" onclick="guardarRecetaDesdeForm()" title="Guardar la receta en edici\u00f3n"><i class="fa-solid fa-floppy-disk"></i> Actualizar receta</button>' +
       '<button class="btn btn-secondary btn-sm" type="button" onclick="cancelarEdicionReceta()"><i class="fa-solid fa-xmark"></i> Cancelar</button>';
     wrap.parentNode.insertBefore(b, wrap.nextSibling);
   }
@@ -1672,25 +1673,22 @@ window.ocultarBannerEdicionReceta = function(){
 };
 
 window.actualizarBotonGuardarReceta = function(editando){
-  const btns = document.querySelectorAll('button[onclick^="guardarRecetaDesdeForm"]');
+  const btns = Array.from(document.querySelectorAll('button[onclick^="guardarRecetaDesdeForm"]'));
   btns.forEach(b => {
     if (editando) {
-      if (!b.dataset.textoOriginal) b.dataset.textoOriginal = b.innerHTML;
-      b.innerHTML = '<i class="fa-solid fa-pen"></i> Actualizar receta';
-      b.title = 'Actualizar la receta en edición';
-      b.classList.remove('btn-secondary');
-      b.classList.add('btn-primary');
-    } else {
-      if (b.dataset.textoOriginal) {
-        b.innerHTML = b.dataset.textoOriginal;
-        delete b.dataset.textoOriginal;
+      if (b.dataset.displayOriginal === undefined) {
+        b.dataset.displayOriginal = b.style.display || '';
       }
-      b.title = 'Guardar esta receta';
-      b.classList.remove('btn-primary');
-      b.classList.add('btn-secondary');
+      b.style.display = 'none';
+    } else {
+      if (b.dataset.displayOriginal !== undefined) {
+        b.style.display = b.dataset.displayOriginal;
+        delete b.dataset.displayOriginal;
+      }
     }
   });
 };
+
 
 window.cancelarEdicionReceta = function(){
   window.__recetaEditandoId = null;
