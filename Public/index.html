@@ -1545,13 +1545,25 @@ window.mostrarBannerEdicionReceta = function(receta){
   const sp = b.querySelector('.recetaEditandoNombre');
   if (sp) sp.textContent = (receta && receta.nombre) || '';
   const espInput = document.getElementById('recetaEditandoEspesor');
-  if (espInput && receta) espInput.value = receta.espesor || '';
+  const __extraerDelNombre = (nombre, pos) => {
+    if (!nombre) return 0;
+    const matches = String(nombre).match(/(\d+(?:[.,]\d+)?)\s*mm/g) || [];
+    if (!matches[pos]) return 0;
+    return parseFloat(matches[pos].replace(/[^\d.,]/g, '').replace(',', '.')) || 0;
+  };
+  if (espInput && receta) {
+    let esp = Number(receta.espesor) || 0;
+    if (esp <= 0) esp = __extraerDelNombre(receta.nombre, 1);
+    espInput.value = esp > 0 ? esp : '';
+  }
   const longWrap = document.getElementById('recetaEditandoLargoWrap');
   const longInput = document.getElementById('recetaEditandoLargo');
   if (longWrap && longInput) {
     if (esTubo) {
       longWrap.style.display = 'flex';
-      longInput.value = receta.long || '';
+      let lg = Number(receta.long) || 0;
+      if (lg <= 0) lg = __extraerDelNombre(receta.nombre, 2);
+      longInput.value = lg > 0 ? lg : '';
     } else {
       longWrap.style.display = 'none';
       longInput.value = '';
