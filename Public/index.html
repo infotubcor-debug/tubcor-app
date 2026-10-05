@@ -352,7 +352,8 @@ table tbody tr:hover{background:#f8fafc}
       </div>
       <div class="flex gap-2 mt-3">
         <button class="btn btn-secondary flex-1" onclick="agregarItemPendiente()"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
-        <button class="btn btn-secondary" onclick="guardarRecetaDesdeForm()" title="Guardar esta receta"><i class="fa-solid fa-bookmark"></i></button>
+        <button class="btn btn-secondary" onclick="guardarRecetaDesdeForm('fajas')" title="Guardar receta de fajas (sin largo)"><i class="fa-solid fa-bookmark"></i> Fajas</button>
+        <button class="btn btn-secondary" onclick="guardarRecetaDesdeForm('tubo')" title="Guardar receta de tubo completo (con largo)"><i class="fa-solid fa-bookmark"></i> Tubo</button>
         <button class="btn btn-primary flex-1" onclick="generarPresupuesto()"><i class="fa-solid fa-file-invoice"></i> Generar presupuesto</button>
       </div>
       <div class="mt-2 text-center"><button class="btn btn-secondary btn-sm" onclick="nuevoPedido()">↺ Nuevo pedido</button></div>
@@ -1334,19 +1335,36 @@ window.renderListaRecetas = function(){
     cont.innerHTML = '<div class="empty">Sin recetas guardadas.</div>';
     return;
   }
-  cont.innerHTML = recetas.map(r =>
-    '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f1f5f9;gap:8px">' +
+  const fajas = recetas.filter(r => (r.tipo || 'fajas') === 'fajas');
+  const tubos = recetas.filter(r => r.tipo === 'tubo');
+  const fila = (r) => {
+    const esTubo = r.tipo === 'tubo';
+    const tag = esTubo
+      ? '<span style="display:inline-block;padding:1px 6px;background:#dcfce7;color:#15803d;border-radius:3px;font-size:9px;font-weight:800;margin-right:6px">TUBO</span>'
+      : '<span style="display:inline-block;padding:1px 6px;background:#dbeafe;color:#1d4ed8;border-radius:3px;font-size:9px;font-weight:800;margin-right:6px">FAJAS</span>';
+    let medidas = '\u00d8' + r.diam + ' mm \u00b7 ' + r.espesor + ' mm \u00b7 ' + r.fajas.totalCapas + ' capas';
+    if (esTubo && r.long) medidas += ' \u00b7 ' + r.long + ' mm largo';
+    return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f1f5f9;gap:8px">' +
       '<div style="flex:1;min-width:0">' +
-        '<div style="font-size:12px;font-weight:700;color:#0f172a">' + esc(r.nombre) + '</div>' +
-        '<div style="font-size:10.5px;color:#64748b">\u00d8' + r.diam + ' mm \u00b7 ' + r.espesor + ' mm \u00b7 ' + r.fajas.totalCapas + ' capas</div>' +
+        '<div style="font-size:12px;font-weight:700;color:#0f172a">' + tag + esc(r.nombre) + '</div>' +
+        '<div style="font-size:10.5px;color:#64748b">' + medidas + '</div>' +
       '</div>' +
       '<button class="btn btn-secondary btn-sm" onclick="cargarReceta(\'' + r.id + '\')" title="Cargar"><i class="fa-solid fa-arrow-right-to-bracket"></i></button>' +
       '<button class="btn btn-secondary btn-sm" onclick="editarReceta(\'' + r.id + '\')" title="Editar"><i class="fa-solid fa-pen"></i></button>' +
       '<button class="btn btn-danger btn-sm" onclick="eliminarReceta(\'' + r.id + '\')" title="Eliminar"><i class="fa-solid fa-trash"></i></button>' +
-    '</div>'
-  ).join('');
+    '</div>';
+  };
+  let h = '';
+  if (fajas.length) {
+    h += '<div style="font-size:10.5px;font-weight:800;color:#1d4ed8;text-transform:uppercase;letter-spacing:0.5px;margin:6px 0 2px">Recetas de fajas</div>';
+    h += fajas.map(fila).join('');
+  }
+  if (tubos.length) {
+    h += '<div style="font-size:10.5px;font-weight:800;color:#15803d;text-transform:uppercase;letter-spacing:0.5px;margin:12px 0 2px">Recetas de tubo completo</div>';
+    h += tubos.map(fila).join('');
+  }
+  cont.innerHTML = h;
 };
-
 window.capturarRecetaDelForm = function(){
   const rellenos = [];
   const c1 = Math.max(0, parseInt($('ingRellCant').value)||0);
@@ -1409,7 +1427,8 @@ window.aplicarRecetaAlForm = function(fajas){
   try { recalcular(); } catch(_){}
 };
 
-window.guardarRecetaDesdeForm = function(){
+window.guardarRecetaDesdeForm = function(tipo){
+  tipo = (tipo === 'tubo') ? 'tubo' : 'fajas';
   const fajas = window.capturarRecetaDelForm();
   if (!fajas.principal.ancho || !fajas.principal.gramaje) {
     toast('Carga al menos la faja principal antes de guardar', 'err');
@@ -1421,14 +1440,33 @@ window.guardarRecetaDesdeForm = function(){
   STATE.config.recetas = STATE.config.recetas || [];
 
   const idEditando = window.__recetaEditandoId;
-  let nombreFinal;
+  let nombreFinal, tipoFinal, longFinal;
   if (idEditando) {
     const existente = STATE.config.recetas.find(r => r.id === idEditando);
-    nombreFinal = existente ? existente.nombre : 'Receta';
+    if (existente) {
+      nombreFinal = existente.nombre;
+      tipoFinal = existente.tipo || 'fajas';
+      longFinal = existente.long;
+    } else {
+      nombreFinal = 'Receta';
+      tipoFinal = tipo;
+      longFinal = (tipo === 'tubo') ? long : null;
+    }
   } else {
-    const nombreBase = prompt('Nombre de la receta (se agrega Ø y espesor automáticamente):', '');
+    if (tipo === 'tubo' && !long) {
+      toast('Carg\u00e1 el largo antes de guardar una receta de tubo completo', 'err');
+      return;
+    }
+    const nombreBase = prompt('Nombre de la receta:', '');
     if (nombreBase === null) return;
-    nombreFinal = (nombreBase.trim() || 'Receta') + ' - Ø' + (diam || '?') + ' × ' + espActual.toFixed(2) + ' mm × ' + (long || '?') + ' mm';
+    const base = (nombreBase.trim() || 'Receta');
+    if (tipo === 'tubo') {
+      nombreFinal = base + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm \u00d7 ' + (long || '?') + ' mm';
+    } else {
+      nombreFinal = base + ' - \u00d8' + (diam || '?') + ' \u00d7 ' + espActual.toFixed(2) + ' mm';
+    }
+    tipoFinal = tipo;
+    longFinal = (tipo === 'tubo') ? long : null;
   }
 
   const id = idEditando || uid('rec');
@@ -1436,11 +1474,13 @@ window.guardarRecetaDesdeForm = function(){
   const receta = {
     id: id,
     nombre: nombreFinal,
+    tipo: tipoFinal,
     diam: diam,
     espesor: Number(espActual.toFixed(2)),
     fajas: fajas,
     guardada: new Date().toISOString()
   };
+  if (tipoFinal === 'tubo' && longFinal) receta.long = longFinal;
   if (existente >= 0) {
     STATE.config.recetas[existente] = receta;
     toast('Receta actualizada', 'ok');
@@ -1455,48 +1495,180 @@ window.guardarRecetaDesdeForm = function(){
   try { renderSelectorRecetas(); } catch(_){}
   try { renderListaRecetas(); } catch(_){}
 };
-
 cargarReceta = function(id){
   const recetas = (STATE.config && STATE.config.recetas) || [];
   const r = recetas.find(x => x.id === id);
   if (!r) return;
   window.aplicarRecetaAlForm(r.fajas);
   if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
-  /* cancelar cualquier edicion en curso al cargar otra receta */
+  /* Solo cargar largo si es receta de tubo completo */
+  if ((r.tipo === 'tubo') && r.long && $('ingLong')) $('ingLong').value = r.long;
   window.__recetaEditandoId = null;
   try { window.ocultarBannerEdicionReceta(); } catch(_){}
   try { window.actualizarBotonGuardarReceta(false); } catch(_){}
   try { recalcular(); } catch(_){}
   toast('Receta cargada', 'ok');
-};
-
-editarReceta = function(id){
+};editarReceta = function(id){
   const recetas = (STATE.config && STATE.config.recetas) || [];
   const r = recetas.find(x => x.id === id);
   if (!r) return;
   window.aplicarRecetaAlForm(r.fajas);
   if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
+  if ((r.tipo === 'tubo') && r.long && $('ingLong')) $('ingLong').value = r.long;
   window.__recetaEditandoId = id;
-  try { window.mostrarBannerEdicionReceta(r.nombre); } catch(_){}
+  try { window.mostrarBannerEdicionReceta(r); } catch(_){}
+  try { window.actualizarBotonGuardarReceta(true); } catch(_){}
+  try { recalcular(); } catch(_){}
+  toast('Editando: ' + r.nombre + ' \u2014 ajust\u00e1 y apret\u00e1 "Actualizar receta"', 'ok');
+};
+
+window.mostrarBannerEdicionReceta(r.nombre); } catch(_){}
   try { window.actualizarBotonGuardarReceta(true); } catch(_){}
   try { recalcular(); } catch(_){}
   toast('Editando: ' + r.nombre + ' — ajustá y apretá "Actualizar receta"', 'ok');
 };
 
-window.mostrarBannerEdicionReceta = function(nombre){
+window.mostrarBannerEdicionReceta = function(receta){
   const wrap = document.getElementById('selectorRecetasWrap');
   if (!wrap) return;
+  const esTubo = receta && receta.tipo === 'tubo';
   let b = document.getElementById('recetaEditandoBanner');
   if (!b) {
     b = document.createElement('div');
     b.id = 'recetaEditandoBanner';
-    b.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-top:6px;font-size:12px;color:#78350f';
-    b.innerHTML = '<i class="fa-solid fa-pen"></i><span style="flex:1"><b>Editando receta:</b> <span class="recetaEditandoNombre"></span></span><button class="btn btn-secondary btn-sm" type="button" onclick="cancelarEdicionReceta()"><i class="fa-solid fa-xmark"></i> Cancelar</button>';
+    b.style.cssText = 'display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:8px 10px;background:#fef3c7;border:1px solid #fcd34d;border-radius:6px;margin-top:6px;font-size:12px;color:#78350f';
+    b.innerHTML = '<i class="fa-solid fa-pen"></i>' +
+      '<span style="flex:1;min-width:180px"><b>Editando:</b> <span class="recetaEditandoNombre"></span></span>' +
+      '<label style="display:flex;align-items:center;gap:4px;font-weight:700">Espesor (mm) <input id="recetaEditandoEspesor" type="number" step="0.01" style="width:70px;padding:2px 4px;border:1px solid #fcd34d;border-radius:4px"/></label>' +
+      '<label id="recetaEditandoLargoWrap" style="display:none;align-items:center;gap:4px;font-weight:700">Largo (mm) <input id="recetaEditandoLargo" type="number" step="1" style="width:80px;padding:2px 4px;border:1px solid #fcd34d;border-radius:4px"/></label>' +
+      '<button class="btn btn-primary btn-sm" type="button" onclick="recalcularRecetaDesdeEdicion()"><i class="fa-solid fa-rotate"></i> Recalcular receta</button>' +
+      '<button class="btn btn-secondary btn-sm" type="button" onclick="cancelarEdicionReceta()"><i class="fa-solid fa-xmark"></i> Cancelar</button>';
     wrap.parentNode.insertBefore(b, wrap.nextSibling);
   }
   b.style.display = 'flex';
   const sp = b.querySelector('.recetaEditandoNombre');
-  if (sp) sp.textContent = nombre || '';
+  if (sp) sp.textContent = (receta && receta.nombre) || '';
+  const espInput = document.getElementById('recetaEditandoEspesor');
+  if (espInput && receta) espInput.value = receta.espesor || '';
+  const longWrap = document.getElementById('recetaEditandoLargoWrap');
+  const longInput = document.getElementById('recetaEditandoLargo');
+  if (longWrap && longInput) {
+    if (esTubo) {
+      longWrap.style.display = 'flex';
+      longInput.value = receta.long || '';
+    } else {
+      longWrap.style.display = 'none';
+      longInput.value = '';
+    }
+  }
+};
+
+window.recalcularRecetaDesdeEdicion = function(){
+  const espInput = document.getElementById('recetaEditandoEspesor');
+  if (!espInput) return;
+  const espObjetivo = N(espInput.value);
+  if (!(espObjetivo > 0)) { toast('Carg\u00e1 un espesor v\u00e1lido', 'err'); return; }
+  const longInput = document.getElementById('recetaEditandoLargo');
+  const idEditando = window.__recetaEditandoId;
+  const recetas = (STATE.config && STATE.config.recetas) || [];
+  const receta = recetas.find(r => r.id === idEditando);
+  const esTubo = receta && receta.tipo === 'tubo';
+
+  const diam = N($('ingDiam').value);
+  if (!(diam > 0)) { toast('Carg\u00e1 el di\u00e1metro antes de recalcular', 'err'); return; }
+
+  const gramPrinc = N($('ingPrincGram').value) || 357;
+  const gramRell = N($('ingRellGram') ? $('ingRellGram').value : 0) || gramPrinc;
+  const gramTapa = N($('ingTapaGram').value) || 170;
+
+  const tabla = (STATE.config && STATE.config.espesoresPorGramaje) || { 130:0.15, 170:0.20, 246:0.30, 357:0.50, 408:0.70 };
+  const espPorGram = (g) => tabla[String(g)] != null ? N(tabla[String(g)]) : (g / 720);
+
+  const espPrinc = espPorGram(gramPrinc);
+  const espTapa = espPorGram(gramTapa);
+  const espRell = espPorGram(gramRell);
+  const espRellenos = espObjetivo - espPrinc - espTapa;
+  if (espRellenos <= 0) { toast('El espesor es muy chico para esas capas', 'err'); return; }
+  const capasRellenoTotal = Math.max(1, Math.round(espRellenos / espRell));
+
+  const round5 = (n) => Math.floor(n/5) * 5;
+  const layers = [];
+  let dTmp = diam + espPrinc;
+  for (let i = 0; i < capasRellenoTotal; i++) {
+    const dIni = dTmp;
+    dTmp += espRell;
+    const dMed = (dIni + dTmp) / 2;
+    const anchoTeo = 10 * Math.sqrt(dMed);
+    layers.push({ ancho: round5(anchoTeo) });
+  }
+  const grupos = [];
+  let cur = null;
+  layers.forEach(l => {
+    if (!cur || cur.ancho !== l.ancho) {
+      if (cur) grupos.push(cur);
+      cur = { capas: 1, ancho: l.ancho };
+    } else { cur.capas++; }
+  });
+  if (cur) grupos.push(cur);
+  while (grupos.length > 4) {
+    let minIdx = 0, minCapas = Infinity;
+    for (let i = 0; i < grupos.length - 1; i++) {
+      const suma = grupos[i].capas + grupos[i+1].capas;
+      if (suma < minCapas) { minCapas = suma; minIdx = i; }
+    }
+    const a = grupos[minIdx], b = grupos[minIdx+1];
+    grupos.splice(minIdx, 2, { capas: a.capas + b.capas, ancho: Math.max(a.ancho, b.ancho) });
+  }
+
+  const dMedioPrinc = diam + espPrinc / 2;
+  const anchoPrinc = round5(10 * Math.sqrt(dMedioPrinc));
+  const ultimoRellenoAnchoBase = grupos.length ? grupos[grupos.length-1].ancho : anchoPrinc;
+
+  if ($('ingPrincAncho')) $('ingPrincAncho').value = anchoPrinc;
+  if ($('ingPrincGram')) $('ingPrincGram').value = gramPrinc;
+
+  if (grupos[0]) {
+    if ($('ingRellCant')) $('ingRellCant').value = grupos[0].capas;
+    if ($('ingRellAncho')) $('ingRellAncho').value = grupos[0].ancho;
+    if ($('ingRellGram')) $('ingRellGram').value = gramRell;
+  } else {
+    if ($('ingRellCant')) $('ingRellCant').value = '';
+    if ($('ingRellAncho')) $('ingRellAncho').value = '';
+    if ($('ingRellGram')) $('ingRellGram').value = '';
+  }
+  for (let i = 1; i <= 3; i++) {
+    const g = grupos[i];
+    const cEl = $('ingRell'+(i+1)+'Cant');
+    const aEl = $('ingRell'+(i+1)+'Ancho');
+    const gEl = $('ingRell'+(i+1)+'Gram');
+    if (g) {
+      if (cEl) cEl.value = g.capas;
+      if (aEl) aEl.value = g.ancho;
+      if (gEl) gEl.value = gramRell;
+    } else {
+      if (cEl) cEl.value = '';
+      if (aEl) aEl.value = '';
+      if (gEl) gEl.value = '';
+    }
+  }
+  if (grupos.length > 1) {
+    const w = $('gruposRellenoExtras');
+    if (w) w.style.display = 'block';
+    const ch = $('gruposRellenoExtrasChevron');
+    if (ch) ch.textContent = '-';
+  }
+  const anchoTapa = ultimoRellenoAnchoBase + 5;
+  if ($('ingTapaAncho')) $('ingTapaAncho').value = anchoTapa;
+  if ($('ingTapaGram')) $('ingTapaGram').value = gramTapa;
+
+  if (esTubo && longInput && N(longInput.value) > 0 && $('ingLong')) {
+    $('ingLong').value = N(longInput.value);
+  }
+
+  try { recalcular(); } catch(_){}
+  const espReal = (STATE.resultados && STATE.resultados.espesor) ? STATE.resultados.espesor : espObjetivo;
+  if (espInput) espInput.value = espReal.toFixed(2);
+  toast('Receta recalculada', 'ok');
 };
 
 window.ocultarBannerEdicionReceta = function(){
@@ -1505,7 +1677,7 @@ window.ocultarBannerEdicionReceta = function(){
 };
 
 window.actualizarBotonGuardarReceta = function(editando){
-  const btns = document.querySelectorAll('button[onclick="guardarRecetaDesdeForm()"]');
+  const btns = document.querySelectorAll('button[onclick^="guardarRecetaDesdeForm"]');
   btns.forEach(b => {
     if (editando) {
       if (!b.dataset.textoOriginal) b.dataset.textoOriginal = b.innerHTML;
@@ -1666,7 +1838,8 @@ window.calcularReceta = function(){
   h += '<div class="hint" style="margin-top:8px">' + (1 + capasRellenoTotal + 1) + ' capas en total - ' + espTotal.toFixed(2) + ' mm de espesor - Formula: 10 x raiz cuadrada del diametro medio, redondeado a multiplos de 5 mm</div>';
   h += '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:8px">';
   h += '<button class="btn btn-primary" onclick="aplicarReceta()"><i class="fa-solid fa-check"></i> Aplicar a la carga</button>';
-  h += '<button class="btn btn-secondary" onclick="guardarRecetaDesdeForm()"><i class="fa-solid fa-bookmark"></i> Guardar receta</button>';
+  h += '<button class="btn btn-secondary" onclick="guardarRecetaDesdeForm(\'fajas\')"><i class="fa-solid fa-bookmark"></i> Receta fajas</button>';
+  h += '<button class="btn btn-secondary" onclick="guardarRecetaDesdeForm(\'tubo\')"><i class="fa-solid fa-bookmark"></i> Receta tubo</button>';
   h += '</div>';
 
   cont.innerHTML = h;
