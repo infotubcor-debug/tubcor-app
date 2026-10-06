@@ -2800,9 +2800,12 @@ function renderOF(){
   $('ofLista').innerHTML = list.map(p=>`
     <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.ultimoPresupuestoId===p.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="seleccionarOF('${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
-        <div>
-          <div style="font-weight:700;font-size:12.5px">${esc(p.ordenNumero)}</div>
-          <div style="font-size:10.5px;color:#64748b">${esc(p.numero)} · ${esc(p.clienteRazonSocial)}</div>
+        <div style="display:flex;gap:8px;align-items:flex-start">
+          <input type="checkbox" onclick="event.stopPropagation();toggleOFSeleccion('${p.id}')" ${window.ofEstaSeleccionada(p.id)?'checked':''} style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0"/>
+          <div>
+            <div style="font-weight:700;font-size:12.5px">${esc(p.ordenNumero)}</div>
+            <div style="font-size:10.5px;color:#64748b">${esc(p.numero)} · ${esc(p.clienteRazonSocial)}</div>
+          </div>
         </div>
         <span class="badge badge-blue">${p.items.length}</span>
       </div>
@@ -2812,6 +2815,37 @@ function renderOF(){
 function seleccionarOF(id){
   STATE.config.ultimoPresupuestoId = id; save(['config']); renderOF();
 }
+window.ofEstaSeleccionada = function(id){
+  if (!Array.isArray(STATE.config.ofSeleccionadas)) return true;
+  return STATE.config.ofSeleccionadas.includes(id);
+};
+window.toggleOFSeleccion = function(id){
+  if (!Array.isArray(STATE.config.ofSeleccionadas)) {
+    STATE.config.ofSeleccionadas = (STATE.presupuestos||[]).map(p => p.id);
+  }
+  const idx = STATE.config.ofSeleccionadas.indexOf(id);
+  if (idx >= 0) STATE.config.ofSeleccionadas.splice(idx, 1);
+  else STATE.config.ofSeleccionadas.push(id);
+  save(['config']);
+  renderOF();
+  try { window.renderTotalesMesOF(); } catch(_){}
+};
+window.marcarTodasOFMes = function(mes, valor){
+  if (!Array.isArray(STATE.config.ofSeleccionadas)) {
+    STATE.config.ofSeleccionadas = (STATE.presupuestos||[]).map(p => p.id);
+  }
+  const idsMes = (STATE.presupuestos||[]).filter(p => (p.fecha||'').slice(0,7) === mes).map(p => p.id);
+  if (valor) {
+    idsMes.forEach(id => {
+      if (!STATE.config.ofSeleccionadas.includes(id)) STATE.config.ofSeleccionadas.push(id);
+    });
+  } else {
+    STATE.config.ofSeleccionadas = STATE.config.ofSeleccionadas.filter(id => !idsMes.includes(id));
+  }
+  save(['config']);
+  renderOF();
+  try { window.renderTotalesMesOF(); } catch(_){}
+};
 window.renderTotalesMesOF = function(){
   const cont = $('ofTotalesMesLista');
   const mesInput = $('ofTotalesMes');
@@ -2819,12 +2853,13 @@ window.renderTotalesMesOF = function(){
   if (!mesInput.value) mesInput.value = today().slice(0,7);
   const mes = mesInput.value;
 
-  const presMes = (STATE.presupuestos||[]).filter(p => (p.fecha||'').slice(0,7) === mes);
-  if (!presMes.length) {
+  const presMesTodas = (STATE.presupuestos||[]).filter(p => (p.fecha||'').slice(0,7) === mes);
+  if (!presMesTodas.length) {
     cont.innerHTML = '<div class="empty">Sin OF en este mes.</div>';
     return;
   }
 
+  const presMes = presMesTodas.filter(p => window.ofEstaSeleccionada(p.id));
   const map = {};
   let kgPapelTotal = 0;
   presMes.forEach(p=>{
@@ -2868,6 +2903,13 @@ window.renderTotalesMesOF = function(){
   const mermaPct = N($('ingDesperdicio') ? $('ingDesperdicio').value : 10)/100;
 
   cont.innerHTML = `
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap">
+      <div style="font-size:11px;font-weight:700;color:#334155">${presMes.length} de ${presMesTodas.length} OF</div>
+      <div style="display:flex;gap:4px">
+        <button class="btn btn-secondary btn-sm" onclick="marcarTodasOFMes('${mes}',true)" style="font-size:10px;padding:2px 8px">Todas</button>
+        <button class="btn btn-secondary btn-sm" onclick="marcarTodasOFMes('${mes}',false)" style="font-size:10px;padding:2px 8px">Ninguna</button>
+      </div>
+    </div>
     <div class="grid grid-cols-2 gap-2 mb-2">
       <div class="kpi"><div class="k-label">Papel total del mes</div><div class="k-value text-[14px]">${kgPapelTotal.toFixed(1)} kg</div></div>
       <div class="kpi"><div class="k-label">Con merma (${(mermaPct*100).toFixed(0)}%)</div><div class="k-value text-[14px]" style="color:#b45309">${(kgPapelTotal*(1+mermaPct)).toFixed(1)} kg</div></div>
