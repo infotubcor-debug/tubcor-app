@@ -631,17 +631,22 @@ table tbody tr:hover{background:#f8fafc}
 <section class="section" id="tab-of">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="card">
-      <div class="flex items-center justify-between mb-2">
-        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide">Órdenes de fabricación</div>
-        <span class="badge badge-gray" id="ofCount">0</span>
-      </div>
-      <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
-      <div class="mt-3 pt-3 border-t border-slate-200">
-        <div class="flex items-center justify-between mb-2">
-          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Totales del mes</div>
-          <input id="ofTotalesMes" type="month" onchange="renderTotalesMesOF()" style="width:auto;font-size:11px;padding:4px 8px"/>
+      <div class="flex items-center justify-between mb-2" style="cursor:pointer" onclick="toggleOFPanel()">
+        <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-list-check" style="color:#16a34a"></i> Órdenes de fabricación y totales</div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="badge badge-gray" id="ofCount">0</span>
+          <span id="ofPanelChevron" style="font-size:14px;font-weight:700;color:#475569">▼</span>
         </div>
-        <div id="ofTotalesMesLista"><div class="empty">Selecciona un mes.</div></div>
+      </div>
+      <div id="ofPanelContenido">
+        <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
+        <div class="mt-3 pt-3 border-t border-slate-200">
+          <div class="flex items-center justify-between mb-2">
+            <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Totales del mes</div>
+            <input id="ofTotalesMes" type="month" onchange="renderTotalesMesOF()" style="width:auto;font-size:11px;padding:4px 8px"/>
+          </div>
+          <div id="ofTotalesMesLista"><div class="empty">Selecciona un mes.</div></div>
+        </div>
       </div>
     </div>
     <div class="card lg:col-span-2">
@@ -2830,6 +2835,14 @@ window.toggleOFSeleccion = function(id){
   renderOF();
   try { window.renderTotalesMesOF(); } catch(_){}
 };
+window.toggleOFPanel = function(){
+  const cont = document.getElementById('ofPanelContenido');
+  const ch = document.getElementById('ofPanelChevron');
+  if (!cont) return;
+  const abierto = cont.style.display !== 'none';
+  cont.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '\u25b6' : '\u25bc';
+};
 window.marcarTodasOFMes = function(mes, valor){
   if (!Array.isArray(STATE.config.ofSeleccionadas)) {
     STATE.config.ofSeleccionadas = (STATE.presupuestos||[]).map(p => p.id);
@@ -2902,6 +2915,27 @@ window.renderTotalesMesOF = function(){
   const lista = Object.values(map).sort((a,b)=>(a.tipo+a.gramaje).localeCompare(b.tipo+b.gramaje));
   const mermaPct = N($('ingDesperdicio') ? $('ingDesperdicio').value : 10)/100;
 
+  /* === PE con mezcla real (ponderado por kg) === */
+  let __totalPesoLote = 0, __totalPrecio = 0, __totalCostoVar = 0;
+  presMes.forEach(p => {
+    (p.items||[]).forEach(it => {
+      __totalPesoLote += N(it.pesoLoteKg) || 0;
+      __totalPrecio += N(it.precioVentaTotal) || 0;
+      __totalCostoVar += N(it.costoVariableTotal) || 0;
+    });
+  });
+  const __precioPromKg = __totalPesoLote > 0 ? __totalPrecio / __totalPesoLote : 0;
+  const __costoVarPromKg = __totalPesoLote > 0 ? __totalCostoVar / __totalPesoLote : 0;
+  const __contribPromKg = __precioPromKg - __costoVarPromKg;
+  const __gfPE = ['gfAlq','gfExp','gfCon','gfSue','gfArca','gfRen','gfMun','gfPre','gfEpec','gfPro']
+    .reduce((s,id)=>s+N($(id).value),0);
+  const __peKg = __contribPromKg > 0 ? __gfPE / __contribPromKg : 0;
+  const __prodMesPE = (STATE.produccion||[]).filter(p => (p.fecha||'').slice(0,7) === mes);
+  let __kgEntregados = 0;
+  __prodMesPE.forEach(p => { __kgEntregados += (p.cantidad || 0) * (p.pesoPromedio || 0) / 1000; });
+  const __pctPE = __peKg > 0 ? Math.min(100, (__kgEntregados / __peKg) * 100) : 0;
+  const __money = (v) => '$' + (v||0).toLocaleString('es-AR', {maximumFractionDigits:0});
+
   cont.innerHTML = `
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap">
       <div style="font-size:11px;font-weight:700;color:#334155">${presMes.length} de ${presMesTodas.length} OF</div>
@@ -2936,6 +2970,33 @@ window.renderTotalesMesOF = function(){
         </tr>
       </tbody>
     </table>
+    <div style="margin-top:12px;padding:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
+      <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;margin-bottom:8px"><i class="fa-solid fa-scale-balanced"></i> Punto de equilibrio con mezcla real</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;margin-bottom:8px">
+        <div><div style="color:#64748b;font-size:10px">Precio promedio (\${presMes.length} OF)</div><div style="font-weight:700">\${__precioPromKg > 0 ? __money(__precioPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Costo variable promedio</div><div style="font-weight:700">\${__costoVarPromKg > 0 ? __money(__costoVarPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Contribución</div><div style="font-weight:700;color:#15803d">\${__contribPromKg > 0 ? __money(__contribPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Gastos fijos del mes</div><div style="font-weight:700">\${__money(__gfPE)}</div></div>
+      </div>
+      <div style="padding-top:8px;border-top:1px dashed #86efac">
+        <div style="display:flex;justify-content:space-between;align-items:baseline">
+          <div style="font-size:11px;color:#64748b">PE con esta mezcla</div>
+          <div style="font-size:16px;font-weight:800;color:#15803d">\${__peKg > 0 ? __peKg.toFixed(0) + ' kg' : '\u2014'}</div>
+        </div>
+        <div style="margin-top:8px;font-size:11px">
+          <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+            <span>Entregado real: <b>\${__kgEntregados.toFixed(1)} kg</b></span>
+            <span>\${__pctPE.toFixed(0)}%</span>
+          </div>
+          <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden">
+            <div style="width:\${__pctPE}%;height:100%;background:\${__pctPE >= 100 ? '#15803d' : '#f59e0b'};transition:width 0.3s"></div>
+          </div>
+          \${__peKg > 0 && __kgEntregados < __peKg
+            ? '<div style="margin-top:4px;color:#b45309;font-weight:600">Faltan ' + (__peKg - __kgEntregados).toFixed(0) + ' kg para cubrir gastos fijos</div>'
+            : (__peKg > 0 ? '<div style="margin-top:4px;color:#15803d;font-weight:600">\u2713 Cubriste los gastos fijos este mes</div>' : '')}
+        </div>
+      </div>
+    </div>
   `;
 };
 
