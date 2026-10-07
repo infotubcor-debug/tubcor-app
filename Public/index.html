@@ -2852,7 +2852,7 @@ window.toggleOFSeccion = function(){
   if (ch) ch.textContent = abierto ? '\u25b6' : '\u25bc';
 };
 window.toggleTotalesSeccion = function(){
-  const c = document.getElementById('ofTotalesMesLista');
+  const c = document.getElementById('totalesContenido');
   const ch = document.getElementById('totalesSeccionChevron');
   if (!c) return;
   const abierto = c.style.display !== 'none';
@@ -2960,6 +2960,7 @@ window.renderTotalesMesOF = function(){
   const __money = (v) => '$' + (v||0).toLocaleString('es-AR', {maximumFractionDigits:0});
 
   cont.innerHTML = `
+    <div id="totalesContenido">
     <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;gap:6px;flex-wrap:wrap">
       <div style="font-size:11px;font-weight:700;color:#334155">${presMes.length} de ${presMesTodas.length} OF</div>
       <div style="display:flex;gap:4px">
@@ -2993,6 +2994,7 @@ window.renderTotalesMesOF = function(){
         </tr>
       </tbody>
     </table>
+    </div>
     <div style="margin-top:12px;padding:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
       <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="togglePESeccion()">
         <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase"><i class="fa-solid fa-scale-balanced"></i> Punto de equilibrio con mezcla real</div>
