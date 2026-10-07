@@ -2973,25 +2973,25 @@ window.renderTotalesMesOF = function(){
     <div style="margin-top:12px;padding:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
       <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;margin-bottom:8px"><i class="fa-solid fa-scale-balanced"></i> Punto de equilibrio con mezcla real</div>
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;margin-bottom:8px">
-        <div><div style="color:#64748b;font-size:10px">Precio promedio (\${presMes.length} OF)</div><div style="font-weight:700">\${__precioPromKg > 0 ? __money(__precioPromKg) + '/kg' : '\u2014'}</div></div>
-        <div><div style="color:#64748b;font-size:10px">Costo variable promedio</div><div style="font-weight:700">\${__costoVarPromKg > 0 ? __money(__costoVarPromKg) + '/kg' : '\u2014'}</div></div>
-        <div><div style="color:#64748b;font-size:10px">Contribución</div><div style="font-weight:700;color:#15803d">\${__contribPromKg > 0 ? __money(__contribPromKg) + '/kg' : '\u2014'}</div></div>
-        <div><div style="color:#64748b;font-size:10px">Gastos fijos del mes</div><div style="font-weight:700">\${__money(__gfPE)}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Precio promedio (${presMes.length} OF)</div><div style="font-weight:700">${__precioPromKg > 0 ? __money(__precioPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Costo variable promedio</div><div style="font-weight:700">${__costoVarPromKg > 0 ? __money(__costoVarPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Contribución</div><div style="font-weight:700;color:#15803d">${__contribPromKg > 0 ? __money(__contribPromKg) + '/kg' : '\u2014'}</div></div>
+        <div><div style="color:#64748b;font-size:10px">Gastos fijos del mes</div><div style="font-weight:700">${__money(__gfPE)}</div></div>
       </div>
       <div style="padding-top:8px;border-top:1px dashed #86efac">
         <div style="display:flex;justify-content:space-between;align-items:baseline">
           <div style="font-size:11px;color:#64748b">PE con esta mezcla</div>
-          <div style="font-size:16px;font-weight:800;color:#15803d">\${__peKg > 0 ? __peKg.toFixed(0) + ' kg' : '\u2014'}</div>
+          <div style="font-size:16px;font-weight:800;color:#15803d">${__peKg > 0 ? __peKg.toFixed(0) + ' kg' : '\u2014'}</div>
         </div>
         <div style="margin-top:8px;font-size:11px">
           <div style="display:flex;justify-content:space-between;margin-bottom:4px">
-            <span>Entregado real: <b>\${__kgEntregados.toFixed(1)} kg</b></span>
-            <span>\${__pctPE.toFixed(0)}%</span>
+            <span>Entregado real: <b>${__kgEntregados.toFixed(1)} kg</b></span>
+            <span>${__pctPE.toFixed(0)}%</span>
           </div>
           <div style="background:#e2e8f0;border-radius:4px;height:10px;overflow:hidden">
-            <div style="width:\${__pctPE}%;height:100%;background:\${__pctPE >= 100 ? '#15803d' : '#f59e0b'};transition:width 0.3s"></div>
+            <div style="width:${__pctPE}%;height:100%;background:${__pctPE >= 100 ? '#15803d' : '#f59e0b'};transition:width 0.3s"></div>
           </div>
-          \${__peKg > 0 && __kgEntregados < __peKg
+          ${__peKg > 0 && __kgEntregados < __peKg
             ? '<div style="margin-top:4px;color:#b45309;font-weight:600">Faltan ' + (__peKg - __kgEntregados).toFixed(0) + ' kg para cubrir gastos fijos</div>'
             : (__peKg > 0 ? '<div style="margin-top:4px;color:#15803d;font-weight:600">\u2713 Cubriste los gastos fijos este mes</div>' : '')}
         </div>
