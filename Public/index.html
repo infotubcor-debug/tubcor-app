@@ -631,22 +631,30 @@ table tbody tr:hover{background:#f8fafc}
 <section class="section" id="tab-of">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="card">
-      <div class="flex items-center justify-between mb-2" style="cursor:pointer" onclick="toggleOFPanel()">
+      <div class="flex items-center justify-between mb-2">
         <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-list-check" style="color:#16a34a"></i> Órdenes de fabricación y totales</div>
-        <div style="display:flex;align-items:center;gap:6px">
-          <span class="badge badge-gray" id="ofCount">0</span>
-          <span id="ofPanelChevron" style="font-size:14px;font-weight:700;color:#475569">▼</span>
+        <span class="badge badge-gray" id="ofCount">0</span>
+      </div>
+
+      <div style="margin-top:10px">
+        <div class="flex items-center justify-between mb-2" style="cursor:pointer" onclick="toggleOFSeccion()">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Órdenes de fabricación</div>
+          <span id="ofSeccionChevron" style="font-size:12px;font-weight:700;color:#475569">▼</span>
+        </div>
+        <div id="ofListaWrap">
+          <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
         </div>
       </div>
-      <div id="ofPanelContenido">
-        <div id="ofLista" style="max-height:600px;overflow:auto;display:grid;gap:6px"></div>
-        <div class="mt-3 pt-3 border-t border-slate-200">
-          <div class="flex items-center justify-between mb-2">
-            <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Totales del mes</div>
+
+      <div class="mt-3 pt-3 border-t border-slate-200">
+        <div class="flex items-center justify-between mb-2" style="cursor:pointer" onclick="toggleTotalesSeccion()">
+          <div class="text-[11px] font-extrabold text-slate-700 uppercase tracking-wide">Totales del mes</div>
+          <div style="display:flex;align-items:center;gap:6px" onclick="event.stopPropagation()">
             <input id="ofTotalesMes" type="month" onchange="renderTotalesMesOF()" style="width:auto;font-size:11px;padding:4px 8px"/>
+            <span id="totalesSeccionChevron" onclick="toggleTotalesSeccion()" style="font-size:12px;font-weight:700;color:#475569;cursor:pointer">▼</span>
           </div>
-          <div id="ofTotalesMesLista"><div class="empty">Selecciona un mes.</div></div>
         </div>
+        <div id="ofTotalesMesLista"><div class="empty">Selecciona un mes.</div></div>
       </div>
     </div>
     <div class="card lg:col-span-2">
@@ -2835,13 +2843,28 @@ window.toggleOFSeleccion = function(id){
   renderOF();
   try { window.renderTotalesMesOF(); } catch(_){}
 };
-window.toggleOFPanel = function(){
-  const cont = document.getElementById('ofPanelContenido');
-  const ch = document.getElementById('ofPanelChevron');
-  if (!cont) return;
-  const abierto = cont.style.display !== 'none';
-  cont.style.display = abierto ? 'none' : 'block';
+window.toggleOFSeccion = function(){
+  const c = document.getElementById('ofListaWrap');
+  const ch = document.getElementById('ofSeccionChevron');
+  if (!c) return;
+  const abierto = c.style.display !== 'none';
+  c.style.display = abierto ? 'none' : 'block';
   if (ch) ch.textContent = abierto ? '\u25b6' : '\u25bc';
+};
+window.toggleTotalesSeccion = function(){
+  const c = document.getElementById('ofTotalesMesLista');
+  const ch = document.getElementById('totalesSeccionChevron');
+  if (!c) return;
+  const abierto = c.style.display !== 'none';
+  c.style.display = abierto ? 'none' : 'block';
+  if (ch) ch.textContent = abierto ? '\u25b6' : '\u25bc';
+};
+window.togglePESeccion = function(){
+  window.__peColapsado = !window.__peColapsado;
+  const c = document.getElementById('peContenido');
+  const ch = document.getElementById('peChevron');
+  if (c) c.style.display = window.__peColapsado ? 'none' : 'block';
+  if (ch) ch.textContent = window.__peColapsado ? '\u25b6' : '\u25bc';
 };
 window.marcarTodasOFMes = function(mes, valor){
   if (!Array.isArray(STATE.config.ofSeleccionadas)) {
@@ -2971,7 +2994,11 @@ window.renderTotalesMesOF = function(){
       </tbody>
     </table>
     <div style="margin-top:12px;padding:10px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
-      <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase;margin-bottom:8px"><i class="fa-solid fa-scale-balanced"></i> Punto de equilibrio con mezcla real</div>
+      <div style="display:flex;justify-content:space-between;align-items:center;cursor:pointer" onclick="togglePESeccion()">
+        <div style="font-size:11px;font-weight:800;color:#15803d;text-transform:uppercase"><i class="fa-solid fa-scale-balanced"></i> Punto de equilibrio con mezcla real</div>
+        <span id="peChevron" style="font-size:12px;font-weight:700;color:#15803d">▼</span>
+      </div>
+      <div id="peContenido" style="margin-top:8px">
       <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;font-size:11.5px;margin-bottom:8px">
         <div><div style="color:#64748b;font-size:10px">Precio promedio (${presMes.length} OF)</div><div style="font-weight:700">${__precioPromKg > 0 ? __money(__precioPromKg) + '/kg' : '\u2014'}</div></div>
         <div><div style="color:#64748b;font-size:10px">Costo variable promedio</div><div style="font-weight:700">${__costoVarPromKg > 0 ? __money(__costoVarPromKg) + '/kg' : '\u2014'}</div></div>
@@ -2995,6 +3022,7 @@ window.renderTotalesMesOF = function(){
             ? '<div style="margin-top:4px;color:#b45309;font-weight:600">Faltan ' + (__peKg - __kgEntregados).toFixed(0) + ' kg para cubrir gastos fijos</div>'
             : (__peKg > 0 ? '<div style="margin-top:4px;color:#15803d;font-weight:600">\u2713 Cubriste los gastos fijos este mes</div>' : '')}
         </div>
+      </div>
       </div>
     </div>
   `;
