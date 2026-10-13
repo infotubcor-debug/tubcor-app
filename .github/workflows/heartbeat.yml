@@ -1,0 +1,32 @@
+name: Heartbeat Supabase
+
+on:
+  schedule:
+    # Corre los jueves a las 6 AM UTC (3 AM hora Argentina)
+    # + el backup corre los lunes → actividad cada 3-4 días
+    - cron: '0 6 * * 4'
+  workflow_dispatch:
+
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping a Supabase para evitar pausa por inactividad
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: |
+          echo "Pingeando Supabase para mantener el proyecto activo..."
+          HTTP_CODE=$(curl -s -o /dev/null -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/state?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_SERVICE_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_SERVICE_KEY}")
+
+          echo "Respuesta HTTP: ${HTTP_CODE}"
+
+          if [ "${HTTP_CODE}" != "200" ]; then
+            echo "ERROR: Supabase no respondió con 200"
+            exit 1
+          fi
+
+          echo "OK: Supabase activo"
