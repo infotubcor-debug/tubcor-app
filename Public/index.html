@@ -176,13 +176,7 @@ table tbody tr:hover{background:#f8fafc}
         <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-layer-group" style="color:#16a34a"></i> 2. Fajas de cartón</div>
       </div>
       <div style="display:grid;gap:8px">
-        <div id="selectorRecetasWrap" style="display:none;padding:8px;background:#f0fdf4;border:1px solid #86efac;border-radius:6px">
-          <label style="font-size:10px;text-transform:uppercase;font-weight:800;color:#15803d">Cargar receta guardada</label>
-          <div style="display:flex;gap:6px;margin-top:4px">
-            <select id="selectorRecetas" style="flex:1"><option value="">— Elegir receta —</option></select>
-            <button class="btn btn-primary btn-sm" type="button" onclick="cargarRecetaSeleccionada()">Cargar</button>
-          </div>
-        </div>
+        <div id="recetaBannerAnchor"></div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal (interior)</div>
           <div><label>Ancho (mm)</label><input id="ingPrincAncho" type="number" oninput="recalcular()"/></div>
@@ -1327,18 +1321,7 @@ window.__recetaCalculada = null;
 /* ============ RECETAS GUARDADAS ============ */
 window.__recetaEditandoId = null;
 
-window.renderSelectorRecetas = function(){
-  const sel = $('selectorRecetas');
-  const wrap = $('selectorRecetasWrap');
-  if (!sel || !wrap) return;
-  const recetas = (STATE.config && STATE.config.recetas) || [];
-  if (!recetas.length) { wrap.style.display = 'none'; return; }
-  wrap.style.display = 'block';
-  const cur = sel.value;
-  sel.innerHTML = '<option value="">\u2014 Elegir receta \u2014</option>' +
-    recetas.map(r => '<option value="' + r.id + '">' + esc(r.nombre) + '</option>').join('');
-  if (cur && recetas.some(r => r.id === cur)) sel.value = cur;
-};
+window.renderSelectorRecetas = function(){ /* removido */ };;
 
 window.renderListaRecetas = function(){
   const cont = $('listaRecetasBody');
@@ -1537,7 +1520,7 @@ cargarReceta = function(id){
 
 
 window.mostrarBannerEdicionReceta = function(receta){
-  const wrap = document.getElementById('selectorRecetasWrap');
+  const wrap = document.getElementById('recetaBannerAnchor');
   if (!wrap) return;
   const esTubo = receta && receta.tipo === 'tubo';
   let b = document.getElementById('recetaEditandoBanner');
@@ -1552,7 +1535,7 @@ window.mostrarBannerEdicionReceta = function(receta){
       '<button class="btn btn-primary btn-sm" type="button" onclick="recalcularRecetaDesdeEdicion()"><i class="fa-solid fa-rotate"></i> Recalcular receta</button>' +
       '<button class="btn btn-primary btn-sm" type="button" onclick="guardarRecetaDesdeForm()" title="Guardar la receta en edici\u00f3n"><i class="fa-solid fa-floppy-disk"></i> Actualizar receta</button>' +
       '<button class="btn btn-secondary btn-sm" type="button" onclick="cancelarEdicionReceta()"><i class="fa-solid fa-xmark"></i> Cancelar</button>';
-    wrap.parentNode.insertBefore(b, wrap.nextSibling);
+    wrap.parentNode.insertBefore(b, wrap);
   }
   b.style.display = 'flex';
   const sp = b.querySelector('.recetaEditandoNombre');
@@ -4802,7 +4785,6 @@ function limpiarIngenieria(){
   const _colT = $('ingTapaColor'); if (_colT) _colT.selectedIndex = 0;
   const _addCnc = $('ingAdicionalCNC'); if (_addCnc) _addCnc.value = '';
   const _coefM = $('ingCoefManual'); if (_coefM) _coefM.value = '';
-  const _selRec = $('selectorRecetas'); if (_selRec) _selRec.selectedIndex = 0;
   limpiar('precioCP'); limpiar('precioCR'); limpiar('precioCT'); limpiar('precioFlete');
   const desp = $('ingDesperdicio'); if (desp) desp.value = '10';
   limpiar('precioAdh'); limpiar('precioAdhTapa');
