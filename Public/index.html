@@ -629,9 +629,12 @@ table tbody tr:hover{background:#f8fafc}
 <section class="section" id="tab-of">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="card">
-      <div class="flex items-center justify-between mb-2">
+      <div class="flex items-center justify-between mb-2 gap-2">
         <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-list-check" style="color:#16a34a"></i> Órdenes de fabricación y totales</div>
-        <span class="badge badge-gray" id="ofCount">0</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-secondary btn-sm" id="btnVerArchivadas" onclick="toggleVerArchivadas()" style="font-size:10px;padding:3px 8px"><i class="fa-solid fa-folder"></i> Arch</button>
+          <span class="badge badge-gray" id="ofCount">0</span>
+        </div>
       </div>
 
       <div style="margin-top:10px">
@@ -659,6 +662,7 @@ table tbody tr:hover{background:#f8fafc}
       <div id="ofVacio" class="empty">Seleccioná una orden de la lista.</div>
       <div id="ofPreview" style="display:none">
         <div class="flex justify-end gap-2 mb-2">
+          <button class="btn btn-secondary btn-sm" id="btnArchivarOF" onclick="toggleArchivarOF()"><i class="fa-solid fa-folder"></i> <span id="btnArchivarOFTexto">Archivar</span></button>
           <button class="btn btn-secondary btn-sm" onclick="editarObsOF()"><i class="fa-solid fa-pen"></i> Observaciones</button>
           <button class="btn btn-primary btn-sm" onclick="descargarOrdenPDF()"><i class="fa-solid fa-file-pdf"></i> Descargar PDF</button>
         </div>
@@ -2824,22 +2828,41 @@ function renderPaperPresupuesto(p){
     <div class="paper-footer">www.tubcor.com.ar · Tel. 351 858 0005 · ventas@tubcor.com.ar</div>
   </div>`;
 }
+window.__ofVerArchivadas = false;
+window.toggleVerArchivadas = function(){
+  window.__ofVerArchivadas = !window.__ofVerArchivadas;
+  renderOF();
+};
 function renderOF(){
-  const list = STATE.presupuestos.slice().reverse();
-  $('ofCount').textContent = list.length;
+  const todos = STATE.presupuestos.slice().reverse();
+  const activas = todos.filter(p => !p.ofArchivada);
+  const archivadas = todos.filter(p => p.ofArchivada);
+  const verArch = !!window.__ofVerArchivadas;
+  const list = verArch ? archivadas : activas;
+  const btn = $('btnVerArchivadas');
+  if (btn){
+    btn.innerHTML = verArch
+      ? '<i class="fa-solid fa-arrow-left"></i> Activas'
+      : '<i class="fa-solid fa-folder"></i> Arch' + (archivadas.length ? ' (' + archivadas.length + ')' : '');
+    btn.style.background = verArch ? '#dbeafe' : '';
+    btn.style.color = verArch ? '#1e40af' : '';
+  }
+  $('ofCount').textContent = verArch ? archivadas.length : activas.length;
   if (!list.length){
-    $('ofLista').innerHTML = '<div class="empty">Sin órdenes generadas.</div>';
+    $('ofLista').innerHTML = verArch
+      ? '<div class="empty">No hay OF archivadas.</div>'
+      : '<div class="empty">Sin órdenes activas.</div>';
     $('ofVacio').style.display='block';
     $('ofPreview').style.display='none';
     return;
   }
   $('ofLista').innerHTML = list.map(p=>`
-    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.ultimoPresupuestoId===p.id?'background:#f0fdf4;border-color:#86efac':''}" onclick="seleccionarOF('${p.id}')">
+    <div class="border border-slate-200 rounded-lg p-2 cursor-pointer hover:bg-slate-50" style="${STATE.config.ultimoPresupuestoId===p.id?'background:#f0fdf4;border-color:#86efac':''}${p.ofArchivada?';opacity:0.7':''}" onclick="seleccionarOF('${p.id}')">
       <div style="display:flex;justify-content:space-between;align-items:flex-start;gap:8px">
         <div style="display:flex;gap:8px;align-items:flex-start">
           <input type="checkbox" onclick="event.stopPropagation();toggleOFSeleccion('${p.id}')" ${window.ofEstaSeleccionada(p.id)?'checked':''} style="width:16px;height:16px;margin-top:2px;cursor:pointer;flex-shrink:0"/>
           <div>
-            <div style="font-weight:700;font-size:12.5px">${esc(p.ordenNumero)}</div>
+            <div style="font-weight:700;font-size:12.5px">${esc(p.ordenNumero)} ${p.ofArchivada?'<span class="badge badge-amber" style="font-size:9px">Arch</span>':''}</div>
             <div style="font-size:10.5px;color:#64748b">${esc(p.numero)} · ${esc(p.clienteRazonSocial)}</div>
           </div>
         </div>
@@ -2851,6 +2874,15 @@ function renderOF(){
 function seleccionarOF(id){
   STATE.config.ultimoPresupuestoId = id; save(['config']); renderOF();
 }
+window.toggleArchivarOF = function(){
+  const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
+  if (!p) return;
+  p.ofArchivada = !p.ofArchivada;
+  save(['presupuestos']);
+  renderOF();
+  try { renderPresupuestosCliente(); } catch(_){}
+  toast(p.ofArchivada ? 'OF archivada' : 'OF desarchivada', 'ok');
+};
 window.ofEstaSeleccionada = function(id){
   if (!Array.isArray(STATE.config.ofSeleccionadas)) return true;
   return STATE.config.ofSeleccionadas.includes(id);
@@ -3059,6 +3091,13 @@ function renderPreviewOF(){
   $('ofVacio').style.display='none';
   $('ofPreview').style.display='block';
   $('ofPaper').innerHTML = renderPaperOF(p);
+  const btn = $('btnArchivarOFTexto');
+  if (btn) btn.textContent = p.ofArchivada ? 'Desarchivar' : 'Archivar';
+  const btnCont = $('btnArchivarOF');
+  if (btnCont){
+    btnCont.style.background = p.ofArchivada ? '#dbeafe' : '';
+    btnCont.style.color = p.ofArchivada ? '#1e40af' : '';
+  }
 }
 function resumenConsumosOF(items){
   const map = {};
