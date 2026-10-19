@@ -2993,6 +2993,32 @@ window.renderTotalesMesOF = function(){
   const lista = Object.values(map).sort((a,b)=>(a.tipo+a.gramaje).localeCompare(b.tipo+b.gramaje));
   const mermaPct = N($('ingDesperdicio') ? $('ingDesperdicio').value : 10)/100;
 
+  const tubosMap = {};
+  presMes.forEach(p => {
+    (p.items || []).forEach(it => {
+      const key = (it.diametro||0) + '|' + (it.longitud||0) + '|' + (it.tipoPaquete || '1');
+      if (!tubosMap[key]) {
+        tubosMap[key] = { diametro: it.diametro, longitud: it.longitud, tipoPaquete: it.tipoPaquete || '1', cantidad: 0 };
+      }
+      tubosMap[key].cantidad += N(it.cantidad);
+    });
+  });
+  const tubosLista = Object.values(tubosMap).sort((a,b) => a.diametro - b.diametro || a.longitud - b.longitud);
+  let tubosHtml = '<div class="text-[11px] font-extrabold text-slate-700 uppercase mt-3 mb-2 text-center">Tubos a fabricar</div>' +
+    '<table style="margin-bottom:12px"><thead><tr><th>Medidas (Ø x Largo)</th><th>Cant. Tubos</th><th>Empaque</th><th>Cant. Paquetes</th></tr></thead><tbody>';
+  tubosLista.forEach(t => {
+    let paquetes = '-';
+    let pStr = 'Sin empaq.';
+    const tp = String(t.tipoPaquete);
+    if (tp === '19') { pStr = '19 un.'; paquetes = Math.ceil(t.cantidad / 19); }
+    else if (tp === '37') { pStr = '37 un.'; paquetes = Math.ceil(t.cantidad / 37); }
+    else if (tp === '61') { pStr = '61 un.'; paquetes = Math.ceil(t.cantidad / 61); }
+    else if (tp === 'palet_vert' || tp === 'palet_horiz' || tp === 'palet_vert_sep') { pStr = 'Pallet'; paquetes = '-'; }
+    
+    tubosHtml += '<tr><td>Ø' + t.diametro + ' x ' + t.longitud + ' mm</td><td class="num"><b>' + t.cantidad.toLocaleString('es-AR') + '</b></td><td>' + pStr + '</td><td class="num"><b>' + (paquetes !== '-' ? paquetes.toLocaleString('es-AR') : '-') + '</b></td></tr>';
+  });
+  tubosHtml += '</tbody></table>';
+
   /* === PE con mezcla real (ponderado por kg) === */
   let __totalPesoLote = 0, __totalPrecio = 0, __totalCostoVar = 0;
   presMes.forEach(p => {
@@ -3023,6 +3049,7 @@ window.renderTotalesMesOF = function(){
         <button class="btn btn-secondary btn-sm" onclick="marcarTodasOFMes('${mes}',false)" style="font-size:10px;padding:2px 8px">Ninguna</button>
       </div>
     </div>
+    ${tubosHtml}
     <div class="grid grid-cols-2 gap-2 mb-2">
       <div class="kpi"><div class="k-label">Papel total del mes</div><div class="k-value text-[14px]">${kgPapelTotal.toFixed(1)} kg</div></div>
       <div class="kpi"><div class="k-label">Con merma (${(mermaPct*100).toFixed(0)}%)</div><div class="k-value text-[14px]" style="color:#b45309">${(kgPapelTotal*(1+mermaPct)).toFixed(1)} kg</div></div>
