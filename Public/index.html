@@ -343,6 +343,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="kpi"><div class="k-label">kg</div><div class="k-value text-[14px]" id="rPEKg">—</div></div>
           <div class="kpi"><div class="k-label">Ventas</div><div class="k-value text-[14px]" id="rPEVen">—</div></div>
         </div>
+        <div id="peAvisoProd" style="margin-top:8px;padding:8px;border-radius:6px;font-size:11px;display:none;text-align:center;font-weight:600;line-height:1.4"></div>
       </div>
       <div class="flex gap-2 mt-3">
         <button class="btn btn-secondary flex-1" onclick="agregarItemPendiente()"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
@@ -2102,6 +2103,34 @@ function recalcular(){
   $('rPETubos').textContent = isFinite(peTubos) ? peTubos.toLocaleString('es-AR') : '—';
   $('rPEKg').textContent = isFinite(peKg) ? peKg.toFixed(1) : '—';
   $('rPEVen').textContent = isFinite(peVentas) ? money(peVentas) : '—';
+  
+  /* Aviso de PE vs Produccion */
+  const avisoProd = $('peAvisoProd');
+  if (avisoProd) {
+    const prodMes = N($('prodMensual').value) || 0;
+    if (!isFinite(peKg) || peKg === 0) {
+      avisoProd.style.display = 'block';
+      avisoProd.style.background = '#fee2e2';
+      avisoProd.style.color = '#991b1b';
+      avisoProd.style.border = '1px solid #fecaca';
+      avisoProd.innerHTML = '⚠️ Con este coeficiente no cubrís ni los costos variables.';
+    } else if (prodMes <= 0) {
+      avisoProd.style.display = 'none';
+    } else if (prodMes >= peKg) {
+      avisoProd.style.display = 'block';
+      avisoProd.style.background = '#dcfce7';
+      avisoProd.style.color = '#166534';
+      avisoProd.style.border = '1px solid #86efac';
+      avisoProd.innerHTML = '✅ Con este coef. cubrís los gastos fijos.<br>Necesitás <b>' + peKg.toFixed(0) + ' kg/mes</b> y tenés <b>' + prodMes.toFixed(0) + ' kg/mes</b>.';
+    } else {
+      avisoProd.style.display = 'block';
+      avisoProd.style.background = '#fef2f2';
+      avisoProd.style.color = '#991b1b';
+      avisoProd.style.border = '1px solid #fecaca';
+      const falta = peKg - prodMes;
+      avisoProd.innerHTML = '⚠️ Con este coef. te faltan <b>' + falta.toFixed(0) + ' kg/mes</b>.<br>Necesitás <b>' + peKg.toFixed(0) + ' kg/mes</b> y tenés <b>' + prodMes.toFixed(0) + ' kg/mes</b>.';
+    }
+  }
   /* Tipo de corte */
   if ($('rCorteValor')) {
     const __corteVacio = long < 1;
