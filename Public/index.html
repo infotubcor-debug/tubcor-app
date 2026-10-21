@@ -5095,8 +5095,8 @@ window.renderPresupuestosCliente = function(){
 
   tb.innerHTML = pres.map(p => {
     const total = totalDe(p);
-    return '<tr>' +
-      '<td><b>' + esc(p.numero) + '</b></td>' +
+    return '<tr style="' + (p.archivado ? 'opacity:0.6' : '') + '">' +
+      '<td><b>' + esc(p.numero) + (p.archivado ? ' <span class="badge badge-amber" style="font-size:9px;vertical-align:middle;margin-left:4px">Arch</span>' : '') + '</b></td>' +
       '<td>' + esc(p.ordenNumero || '—') + '</td>' +
       '<td>' + formatoFecha(p.fecha) + '</td>' +
       '<td>' + (p.items||[]).length + '</td>' +
