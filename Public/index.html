@@ -136,12 +136,13 @@ table tbody tr:hover{background:#f8fafc}
           <a class="hint" style="color:#15803d;text-decoration:underline;cursor:pointer" onclick="switchTab('clientes')">Administrar clientes</a>
         </div>
         <div>
-          <label>Tipo de tubo (por espesor)</label>
-          <select id="ingTipoTubo" onchange="cambiarTipoMercado()">
-            <option value="liviano" selected>Liviano - hasta 2 mm</option>
-            <option value="semipesado">Semipesado - 2 a 5 mm</option>
-            <option value="pesado">Pesado - mas de 5 mm</option>
-          </select>
+          <div style="display:none">
+            <select id="ingTipoTubo" onchange="cambiarTipoMercado()">
+              <option value="liviano" selected>Liviano - hasta 2 mm</option>
+              <option value="semipesado">Semipesado - 2 a 5 mm</option>
+              <option value="pesado">Pesado - mas de 5 mm</option>
+            </select>
+          </div>
         </div>
         <div>
           <label>Mercado / Ventaja logistica</label>
@@ -1948,6 +1949,35 @@ function recalcular(){
   const pctAdhSeco = (N($('pctAdhSeco').value) || 15)/100;
   const pctAdhTapa = (N($('pctAdhTapa').value) || 8)/100;
   const m = modeloFisico({diametroInterno:diam, longitud:long, capas});
+
+  // --- AUTO CLASIFICACION ---
+  if (m.espesor > 0) {
+    const tipoAuto = m.espesor < 2 ? 'liviano' : (m.espesor <= 5 ? 'semipesado' : 'pesado');
+    const elTipo = $('ingTipoTubo');
+    
+    if (elTipo && elTipo.value !== tipoAuto) {
+      elTipo.value = tipoAuto;
+      const merc = $('ingMercado') ? $('ingMercado').value : 'cautivo';
+      const key = tipoAuto + '_' + merc;
+      const cfg = window.tubcorMatriz[key];
+      if (cfg && $('ingSegInfo')) {
+        $('ingSegInfo').textContent = 'Coef sugerido: ' + money(cfg.coef) + '/kg - techo ' + money(cfg.techo) + '/kg';
+      }
+    }
+    
+    const label = $('rSegLabel');
+    if (label) {
+      const textoTipo = tipoAuto.charAt(0).toUpperCase() + tipoAuto.slice(1);
+      const selectMerc = $('ingMercado');
+      const textoMerc = selectMerc.options[selectMerc.selectedIndex].text.split(' - ')[0];
+      label.textContent = textoTipo + ' / ' + textoMerc;
+      
+      if (tipoAuto === 'liviano') label.style.color = '#16a34a';
+      else if (tipoAuto === 'semipesado') label.style.color = '#b45309';
+      else label.style.color = '#b91c1c';
+    }
+  }
+  // --------------------------
   let gPrinc=0, gRell=0, gTapa=0;
   m.detalle.forEach(x=>{
     if (x.tipo==='Principal') gPrinc += x.masa;
