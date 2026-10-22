@@ -1100,6 +1100,21 @@ window.cambiarCoefManual = function(){
   recalcular();
   window.__tubcorForzandoManual = false;
 };
+window.autoClasificarTipoTubo = function(espesor){
+  if (!espesor) return;
+  const tipo = espesor < 2 ? 'liviano' : (espesor <= 5 ? 'semipesado' : 'pesado');
+  const el = $('ingTipoTubo');
+  if (el && el.value !== tipo) {
+    el.value = tipo;
+    const merc = $('ingMercado') ? $('ingMercado').value : 'cautivo';
+    const key = tipo + '_' + merc;
+    const cfg = window.tubcorMatriz[key];
+    if (cfg && $('ingSegInfo')) {
+      $('ingSegInfo').textContent = 'Coef sugerido: ' + money(cfg.coef) + '/kg - techo ' + money(cfg.techo) + '/kg';
+    }
+    try { recalcular(); } catch(_){}
+  }
+};
 
 async function save(keys){
   if (!SESSION_TOKEN) return;
@@ -1508,10 +1523,12 @@ cargarReceta = function(id){
   if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
   /* Solo cargar largo si es receta de tubo completo */
   if ((r.tipo === 'tubo') && r.long && $('ingLong')) $('ingLong').value = r.long;
+  if (r.espesor) window.autoClasificarTipoTubo(r.espesor);
   window.__recetaEditandoId = null;
   try { window.ocultarBannerEdicionReceta(); } catch(_){}
   try { window.actualizarBotonGuardarReceta(false); } catch(_){}
   try { recalcular(); } catch(_){}
+  if (!r.espesor && STATE.resultados && STATE.resultados.espesor) window.autoClasificarTipoTubo(STATE.resultados.espesor);
   toast('Receta cargada', 'ok');
 };editarReceta = function(id){
   const recetas = (STATE.config && STATE.config.recetas) || [];
@@ -1520,10 +1537,12 @@ cargarReceta = function(id){
   window.aplicarRecetaAlForm(r.fajas);
   if (r.diam && $('ingDiam')) $('ingDiam').value = r.diam;
   if ((r.tipo === 'tubo') && r.long && $('ingLong')) $('ingLong').value = r.long;
+  if (r.espesor) window.autoClasificarTipoTubo(r.espesor);
   window.__recetaEditandoId = id;
   try { window.mostrarBannerEdicionReceta(r); } catch(_){}
   try { window.actualizarBotonGuardarReceta(true); } catch(_){}
   try { recalcular(); } catch(_){}
+  if (!r.espesor && STATE.resultados && STATE.resultados.espesor) window.autoClasificarTipoTubo(STATE.resultados.espesor);
   toast('Editando: ' + r.nombre + ' \u2014 ajust\u00e1 y apret\u00e1 "Actualizar receta"', 'ok');
 };
 
@@ -1905,6 +1924,7 @@ window.aplicarReceta = function(){
   }
 
   try { recalcular(); } catch(_){}
+  if (STATE.resultados && STATE.resultados.espesor) window.autoClasificarTipoTubo(STATE.resultados.espesor);
   try { toast('Receta aplicada a la carga', 'ok'); } catch(_){}
 };
 
