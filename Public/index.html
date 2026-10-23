@@ -2065,7 +2065,8 @@ function recalcular(){
   const precioUnitBase = (precioKg * pesoLoteKg) / cant;
   const precioUnitSinIva = Math.round((precioUnitBase + adicionalCNC) * 100) / 100;
   const precioTotalSinIva = precioUnitSinIva * cant;
-  const margenReal = precioKg > 0 ? (precioKg - costoTotalKgActual) / precioKg : 0;
+  const precioKgEfectivo = pesoLoteKg > 0 ? (precioTotalSinIva / pesoLoteKg) : precioKg;
+  const margenReal = precioKgEfectivo > 0 ? (precioKgEfectivo - costoTotalKgActual) / precioKgEfectivo : 0;
   const margenEl = $('ingMargen');
   const margen = margenEl ? Math.min(0.95, Math.max(0, N(margenEl.value)/100)) : (margenMostrado/100);
   const contribUnit = precioUnitSinIva - costoVariableUnit;
@@ -2134,7 +2135,7 @@ function recalcular(){
       $('rCoefInfo').textContent = 'Carga las fajas y los precios para calcular el costo';
       $('rCoefInfo').style.color = '#94a3b8';
     } else {
-      const g = coefAplicado - costoTotalKgActual;
+      const g = precioKgEfectivo - costoTotalKgActual;
       $('rCoefInfo').textContent = 'Costo: ' + money(costoTotalKgActual) + '/kg';
       $('rCoefInfo').style.color = '#64748b';
     }
@@ -2144,7 +2145,7 @@ function recalcular(){
       $('rMargenInfo').textContent = '';
     } else {
       const mr = margenMostrado;
-      const g = coefAplicado - costoTotalKgActual;
+      const g = precioKgEfectivo - costoTotalKgActual;
       $('rMargenInfo').textContent = (mr >= 0 ? 'Margen: +' + mr.toFixed(1) + '% - Ganancia: +' + money(g) + '/kg' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%');
       $('rMargenInfo').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
     }
@@ -2159,7 +2160,7 @@ function recalcular(){
   if (avisoProd) {
     const prodMes = N($('prodMensual').value) || 0;
     const cvKg = pesoUnitKg > 0 ? (costoVariableUnit / pesoUnitKg) : 0;
-    const margenKg = precioKg - cvKg;
+    const margenKg = precioKgEfectivo - cvKg;
     
     if (margenKg <= 0) {
       avisoProd.style.display = 'block';
