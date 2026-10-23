@@ -2050,7 +2050,8 @@ function recalcular(){
   } else {
     const coefManualPersistente = (typeof window.__tubcorCoefManual === 'number' && window.__tubcorCoefManual > 0) ? window.__tubcorCoefManual : 0;
     coefAplicado = coefManualPersistente > 0 ? coefManualPersistente : ((forzandoManual && coefInputVal > 0) ? coefInputVal : (segCfg ? segCfg.coef : 0));
-    margenMostrado = precioKgEfectivo > 0 ? (1 - costoTotalKgActual / precioKgEfectivo) * 100 : 0;
+    const __precioEf = coefAplicado + (pesoUnitKg > 0 ? (adicionalCNC / pesoUnitKg) : 0);
+    margenMostrado = __precioEf > 0 ? (1 - costoTotalKgActual / __precioEf) * 100 : 0;
     if (segCfg && segCfg.techo && coefAplicado > segCfg.techo) {
       avisoTecho = 'ATENCION: coef supera techo de ' + money(segCfg.techo);
     }
