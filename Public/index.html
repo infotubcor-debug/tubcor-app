@@ -2147,8 +2147,8 @@ function recalcular(){
     } else {
       const mr = margenMostrado;
       const g = precioKgEfectivo - costoTotalKgActual;
-      $('rMargenInfo').textContent = (mr >= 0 ? 'Margen: +' + mr.toFixed(1) + '% - Ganancia: +' + money(g) + '/kg' : 'ATENCION: perdida de ' + Math.abs(mr).toFixed(1) + '%');
-      $('rMargenInfo').style.color = mr >= 0 ? '#15803d' : '#b91c1c';
+      $('rMargenInfo').textContent = (mr >= 0 ? 'Margen: +' + mr.toFixed(1) + '% - Ganancia: +' + money(g) + '/kg' : 'Margen Neto: ' + mr.toFixed(1) + '% (c/ gastos fijos)');
+      $('rMargenInfo').style.color = mr >= 0 ? '#15803d' : '#b45309';
     }
   }
   if ($('rAvisoTecho')) { $('rAvisoTecho').textContent = avisoTecho; $('rAvisoTecho').style.color = '#b91c1c'; }
