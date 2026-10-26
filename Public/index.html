@@ -402,8 +402,11 @@ table tbody tr:hover{background:#f8fafc}
       <tbody id="pendList"><tr><td colspan="9" class="empty">No hay tubos cargados. Agregá uno desde Ingeniería.</td></tr></tbody>
     </table>
     <div class="mt-2">
-      <label>Observaciones para el presupuesto</label>
-      <textarea id="obsPresupuesto" rows="2" placeholder="Observaciones que aparecerán al final del presupuesto..."></textarea>
+      <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:4px">
+        <label style="margin-bottom:0">Observaciones para el presupuesto</label>
+        <button class="btn btn-secondary btn-sm" onclick="guardarObsDefault()" style="padding:2px 8px; font-size:10px;"><i class="fa-solid fa-floppy-disk"></i> Guardar por defecto</button>
+      </div>
+      <textarea id="obsPresupuesto" rows="2" placeholder="Observaciones que aparecerán al final del presupuesto..." onchange="guardarObsDefault()"></textarea>
     </div>
   </div>
 </section>
@@ -1100,6 +1103,12 @@ window.cambiarCoefManual = function(){
   window.__tubcorForzandoManual = true;
   recalcular();
   window.__tubcorForzandoManual = false;
+};
+window.guardarObsDefault = function(){
+  const val = $('obsPresupuesto').value;
+  STATE.config.obsPresupuestoDefault = val;
+  save(['config']);
+  toast('Observaciones guardadas por defecto', 'ok');
 };
 window.autoClasificarTipoTubo = function(espesor){
   if (!espesor) return;
