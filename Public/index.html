@@ -5262,7 +5262,11 @@ window.renderCatalogo = function(){
 window.eliminarTuboCatalogo = function(codigo){
   const c = (STATE.catalogo||[]).find(x => x.codigo === codigo);
   if (!c) return;
-  if (!confirm('¿Eliminar el tubo ' + codigo + ' del catálogo?\n\nEsta acción no se puede deshacer.')) return;
+  const check = prompt('⚠️ ATENCIÓN: Se va a borrar el tubo ' + codigo + '.\n\nPara confirmar, escribí la palabra ELIMINAR en mayúsculas:');
+  if (check !== 'ELIMINAR') {
+    if (check !== null) toast('Borrado cancelado', 'err');
+    return;
+  }
   
   STATE.catalogo = STATE.catalogo.filter(x => x.codigo !== codigo);
   save(['catalogo']);
