@@ -182,6 +182,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja principal (interior)</div>
           <div><label>Ancho (mm)</label><input id="ingPrincAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingPrincGram" type="number" oninput="recalcular()"/></div>
+          <div><label>Fábrica</label><input id="ingPrincFab" placeholder="Ej: DPM"/></div>
           <div><label>Color</label><select id="ingPrincColor"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
@@ -189,6 +190,7 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Cantidad</label><input id="ingRellCant" type="number" oninput="recalcular()"/></div>
           <div><label>Ancho (mm)</label><input id="ingRellAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingRellGram" type="number" oninput="recalcular()"/></div>
+          <div><label>Fábrica</label><input id="ingRellFab" placeholder="Ej: COPSI"/></div>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1">
           <button type="button" onclick="toggleGruposRellenoExtras()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
@@ -220,6 +222,7 @@ table tbody tr:hover{background:#f8fafc}
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Faja de tapa (exterior)</div>
           <div><label>Ancho (mm)</label><input id="ingTapaAncho" type="number" oninput="recalcular()"/></div>
           <div><label>Gramaje (g/m²)</label><input id="ingTapaGram" type="number" oninput="recalcular()"/></div>
+          <div><label>Fábrica</label><input id="ingTapaFab" placeholder="Ej: DPM"/></div>
           <div><label>Color</label><select id="ingTapaColor"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
         </div>
       </div>
@@ -1016,13 +1019,13 @@ const LS = {
   produccion:'produccion', bancos:'bancos', movBancos:'movBancos', echeqs:'echeqs',
   obligaciones:'obligaciones', empleados:'empleados', recibos:'recibos',
   pagosEmpleado:'pagosEmpleado', horasExtras:'horasExtras', archivosEmpleado:'archivosEmpleado',
-  config:'config'
+  catalogo:'catalogo', config:'config'
 };
 
 let STATE = {
   clientes:[], presupuestos:[], pendientes:[], pesajes:[], produccion:[],
   bancos:[], movBancos:[], echeqs:[], obligaciones:[],
-  empleados:[], recibos:[], pagosEmpleado:[], horasExtras:[], archivosEmpleado:[],
+  empleados:[], recibos:[], pagosEmpleado:[], horasExtras:[], archivosEmpleado:[], catalogo:[],
   config:{
     factorProceso:1.000,
     factorProcesoPorSegmento: { liviano: 0.822, semipesado: 1.000, pesado: 1.000 },
@@ -2586,8 +2589,25 @@ function agregarItemPendiente(){
   const cli = STATE.clientes.find(c=>c.id===cliId);
   const r = STATE.resultados;
   if (!r || !r.pesoUnitKg) return toast('Revisá los datos del tubo','err');
+  const pesoReal = Math.round(r.pesoUnitG);
+  const codigoBase = r.diam + '-' + r.long + '-' + pesoReal;
+  
+  STATE.catalogo = STATE.catalogo || [];
+  let existing = STATE.catalogo.find(c => 
+    c.diametro === r.diam && 
+    c.longitud === r.long && 
+    c.anchoPrinc === N($('ingPrincAncho').value) &&
+    c.gramajePrinc === N($('ingPrincGram').value)
+  );
+  
+  let codigoFinal = existing ? existing.codigo : codigoBase;
+
   const item = {
     itemId: uid('it'),
+    codigo: codigoFinal,
+    fabPrinc: $('ingPrincFab') ? $('ingPrincFab').value : '',
+    fabRell: $('ingRellFab') ? $('ingRellFab').value : '',
+    fabTapa: $('ingTapaFab') ? $('ingTapaFab').value : '',
     clienteId: cli.id, clienteRazonSocial: cli.razonSocial,
     clienteCUIT: cli.cuit, clienteCondicionIVA: cli.condicionIVA,
     clienteDomicilio: cli.domicilio, clienteLocalidad: cli.localidad,
@@ -2626,8 +2646,23 @@ function agregarItemPendiente(){
     margenReal: r.margenReal || 0
   };
   if (STATE.pendientes.length && STATE.pendientes[0].clienteId !== cliId) return toast('Todos los items deben ser del mismo cliente','err');
+  if (!existing) {
+    STATE.catalogo.push({
+      codigo: codigoFinal,
+      diametro: r.diam,
+      longitud: r.long,
+      espesor: r.espesor,
+      pesoTeoricoG: pesoReal,
+      pesoRealG: pesoReal,
+      anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), fabPrinc: item.fabPrinc,
+      rellenos: item.rellenos,
+      anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), fabTapa: item.fabTapa
+    });
+    save(['catalogo']);
+  }
+
   STATE.pendientes.push(item);
-  save(['pendientes']); renderPendientes();
+  save(['pendientes', 'catalogo']); renderPendientes();
   toast('Tubo agregado a la lista','ok');
 }
 function eliminarPendiente(id){
@@ -3286,11 +3321,11 @@ function renderPaperOF(p){
           const corte = N(x.longitud)<750 ? 'Requiere corte adicional en CNC' : 'Salida directa de máquina';
           return `<tr>
             <td><b>${N(x.cantidad).toLocaleString('es-AR')}</b></td>
-            <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm${describirColorTubo(x)}</b><br/><span style="font-size:9px;color:#64748b;">Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
+            <td class="left"><b>Ø${x.diametro} × ${x.longitud} mm${describirColorTubo(x)}</b><br/><span style="font-size:9px;color:#64748b;"><b>Código: ${x.codigo || '—'}</b> | Peso: ${N(x.pesoUnitG).toFixed(0)} g<br/>Espesor: ${N(x.espesor).toFixed(2)} mm<br/>Empaquetado: ${pack}<br/>${corte}</span></td>
             <td class="left" style="font-size:9.5px;">
-              <b>Principal:</b> ${x.anchoPrinc} mm / ${x.gramajePrinc} g/m²<br/>
-              ${/* renderPaperOF multi */''}<b>Rellenos:</b> ${(x.rellenos||[{cant:x.cantRelleno,ancho:x.anchoRell,gramaje:x.gramajeRell}]).filter(r=>r.cant>0).map(r=>r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²').join('<br/>')}<br/>
-              <b>Tapa:</b> ${x.anchoTapa} mm / ${x.gramajeTapa} g/m²
+              <b>Principal:</b> ${x.anchoPrinc} mm / ${x.gramajePrinc} g/m² ${x.fabPrinc ? '('+x.fabPrinc+')' : ''}<br/>
+              ${/* renderPaperOF multi */''}<b>Rellenos:</b> ${(x.rellenos||[{cant:x.cantRelleno,ancho:x.anchoRell,gramaje:x.gramajeRell}]).filter(r=>r.cant>0).map(r=>r.cant+' × '+r.ancho+' mm / '+r.gramaje+' g/m²'+(x.fabRell?' ('+x.fabRell+')':'')).join('<br/>')}<br/>
+              <b>Tapa:</b> ${x.anchoTapa} mm / ${x.gramajeTapa} g/m² ${x.fabTapa ? '('+x.fabTapa+')' : ''}
             </td>
           </tr>`;
         }).join('')}
