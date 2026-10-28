@@ -112,6 +112,7 @@ table tbody tr:hover{background:#f8fafc}
       <button class="tab active" data-tab="ingenieria"><i class="fa-solid fa-calculator"></i> Ingeniería</button>
       <button class="tab" data-tab="calibrador"><i class="fa-solid fa-scale-balanced"></i> Calibrador</button>
       <button class="tab" data-tab="clientes"><i class="fa-solid fa-address-book"></i> Clientes</button>
+      <button class="tab" data-tab="catalogo"><i class="fa-solid fa-book"></i> Catálogo</button>
       <button class="tab" data-tab="presupuestos"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuestos</button>
       <button class="tab" data-tab="of"><i class="fa-solid fa-clipboard-list"></i> OF</button>
       <button class="tab" data-tab="produccion"><i class="fa-solid fa-boxes-stacked"></i> Producción</button>
@@ -601,6 +602,30 @@ table tbody tr:hover{background:#f8fafc}
           <tbody id="cliPresLista"><tr><td colspan="6" class="empty">Sin presupuestos para este cliente.</td></tr></tbody>
         </table>
       </div>
+    </div>
+  </div>
+</section>
+
+<section class="section" id="tab-catalogo">
+  <div class="card">
+    <div class="flex items-center justify-between mb-2 pb-2 border-b border-slate-200">
+      <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide"><i class="fa-solid fa-book" style="color:#16a34a"></i> Catálogo Maestro de Tubos</div>
+      <input id="catBuscar" placeholder="Buscar por código o medida..." oninput="renderCatalogo()" style="width:250px; font-size:11px; padding:4px 8px;"/>
+    </div>
+    <div style="max-height:600px;overflow:auto">
+      <table>
+        <thead>
+          <tr>
+            <th>Código</th>
+            <th>Medidas</th>
+            <th>Fórmula (Fajas / Fábricas)</th>
+            <th>Peso Teórico</th>
+            <th>Peso Real</th>
+            <th style="width:80px">Acción</th>
+          </tr>
+        </thead>
+        <tbody id="catLista"><tr><td colspan="6" class="empty">Cargá tubos en Ingeniería para que aparezcan aquí.</td></tr></tbody>
+      </table>
     </div>
   </div>
 </section>
@@ -2648,6 +2673,7 @@ function agregarItemPendiente(){
   if (STATE.pendientes.length && STATE.pendientes[0].clienteId !== cliId) return toast('Todos los items deben ser del mismo cliente','err');
   if (!existing) {
     STATE.catalogo.push({
+      id: uid('cat'),
       codigo: codigoFinal,
       diametro: r.diam,
       longitud: r.long,
@@ -4867,6 +4893,7 @@ function switchTab(name){
   if (name === 'presupuestos') renderPresupuestos();
   if (name === 'of') { renderOF(); try { renderTotalesMesOF(); } catch(_){} }
   if (name === 'produccion') renderProduccion();
+  if (name === 'catalogo') renderCatalogo();
   if (name === 'finanzas'){ renderFinanzas(); renderFinBancos(); renderFinEcheqs(); renderFinCobrar(); renderFinPagar(); renderFinConciliacion(); }
   if (name === 'calibrador'){ calPrevia(); renderCalibrador(); try { renderTablasEspesores(); } catch(_){} try { recalcularFactoresPorSegmento(); } catch(_){} }
   if (name === 'clientes'){ renderClientes(); cargarSelectoresClientes(); }
@@ -5189,6 +5216,60 @@ setTimeout(function(){ try { window.tubcorCargarFactores(); } catch(_){} }, 1500
 setInterval(function(){ try { window.tubcorCargarFactores(); } catch(_){} }, 3000);
 
 /* ============ CARPETA DE PRESUPUESTOS POR CLIENTE ============ */
+window.renderCatalogo = function(){
+  const tb = $('catLista');
+  if (!tb) return;
+  const q = ($('catBuscar') ? $('catBuscar').value : '').toLowerCase().trim();
+  let lista = STATE.catalogo || [];
+  
+  if (q) {
+    lista = lista.filter(c => 
+      (c.codigo||'').toLowerCase().includes(q) || 
+      (c.diametro+'').includes(q) || 
+      (c.longitud+'').includes(q)
+    );
+  }
+  
+  // Ordenar por código
+  lista.sort((a,b) => (a.codigo||'').localeCompare(b.codigo||''));
+
+  if (!lista.length) {
+    tb.innerHTML = '<tr><td colspan="6" class="empty">No hay tubos en el catálogo.</td></tr>';
+    return;
+  }
+
+  tb.innerHTML = lista.map(c => {
+    let fajas = 'P: ' + c.anchoPrinc + 'mm/' + c.gramajePrinc + 'g ' + (c.fabPrinc?'('+c.fabPrinc+')':'') + '<br/>';
+    if (c.rellenos && c.rellenos.length) {
+      fajas += c.rellenos.map(r => 'R: ' + r.cant + 'x ' + r.ancho + 'mm/' + r.gramaje + 'g ' + (r.fab?'('+r.fab+')':'')).join('<br/>') + '<br/>';
+    }
+    fajas += 'T: ' + c.anchoTapa + 'mm/' + c.gramajeTapa + 'g ' + (c.fabTapa?'('+c.fabTapa+')':'');
+    
+    return '<tr>' +
+      '<td><b style="color:#15803d">' + esc(c.codigo) + '</b></td>' +
+      '<td>Ø' + c.diametro + ' x ' + c.longitud + '<br/><span style="font-size:9px;color:#64748b">Esp: ' + N(c.espesor).toFixed(2) + ' mm</span></td>' +
+      '<td style="text-align:left; font-size:10px;">' + fajas + '</td>' +
+      '<td class="num">' + N(c.pesoTeoricoG).toFixed(0) + ' g</td>' +
+      '<td class="num" style="font-weight:700; color:#16a34a;">' + N(c.pesoRealG).toFixed(0) + ' g</td>' +
+      '<td><button class="btn btn-secondary btn-sm" onclick="editarTuboCatalogo(\'' + c.id + '\')"><i class="fa-solid fa-pen"></i></button></td>' +
+    '</tr>';
+  }).join('');
+};
+
+window.editarTuboCatalogo = function(id){
+  const c = (STATE.catalogo||[]).find(x => x.id === id);
+  if (!c) return;
+  const nuevoPeso = prompt('Peso Real (en gramos):', c.pesoRealG);
+  if (nuevoPeso !== null && !isNaN(parseFloat(nuevoPeso))) {
+    const pesoLimpio = Math.round(parseFloat(nuevoPeso));
+    c.pesoRealG = pesoLimpio;
+    c.codigo = c.diametro + '-' + c.longitud + '-' + pesoLimpio;
+    save(['catalogo']);
+    renderCatalogo();
+    toast('Tubo actualizado en catálogo', 'ok');
+  }
+};
+
 window.renderPresupuestosCliente = function(){
   const panel = $('cliPresPanel');
   const cliId = $('cliId') ? $('cliId').value : '';
