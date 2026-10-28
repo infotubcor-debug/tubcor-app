@@ -440,12 +440,14 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Ancho</label><input id="calPA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calPG" type="number" oninput="calPrevia()"/></div>
           <div><label>Color</label><select id="calPC"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
+          <div><label>Fábrica</label><input id="calPFab" placeholder="Ej: DPM"/></div>
         </div>
         <div class="grid grid-cols-3 gap-2 items-end">
           <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 1</div>
           <div><label>Cant.</label><input id="calRC" type="number" value="3" oninput="calPrevia()"/></div>
           <div><label>Ancho</label><input id="calRA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calRG" type="number" oninput="calPrevia()"/></div>
+          <div><label>Fábrica</label><input id="calRFab" placeholder="Ej: COPSI"/></div>
         </div>
         <div style="margin-top:8px;padding-top:8px;border-top:1px dashed #cbd5e1">
           <button type="button" onclick="toggleGruposRellenoExtrasCal()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
@@ -458,18 +460,21 @@ table tbody tr:hover{background:#f8fafc}
               <div><label>Cant.</label><input id="calRC2" type="number" oninput="calPrevia()"/></div>
               <div><label>Ancho</label><input id="calRA2" type="number" oninput="calPrevia()"/></div>
               <div><label>Gramaje</label><input id="calRG2" type="number" oninput="calPrevia()"/></div>
+              <div><label>Fábrica</label><input id="calR2Fab" placeholder="Ej: COPSI"/></div>
             </div>
             <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
               <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 3</div>
               <div><label>Cant.</label><input id="calRC3" type="number" oninput="calPrevia()"/></div>
               <div><label>Ancho</label><input id="calRA3" type="number" oninput="calPrevia()"/></div>
               <div><label>Gramaje</label><input id="calRG3" type="number" oninput="calPrevia()"/></div>
+              <div><label>Fábrica</label><input id="calR3Fab" placeholder="Ej: COPSI"/></div>
             </div>
             <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
               <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 4</div>
               <div><label>Cant.</label><input id="calRC4" type="number" oninput="calPrevia()"/></div>
               <div><label>Ancho</label><input id="calRA4" type="number" oninput="calPrevia()"/></div>
               <div><label>Gramaje</label><input id="calRG4" type="number" oninput="calPrevia()"/></div>
+              <div><label>Fábrica</label><input id="calR4Fab" placeholder="Ej: COPSI"/></div>
             </div>
           </div>
         </div>
@@ -478,6 +483,7 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Ancho</label><input id="calTA" type="number" oninput="calPrevia()"/></div>
           <div><label>Gramaje</label><input id="calTG" type="number" oninput="calPrevia()"/></div>
           <div><label>Color</label><select id="calTC"><option>Marrón</option><option>Blanco</option><option>Marrón impreso</option><option>Blanco impreso</option></select></div>
+          <div><label>Fábrica</label><input id="calTFab" placeholder="Ej: DPM"/></div>
         </div>
         <div class="grid grid-cols-2 gap-2">
           <div><label>Espesor real (mm)</label><input id="calEspR" type="number" step="0.01" value=""/></div>
@@ -2461,18 +2467,22 @@ window.cargarTuboDesdeCatalogo = function(){
     if ($('calPG')) $('calPG').value = c.gramajePrinc;
     if ($('calTA')) $('calTA').value = c.anchoTapa;
     if ($('calTG')) $('calTG').value = c.gramajeTapa;
+    if ($('calPFab')) $('calPFab').value = c.fabPrinc || '';
+    if ($('calTFab')) $('calTFab').value = c.fabTapa || '';
     
     const rellenos = c.rellenos || [];
     if (rellenos.length > 0) {
       if ($('calRC')) $('calRC').value = rellenos[0].cant;
       if ($('calRA')) $('calRA').value = rellenos[0].ancho;
       if ($('calRG')) $('calRG').value = rellenos[0].gramaje;
+      if ($('calRFab')) $('calRFab').value = rellenos[0].fab || '';
       
       for (let i = 1; i < rellenos.length; i++) {
         const idx = i + 1;
         if ($('calRC'+idx)) $('calRC'+idx).value = rellenos[i].cant;
         if ($('calRA'+idx)) $('calRA'+idx).value = rellenos[i].ancho;
         if ($('calRG'+idx)) $('calRG'+idx).value = rellenos[i].gramaje;
+        if ($('calR'+idx+'Fab')) $('calR'+idx+'Fab').value = rellenos[i].fab || '';
       }
       if (rellenos.length > 1) {
         const wrap = $('gruposRellenoExtrasCal');
