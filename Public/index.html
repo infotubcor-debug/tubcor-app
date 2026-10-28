@@ -5358,8 +5358,15 @@ window.editarTuboCatalogo = function(busqueda){
   const nuevoPeso = prompt('Peso Real (en gramos):', c.pesoRealG);
   if (nuevoPeso !== null && !isNaN(parseFloat(nuevoPeso))) {
     const pesoLimpio = Math.round(parseFloat(nuevoPeso));
+    const nuevoCodigo = c.diametro + '-' + c.longitud + '-' + pesoLimpio;
+    
+    if (pesoLimpio !== c.pesoRealG) {
+      const check = confirm('⚠️ CONFIRMAR CAMBIO:\n\n¿Estás seguro de cambiar el peso de ' + c.pesoRealG + ' g a ' + pesoLimpio + ' g?\n\nEl código del tubo cambiará de:\n' + c.codigo + '\n\nA:\n' + nuevoCodigo);
+      if (!check) return;
+    }
+
     c.pesoRealG = pesoLimpio;
-    c.codigo = c.diametro + '-' + c.longitud + '-' + pesoLimpio;
+    c.codigo = nuevoCodigo;
     save(['catalogo']);
     renderCatalogo();
     toast('Tubo actualizado en catálogo', 'ok');
