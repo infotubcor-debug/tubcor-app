@@ -5254,9 +5254,20 @@ window.renderCatalogo = function(){
       '<td style="text-align:left; font-size:10px;">' + fajas + '</td>' +
       '<td class="num">' + N(c.pesoTeoricoG).toFixed(0) + ' g</td>' +
       '<td class="num" style="font-weight:700; color:#16a34a;">' + N(c.pesoRealG).toFixed(0) + ' g</td>' +
-      '<td><button class="btn btn-secondary btn-sm" onclick="editarTuboCatalogo(\'' + c.codigo + '\')"><i class="fa-solid fa-pen"></i></button></td>' +
+      '<td><div style="display:flex;gap:4px;justify-content:center"><button class="btn btn-secondary btn-sm" onclick="editarTuboCatalogo(\'' + c.codigo + '\')" title="Editar"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarTuboCatalogo(\'' + c.codigo + '\')" title="Eliminar"><i class="fa-solid fa-trash"></i></button></div></td>' +
     '</tr>';
   }).join('');
+};
+
+window.eliminarTuboCatalogo = function(codigo){
+  const c = (STATE.catalogo||[]).find(x => x.codigo === codigo);
+  if (!c) return;
+  if (!confirm('¿Eliminar el tubo ' + codigo + ' del catálogo?\n\nEsta acción no se puede deshacer.')) return;
+  
+  STATE.catalogo = STATE.catalogo.filter(x => x.codigo !== codigo);
+  save(['catalogo']);
+  renderCatalogo();
+  toast('Tubo eliminado del catálogo', 'ok');
 };
 
 window.editarTuboCatalogo = function(busqueda){
