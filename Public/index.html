@@ -204,18 +204,21 @@ table tbody tr:hover{background:#f8fafc}
               <div><label>Cantidad</label><input id="ingRell2Cant" type="number" oninput="recalcular()"/></div>
               <div><label>Ancho (mm)</label><input id="ingRell2Ancho" type="number" oninput="recalcular()"/></div>
               <div><label>Gramaje (g/m²)</label><input id="ingRell2Gram" type="number" oninput="recalcular()"/></div>
+              <div><label>Fábrica</label><input id="ingRell2Fab" placeholder="Ej: DPM"/></div>
             </div>
             <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
               <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 3</div>
               <div><label>Cantidad</label><input id="ingRell3Cant" type="number" oninput="recalcular()"/></div>
               <div><label>Ancho (mm)</label><input id="ingRell3Ancho" type="number" oninput="recalcular()"/></div>
               <div><label>Gramaje (g/m²)</label><input id="ingRell3Gram" type="number" oninput="recalcular()"/></div>
+              <div><label>Fábrica</label><input id="ingRell3Fab" placeholder="Ej: DPM"/></div>
             </div>
             <div class="grid grid-cols-3 gap-2 items-end" style="margin-top:8px">
               <div class="col-span-3 text-[10px] font-bold text-slate-500 uppercase text-center">Relleno - Grupo 4</div>
               <div><label>Cantidad</label><input id="ingRell4Cant" type="number" oninput="recalcular()"/></div>
               <div><label>Ancho (mm)</label><input id="ingRell4Ancho" type="number" oninput="recalcular()"/></div>
               <div><label>Gramaje (g/m²)</label><input id="ingRell4Gram" type="number" oninput="recalcular()"/></div>
+              <div><label>Fábrica</label><input id="ingRell4Fab" placeholder="Ej: DPM"/></div>
             </div>
           </div>
         </div>
@@ -2652,7 +2655,7 @@ function agregarItemPendiente(){
         const cEl = $('ingRell'+i+'Cant');
         if (!cEl) continue;
         const cc = Math.max(0, parseInt(cEl.value)||0);
-        if (cc > 0) arr.push({ cant: cc, ancho: N($('ingRell'+i+'Ancho').value), gramaje: N($('ingRell'+i+'Gram').value), fab: $('ingRellFab') ? $('ingRellFab').value : '' });
+        if (cc > 0) arr.push({ cant: cc, ancho: N($('ingRell'+i+'Ancho').value), gramaje: N($('ingRell'+i+'Gram').value), fab: $('ingRell'+i+'Fab') ? $('ingRell'+i+'Fab').value : '' });
       }
       return arr;
     })(),
@@ -5241,7 +5244,7 @@ window.renderCatalogo = function(){
   tb.innerHTML = lista.map(c => {
     let fajas = 'P: ' + c.anchoPrinc + 'mm/' + c.gramajePrinc + 'g ' + (c.fabPrinc?'('+c.fabPrinc+')':'') + '<br/>';
     if (c.rellenos && c.rellenos.length) {
-      fajas += c.rellenos.map(r => 'R: ' + r.cant + 'x ' + r.ancho + 'mm/' + r.gramaje + 'g ' + (r.fab?'('+r.fab+')':'')).join('<br/>') + '<br/>';
+      fajas += c.rellenos.map(r => 'R: ' + r.cant + 'x ' + r.ancho + 'mm/' + r.gramaje + 'g ' + ((r.fab && r.fab.trim() !== '') ? '('+r.fab+')' : '')).join('<br/>') + '<br/>';
     }
     fajas += 'T: ' + c.anchoTapa + 'mm/' + c.gramajeTapa + 'g ' + (c.fabTapa?'('+c.fabTapa+')':'');
     
