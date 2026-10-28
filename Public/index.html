@@ -3286,6 +3286,7 @@ function resumenConsumosOF(items){
 
 function renderPaperOF(p){
   const items = p.items||[];
+  const pesoTotalLote = items.reduce((s, x) => s + (N(x.pesoUnitG) * N(x.cantidad)), 0);
   return `<div class="paper">
     <div class="paper-header">
       <div class="brand">
@@ -3346,6 +3347,11 @@ function renderPaperOF(p){
       </tbody>
     </table>
     
+    
+    <div style="display:flex; justify-content:flex-end; margin-top:6px; font-size:11px; font-weight:800; color:#0f172a;">
+      <span style="background:#f1f5f9; padding:4px 8px; border-radius:4px;">Peso Total del Lote: ${(pesoTotalLote/1000).toFixed(2)} kg</span>
+    </div>
+
     ${p.observacionesOF?`<div class="paper-obs"><b>OBSERVACIONES DE PLANTA</b><br/>${esc(p.observacionesOF).replace(/\n/g,'<br/>')}</div>`:''}
     <div class="paper-footer">TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar</div>
   </div>`;
