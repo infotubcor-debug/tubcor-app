@@ -423,7 +423,13 @@ table tbody tr:hover{background:#f8fafc}
     <div class="card">
       <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-weight-scale" style="color:#16a34a"></i> Registro de pesaje real</div>
       <div style="display:grid;gap:8px">
-        <div><label>Referencia / Lote</label><input id="calRef"/></div>
+        <div>
+    <label>Tubo del Catálogo (Autocompletar)</label>
+    <select id="calSelectCat" onchange="cargarTuboDesdeCatalogo()">
+      <option value="">— Seleccionar tubo —</option>
+    </select>
+  </div>
+  <div><label>Referencia / Lote</label><input id="calRef"/></div>
         <div class="grid grid-cols-3 gap-2">
           <div><label>Ø Int (mm)</label><input id="calDiam" type="number" oninput="calPrevia()"/></div>
           <div><label>Long (mm)</label><input id="calLong" type="number" oninput="calPrevia()"/></div>
@@ -2443,7 +2449,48 @@ function recalcularFactorProceso(){
   $('calFactorInfo').textContent = `Basado en ${ratios.length} pesaje(s) histórico(s).`;
   save(['config']);
 }
-function registrarPesaje(){
+window.cargarTuboDesdeCatalogo = function(){
+    const sel = $('calSelectCat');
+    if (!sel || !sel.value) return;
+    const c = (STATE.catalogo||[]).find(x => x.codigo === sel.value);
+    if (!c) return;
+    
+    if ($('calDiam')) $('calDiam').value = c.diametro;
+    if ($('calLong')) $('calLong').value = c.longitud;
+    if ($('calPA')) $('calPA').value = c.anchoPrinc;
+    if ($('calPG')) $('calPG').value = c.gramajePrinc;
+    if ($('calTA')) $('calTA').value = c.anchoTapa;
+    if ($('calTG')) $('calTG').value = c.gramajeTapa;
+    
+    const rellenos = c.rellenos || [];
+    if (rellenos.length > 0) {
+      if ($('calRC')) $('calRC').value = rellenos[0].cant;
+      if ($('calRA')) $('calRA').value = rellenos[0].ancho;
+      if ($('calRG')) $('calRG').value = rellenos[0].gramaje;
+      
+      for (let i = 1; i < rellenos.length; i++) {
+        const idx = i + 1;
+        if ($('calRC'+idx)) $('calRC'+idx).value = rellenos[i].cant;
+        if ($('calRA'+idx)) $('calRA'+idx).value = rellenos[i].ancho;
+        if ($('calRG'+idx)) $('calRG'+idx).value = rellenos[i].gramaje;
+      }
+      if (rellenos.length > 1) {
+        const wrap = $('gruposRellenoExtrasCal');
+        if (wrap) wrap.style.display = 'block';
+      }
+    } else {
+      if ($('calRC')) $('calRC').value = '';
+      if ($('calRA')) $('calRA').value = '';
+      if ($('calRG')) $('calRG').value = '';
+    }
+    
+    if ($('calEspR') && c.espesor) $('calEspR').value = c.espesor;
+    
+    try { calPrevia(); } catch(_){}
+    toast('Tubo cargado desde el catálogo', 'ok');
+  };
+
+  function registrarPesaje(){
   const pesoTotal = N($('calPeso').value);
   const cantidadPesada = Math.max(1, parseInt($('calCant').value)||1);
   const pesoReal = pesoTotal / cantidadPesada;
@@ -2477,6 +2524,18 @@ function registrarPesaje(){
     })()
   });
   save(['pesajes']);
+  
+  const selCat = $('calSelectCat') ? $('calSelectCat').value : '';
+  if (selCat) {
+    const catTube = (STATE.catalogo||[]).find(x => x.codigo === selCat);
+    if (catTube) {
+      catTube.pesoRealG = pesoReal;
+      catTube.codigo = catTube.diametro + '-' + catTube.longitud + '-' + Math.round(pesoReal);
+      save(['catalogo']);
+      try { renderCatalogo(); } catch(_){}
+    }
+  }
+
   try { limpiarCalibrador(); } catch(_){} /* registrarPesaje */
   recalcularFactorProceso(); recalcularFactoresPorSegmento(); renderCalibrador(); recalcular();
   toast('Pesaje registrado · factor recalibrado','ok');
@@ -2497,6 +2556,15 @@ function limpiarPesajes(){
   });
 }
 function renderCalibrador(){
+    try {
+      if ($('calSelectCat')) {
+        const cur = $('calSelectCat').value;
+        $('calSelectCat').innerHTML = '<option value="">— Seleccionar tubo —</option>' + 
+          (STATE.catalogo||[]).map(c => '<option value="' + c.codigo + '">' + c.codigo + ' (Ø' + c.diametro + 'x' + c.longitud + ')</option>').join('');
+        if (cur && (STATE.catalogo||[]).some(x => x.codigo === cur)) $('calSelectCat').value = cur;
+      }
+    } catch(_){}
+
   const list = STATE.pesajes.slice().reverse();
   const tb = $('calLista');
   if (!list.length){
