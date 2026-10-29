@@ -1072,7 +1072,8 @@ let STATE = {
     espesoresPorGramaje: { 130: 0.15, 170: 0.20, 246: 0.30, 357: 0.50, 408: 0.70 },
     ultimoPresupuestoId:null,
     clienteSeleccionadoId:null,
-    empleadoSeleccionadoId:null
+    empleadoSeleccionadoId:null,
+    obsPresupuestoDefault: "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envíos.\n- El retiro es por planta: Camino Santa Bárbara 1448, CP 5014, Córdoba.\n- Plazo de entrega: 15 días hábiles desde la acreditación del anticipo.\n- Moldes a medida: La fabricación de moldes especiales para medidas fuera de línea representa una inversión única a cargo del cliente, la cual se abona al confirmar el pedido. Una vez fabricado, el molde queda en planta y no se volverá a cobrar para futuras producciones de la misma medida.\n- Precios expresados en pesos, netos + IVA."
   }
 };
 
@@ -1090,6 +1091,17 @@ let SESSION_TOKEN = localStorage.getItem('tubcor_session') || '';
 let CURRENT_VERSION = -1;
 let savingLocally = false;
 
+function cargarObsDefault() {
+  if (STATE.config && STATE.config.obsPresupuestoDefault) {
+    if ($('obsPresupuesto') && !$('obsPresupuesto').value) {
+      $('obsPresupuesto').value = STATE.config.obsPresupuestoDefault;
+    }
+  }
+}
+window.addEventListener('DOMContentLoaded', () => {
+  setTimeout(cargarObsDefault, 1000);
+});
+
 async function load(){
   const r = await fetch('/api/state', { headers: { 'Authorization': 'Bearer ' + SESSION_TOKEN } });
   if (r.status === 401){ localStorage.removeItem('tubcor_session'); SESSION_TOKEN=''; throw new Error('unauthorized'); }
@@ -1099,6 +1111,7 @@ async function load(){
     STATE[k] = data.state[k] !== undefined ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
   });
   CURRENT_VERSION = data.version;
+  if (typeof cargarObsDefault === 'function') cargarObsDefault();
 }
 
 window.tubcorTipos = {
