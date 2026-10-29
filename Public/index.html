@@ -1524,7 +1524,7 @@ window.renderListaRecetas = function(){
     const tag = esTubo
       ? '<span style="display:inline-block;padding:1px 6px;background:#dcfce7;color:#15803d;border-radius:3px;font-size:9px;font-weight:800;margin-right:6px">TUBO</span>'
       : '<span style="display:inline-block;padding:1px 6px;background:#dbeafe;color:#1d4ed8;border-radius:3px;font-size:9px;font-weight:800;margin-right:6px">FAJAS</span>';
-    let medidas = '\u00d8' + r.diam + ' mm \u00b7 ' + r.espesor + ' mm \u00b7 ' + r.fajas.totalCapas + ' capas';
+    let medidas = '\u00d8' + r.diam + ' mm \u00b7 ' + r.espesor + ' mm \u00b7 ' + r.fajas.totalCapas + ' capas' + (r.pesoTeoricoG ? ' \u00b7 ' + r.pesoTeoricoG + 'g' : '');
     if (esTubo && r.long) medidas += ' \u00b7 ' + r.long + ' mm largo';
     return '<div style="display:flex;justify-content:space-between;align-items:center;padding:6px 8px;border-bottom:1px solid #f1f5f9;gap:8px">' +
       '<div style="flex:1;min-width:0">' +
@@ -1659,6 +1659,7 @@ window.guardarRecetaDesdeForm = function(tipo){
     tipo: tipoFinal,
     diam: diam,
     espesor: Number(espActual.toFixed(2)),
+    pesoTeoricoG: STATE.resultados ? Math.round(STATE.resultados.pesoUnitG) : 0,
     fajas: fajas,
     guardada: new Date().toISOString()
   };
@@ -2928,7 +2929,8 @@ function eliminarPendiente(id){
 }
 function renderPendientes(){
   const list = STATE.pendientes;
-  $('pendCount').textContent = list.length + ' item' + (list.length===1?'':'s');
+  const __totPesoKg = STATE.pendientes.reduce((s, it) => s + (N(it.pesoUnitG) * N(it.cantidad)), 0) / 1000;
+  $('pendCount').innerHTML = STATE.pendientes.length + ' items · <b style="color:#15803d">' + __totPesoKg.toFixed(2) + ' kg</b>';
   if (!list.length){
     $('pendList').innerHTML = '<tr><td colspan="9" class="empty">No hay tubos cargados.</td></tr>';
     return;
