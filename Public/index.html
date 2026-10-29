@@ -148,9 +148,9 @@ table tbody tr:hover{background:#f8fafc}
         <div>
           <label>Mercado / Ventaja logistica</label>
           <select id="ingMercado" onchange="cambiarTipoMercado()">
-            <option value="cautivo" selected>Cautivo - Cordoba, interior, Jujuy</option>
-            <option value="semicautivo">Semi-cautivo - Santa Fe, Rosario</option>
-            <option value="competitivo">Competitivo - Buenos Aires, otras</option>
+            <option value="cautivo" selected>Cautivo - Córdoba / Norte (Flete Bs As caro)</option>
+            <option value="semicautivo">Semi-cautivo - Santa Fe / Rosario</option>
+            <option value="competitivo">Competitivo - Camión propio / Volumen</option>
           </select>
           <span class="hint" id="ingSegInfo">Coef sugerido: $3.900/kg - techo $4.400/kg</span>
         </div>
@@ -1108,15 +1108,15 @@ window.tubcorTipos = {
 };
 
 window.tubcorMatriz = {
-  'liviano_cautivo':        { coef: 3900, techo: 4400, adicionalCNC: 80 },
-  'liviano_semicautivo':    { coef: 3400, techo: 3900, adicionalCNC: 60 },
-  'liviano_competitivo':    { coef: 3000, techo: 3500, adicionalCNC: 30 },
-  'semipesado_cautivo':     { coef: 3500, techo: 3800, adicionalCNC: 80 },
-  'semipesado_semicautivo': { coef: 3000, techo: 3500, adicionalCNC: 60 },
-  'semipesado_competitivo': { coef: 2500, techo: 3300, adicionalCNC: 30 },
-  'pesado_cautivo':         { coef: 3900, techo: 4500, adicionalCNC: 80 },
-  'pesado_semicautivo':     { coef: 3200, techo: 4000, adicionalCNC: 60 },
-  'pesado_competitivo':     { coef: 2700, techo: 3500, adicionalCNC: 30 }
+  'liviano_cautivo':        { coef: 3400, techo: 3800, adicionalCNC: 80 },
+  'liviano_semicautivo':    { coef: 3200, techo: 3600, adicionalCNC: 60 },
+  'liviano_competitivo':    { coef: 3000, techo: 3300, adicionalCNC: 30 },
+  'semipesado_cautivo':     { coef: 2800, techo: 3100, adicionalCNC: 80 },
+  'semipesado_semicautivo': { coef: 2700, techo: 3000, adicionalCNC: 60 },
+  'semipesado_competitivo': { coef: 2500, techo: 2800, adicionalCNC: 30 },
+  'pesado_cautivo':         { coef: 2900, techo: 3200, adicionalCNC: 80 },
+  'pesado_semicautivo':     { coef: 2800, techo: 3100, adicionalCNC: 60 },
+  'pesado_competitivo':     { coef: 2600, techo: 2900, adicionalCNC: 30 }
 };
 
 window.__tubcorForzandoManual = false;
