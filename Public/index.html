@@ -2164,41 +2164,44 @@ function recalcular(){
   const pesoLoteKg = pesoUnitKg * cant;
       
       // --- CALCULO LOGISTICO CUADRÍCULA ---
-      try {
-        if (cant > 0 && m.espesor > 0) {
-          const diamExtMm = diam + (2 * m.espesor);
-          const tubosAncho = Math.floor(1000 / diamExtMm);
-          const tubosLargo = Math.floor(1200 / diamExtMm);
-          
-          const tubosPorPallet = Math.max(1, tubosAncho * tubosLargo);
-          const cantPallets = Math.ceil(cant / tubosPorPallet);
-          
-          const fletePorPallet = N($('logFleteInput') ? $('logFleteInput').value : (STATE.config.fletePalletBsAs || 230000));
-          const costoFleteTotal = cantPallets * fletePorPallet;
-          const fletePorKg = pesoLoteKg > 0 ? (costoFleteTotal / pesoLoteKg) : 0;
-          
-          const tipoAuto = m.espesor < 2 ? 'liviano' : (m.espesor <= 5 ? 'semipesado' : 'pesado');
-          let precioMercadoBsAs = 0;
-          
-          if (tipoAuto === 'liviano') precioMercadoBsAs = N($('mktLiviano') ? $('mktLiviano').value : (STATE.config.precioMktLiviano || 2200));
-          else if (tipoAuto === 'semipesado') precioMercadoBsAs = N($('mktSemi') ? $('mktSemi').value : (STATE.config.precioMktSemi || 1800));
-          else precioMercadoBsAs = N($('mktPesado') ? $('mktPesado').value : (STATE.config.precioMktPesado || 1800));
-          
-          const costoPuestoCba = precioMercadoBsAs + fletePorKg;
-          const coefSugerido = Math.floor(costoPuestoCba * 0.95); 
-          
-          if ($('logTubosPallet')) $('logTubosPallet').textContent = tubosPorPallet.toLocaleString('es-AR');
-          if ($('logPallets')) $('logPallets').textContent = cantPallets.toLocaleString('es-AR');
-          if ($('logFleteTotal')) $('logFleteTotal').textContent = money(costoFleteTotal);
-          if ($('logFleteKg')) $('logFleteKg').textContent = money(fletePorKg);
-          if ($('logCostoBase')) $('logCostoBase').textContent = money(costoPuestoCba) + ' /kg';
-          if ($('logCoefSugerido')) {
-            $('logCoefSugerido').textContent = money(coefSugerido) + ' /kg';
-            window.__tubcorCoefSugerido = coefSugerido;
-          }
-        }
-      } catch(_) {}
-      // -------------------------------------
+  try {
+    if (cant > 0 && m.espesor > 0) {
+      const diamExtMm = diam + (2 * m.espesor);
+      const tubosAncho = Math.floor(1000 / diamExtMm);
+      const tubosLargo = Math.floor(1200 / diamExtMm);
+      
+      const tubosPorPallet = Math.max(1, tubosAncho * tubosLargo);
+      const cantPallets = Math.ceil(cant / tubosPorPallet);
+      
+      const fletePorPallet = N($('logFleteInput') ? $('logFleteInput').value : (STATE.config.fletePalletBsAs || 230000));
+      
+      // Calculamos el peso de UN PALLET lleno
+      const pesoPalletKg = tubosPorPallet * pesoUnitKg;
+      // El flete por kg es el costo de un pallet dividido por el peso de un pallet lleno
+      const fletePorKg = pesoPalletKg > 0 ? (fletePorPallet / pesoPalletKg) : 0;
+      
+      const tipoAuto = m.espesor < 2 ? 'liviano' : (m.espesor <= 5 ? 'semipesado' : 'pesado');
+      let precioMercadoBsAs = 0;
+      
+      if (tipoAuto === 'liviano') precioMercadoBsAs = N($('mktLiviano') ? $('mktLiviano').value : (STATE.config.precioMktLiviano || 2200));
+      else if (tipoAuto === 'semipesado') precioMercadoBsAs = N($('mktSemi') ? $('mktSemi').value : (STATE.config.precioMktSemi || 1800));
+      else precioMercadoBsAs = N($('mktPesado') ? $('mktPesado').value : (STATE.config.precioMktPesado || 1800));
+      
+      const costoPuestoCba = precioMercadoBsAs + fletePorKg;
+      const coefSugerido = Math.floor(costoPuestoCba * 0.95); 
+      
+      if ($('logTubosPallet')) $('logTubosPallet').textContent = tubosPorPallet.toLocaleString('es-AR');
+      if ($('logPallets')) $('logPallets').textContent = cantPallets.toLocaleString('es-AR');
+      if ($('logFleteTotal')) $('logFleteTotal').textContent = money(cantPallets * fletePorPallet);
+      if ($('logFleteKg')) $('logFleteKg').textContent = money(fletePorKg);
+      if ($('logCostoBase')) $('logCostoBase').textContent = money(costoPuestoCba) + ' /kg';
+      if ($('logCoefSugerido')) {
+        $('logCoefSugerido').textContent = money(coefSugerido) + ' /kg';
+        window.__tubcorCoefSugerido = coefSugerido;
+      }
+    }
+  } catch(_) {}
+  // -------------------------------------
 
   const cp=N($('precioCP').value), cr=N($('precioCR').value), ct=N($('precioCT').value);
   const ca=N($('precioAdh').value), cat=N($('precioAdhTapa').value), cf=N($('precioFlete').value);
