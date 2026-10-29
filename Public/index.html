@@ -351,7 +351,57 @@ table tbody tr:hover{background:#f8fafc}
           <div class="kpi"><div class="k-label">kg</div><div class="k-value text-[14px]" id="rPEKg">—</div></div>
           <div class="kpi"><div class="k-label">Ventas</div><div class="k-value text-[14px]" id="rPEVen">—</div></div>
         </div>
-        <div id="peAvisoProd" style="margin-top:8px;padding:8px;border-radius:6px;font-size:11px;display:none;text-align:center;font-weight:600;line-height:1.4"></div>
+        <div id="peAvisoProd"></div>
+        
+        <div style="margin-top:10px; padding:10px; background:#f8fafc; border:1px solid #cbd5e1; border-radius:6px; border-left:4px solid #2563eb;">
+          <div style="font-size:10.5px; font-weight:800; color:#1e3a8a; text-transform:uppercase; margin-bottom:8px; display:flex; align-items:center; gap:6px;">
+            <i class="fa-solid fa-truck-fast"></i> Logística Bs As a Cba
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap:4px; margin-bottom:8px;">
+            <div>
+              <label style="font-size:8.5px; text-transform:uppercase; color:#475569; margin-bottom:2px;">Mkt Liviano ($/kg)</label>
+              <input id="mktLiviano" type="number" oninput="guardarPreciosMercado()" style="padding:2px 4px; font-size:11px; font-weight:700; width:100%;" />
+            </div>
+            <div>
+              <label style="font-size:8.5px; text-transform:uppercase; color:#475569; margin-bottom:2px;">Mkt Semi ($/kg)</label>
+              <input id="mktSemi" type="number" oninput="guardarPreciosMercado()" style="padding:2px 4px; font-size:11px; font-weight:700; width:100%;" />
+            </div>
+            <div>
+              <label style="font-size:8.5px; text-transform:uppercase; color:#475569; margin-bottom:2px;">Mkt Pesado ($/kg)</label>
+              <input id="mktPesado" type="number" oninput="guardarPreciosMercado()" style="padding:2px 4px; font-size:11px; font-weight:700; width:100%;" />
+            </div>
+          </div>
+          
+          <div style="display:flex; gap:8px; margin-bottom:8px; align-items:center;">
+            <div style="flex:1;">
+              <label style="font-size:9px; text-transform:uppercase; color:#475569; margin-bottom:2px;">Flete x Pallet (Bs As-Cba)</label>
+              <input id="logFleteInput" type="number" oninput="guardarFleteBsAs()" style="padding:4px; font-size:12px; font-weight:700; width:100%;" />
+            </div>
+            <div style="background:#1e40af; color:#fff; padding:6px 12px; border-radius:6px; text-align:center; min-width:90px;">
+              <div style="font-size:9px; text-transform:uppercase; font-weight:700; opacity:0.9;">Pallets Ocupados</div>
+              <div id="logPallets" style="font-size:18px; font-weight:800; line-height:1.1;">—</div>
+            </div>
+          </div>
+          
+          <div style="display:grid; grid-template-columns: 1fr 1fr; gap:6px; font-size:11px; margin-bottom:8px;">
+            <div><span style="color:#64748b">Tubos x Pallet:</span> <b id="logTubosPallet">—</b></div>
+            <div><span style="color:#64748b">Flete total:</span> <b id="logFleteTotal">—</b></div>
+            <div><span style="color:#64748b">Flete x kg:</span> <b id="logFleteKg">—</b></div>
+            <div style="font-size:9px; color:#64748b; align-self:end;">*(Verticales en cuadrícula)*</div>
+          </div>
+          
+          <div style="background:#eff6ff; padding:8px; border-radius:4px; border:1px solid #bfdbfe; margin-bottom:8px;">
+            <div style="font-size:9.5px; color:#1e40af; font-weight:700; text-transform:uppercase;">Costo Base en Cba (Precio + Flete)</div>
+            <div id="logCostoBase" style="font-size:14px; font-weight:800; color:#1d4ed8;">—</div>
+          </div>
+          
+          <div style="background:#f0fdf4; padding:8px; border-radius:4px; border:1px solid #bbf7d0; text-align:center;">
+            <div style="font-size:9.5px; color:#166534; font-weight:700; text-transform:uppercase;">Coeficiente Sugerido</div>
+            <div id="logCoefSugerido" style="font-size:18px; font-weight:800; color:#15803d; margin:4px 0;">—</div>
+            <button class="btn btn-primary btn-sm" onclick="aplicarCoefLogistico()" style="font-size:10px; padding:4px 8px;"><i class="fa-solid fa-arrow-right"></i> Aplicar Coef</button>
+          </div>
+        </div> style="margin-top:8px;padding:8px;border-radius:6px;font-size:11px;display:none;text-align:center;font-weight:600;line-height:1.4"></div>
       </div>
       <div class="flex gap-2 mt-3">
         <button class="btn btn-secondary flex-1" onclick="agregarItemPendiente()"><i class="fa-solid fa-plus"></i> Agregar a la lista</button>
@@ -1073,6 +1123,10 @@ let STATE = {
     ultimoPresupuestoId:null,
     clienteSeleccionadoId:null,
     empleadoSeleccionadoId:null,
+    fletePalletBsAs: 230000,
+    precioMktLiviano: 2200,
+    precioMktSemi: 1800,
+    precioMktPesado: 1800,
     obsPresupuestoDefault: "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envíos.\n- El retiro es por planta: Camino Santa Bárbara 1448, CP 5014, Córdoba.\n- Plazo de entrega: 15 días hábiles desde la acreditación del anticipo.\n- Moldes a medida: La fabricación de moldes especiales para medidas fuera de línea representa una inversión única a cargo del cliente, la cual se abona al confirmar el pedido. Una vez fabricado, el molde queda en planta y no se volverá a cobrar para futuras producciones de la misma medida.\n- Precios expresados en pesos, netos + IVA."
   }
 };
@@ -1111,6 +1165,11 @@ async function load(){
     STATE[k] = data.state[k] !== undefined ? data.state[k] : (Array.isArray(STATE[k]) ? [] : {});
   });
   CURRENT_VERSION = data.version;
+  if ($('logFleteInput')) $('logFleteInput').value = STATE.config.fletePalletBsAs || 230000;
+  if ($('mktLiviano')) $('mktLiviano').value = STATE.config.precioMktLiviano || 2200;
+  if ($('mktSemi')) $('mktSemi').value = STATE.config.precioMktSemi || 1800;
+  if ($('mktPesado')) $('mktPesado').value = STATE.config.precioMktPesado || 1800;
+  
   // --- FORZAR TEXTO DE OBSERVACIONES NUEVO ---
   if (!STATE.config.obsPresupuestoDefault || !STATE.config.obsPresupuestoDefault.includes("Plazo de entrega") || !STATE.config.obsPresupuestoDefault.includes("inversión única")) {
     STATE.config.obsPresupuestoDefault = "Condiciones comerciales:\n- Forma de pago: 50% de anticipo al confirmar el pedido, 50% contra retiro.\n- Descuento por pago adelantado: 5% sobre el subtotal neto (abonando el 100% antes de fabricar).\n- Aceptamos transferencia bancaria o efectivo.\n- El transporte y/o flete es a cargo del cliente. No realizamos despachos ni envíos.\n- El retiro es por planta: Camino Santa Bárbara 1448, CP 5014, Córdoba.\n- Plazo de entrega: 15 días hábiles desde la acreditación del anticipo.\n- Moldes a medida: La fabricación de moldes especiales para medidas fuera de línea representa una inversión única a cargo del cliente, la cual se abona al confirmar el pedido. Una vez fabricado, el molde queda en planta y no se volverá a cobrar para futuras producciones de la misma medida.\n- Precios expresados en pesos, netos + IVA.";
@@ -1145,6 +1204,33 @@ window.tubcorMatriz = {
 window.__tubcorForzandoManual = false;
 window.__tubcorCoefManual = null; /* coeficiente manual persistente */
 
+window.guardarPreciosMercado = function() {
+  if ($('mktLiviano')) STATE.config.precioMktLiviano = N($('mktLiviano').value);
+  if ($('mktSemi')) STATE.config.precioMktSemi = N($('mktSemi').value);
+  if ($('mktPesado')) STATE.config.precioMktPesado = N($('mktPesado').value);
+  if (typeof save === 'function') save(['config']);
+  recalcular();
+};
+window.guardarFleteBsAs = function() {
+  const val = N($('logFleteInput').value);
+  if (val > 0) {
+    STATE.config.fletePalletBsAs = val;
+    if (typeof save === 'function') save(['config']);
+    recalcular();
+  }
+};
+window.aplicarCoefLogistico = function() {
+  if (window.__tubcorCoefSugerido && window.__tubcorCoefSugerido > 0) {
+    if ($('ingCoefManual')) {
+      $('ingCoefManual').value = window.__tubcorCoefSugerido;
+      window.__tubcorCoefManual = window.__tubcorCoefSugerido;
+      window.__tubcorForzandoManual = true;
+      recalcular();
+      window.__tubcorForzandoManual = false;
+      toast('Coeficiente logístico aplicado', 'ok');
+    }
+  }
+};
 window.cambiarTipoMercado = function(){
   const tipo = $('ingTipoTubo') ? $('ingTipoTubo').value : 'liviano';
   const merc = $('ingMercado') ? $('ingMercado').value : 'cautivo';
@@ -2076,6 +2162,44 @@ function recalcular(){
   const pesoUnitG = (papelTotal + adhSecoTotal) * fp;
   const pesoUnitKg = pesoUnitG / 1000;
   const pesoLoteKg = pesoUnitKg * cant;
+      
+      // --- CALCULO LOGISTICO CUADRÍCULA ---
+      try {
+        if (cant > 0 && m.espesor > 0) {
+          const diamExtMm = diam + (2 * m.espesor);
+          const tubosAncho = Math.floor(1000 / diamExtMm);
+          const tubosLargo = Math.floor(1200 / diamExtMm);
+          
+          const tubosPorPallet = Math.max(1, tubosAncho * tubosLargo);
+          const cantPallets = Math.ceil(cant / tubosPorPallet);
+          
+          const fletePorPallet = N($('logFleteInput') ? $('logFleteInput').value : (STATE.config.fletePalletBsAs || 230000));
+          const costoFleteTotal = cantPallets * fletePorPallet;
+          const fletePorKg = pesoLoteKg > 0 ? (costoFleteTotal / pesoLoteKg) : 0;
+          
+          const tipoAuto = m.espesor < 2 ? 'liviano' : (m.espesor <= 5 ? 'semipesado' : 'pesado');
+          let precioMercadoBsAs = 0;
+          
+          if (tipoAuto === 'liviano') precioMercadoBsAs = N($('mktLiviano') ? $('mktLiviano').value : (STATE.config.precioMktLiviano || 2200));
+          else if (tipoAuto === 'semipesado') precioMercadoBsAs = N($('mktSemi') ? $('mktSemi').value : (STATE.config.precioMktSemi || 1800));
+          else precioMercadoBsAs = N($('mktPesado') ? $('mktPesado').value : (STATE.config.precioMktPesado || 1800));
+          
+          const costoPuestoCba = precioMercadoBsAs + fletePorKg;
+          const coefSugerido = Math.floor(costoPuestoCba * 0.95); 
+          
+          if ($('logTubosPallet')) $('logTubosPallet').textContent = tubosPorPallet.toLocaleString('es-AR');
+          if ($('logPallets')) $('logPallets').textContent = cantPallets.toLocaleString('es-AR');
+          if ($('logFleteTotal')) $('logFleteTotal').textContent = money(costoFleteTotal);
+          if ($('logFleteKg')) $('logFleteKg').textContent = money(fletePorKg);
+          if ($('logCostoBase')) $('logCostoBase').textContent = money(costoPuestoCba) + ' /kg';
+          if ($('logCoefSugerido')) {
+            $('logCoefSugerido').textContent = money(coefSugerido) + ' /kg';
+            window.__tubcorCoefSugerido = coefSugerido;
+          }
+        }
+      } catch(_) {}
+      // -------------------------------------
+
   const cp=N($('precioCP').value), cr=N($('precioCR').value), ct=N($('precioCT').value);
   const ca=N($('precioAdh').value), cat=N($('precioAdhTapa').value), cf=N($('precioFlete').value);
   const merma = N($('ingDesperdicio').value)/100;
