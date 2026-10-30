@@ -26,4 +26,4 @@ backups/
 # Archivos temporales de Windows / editores
 Thumbs.db
 desktop.ini
-~$*
+~$*backups/ 
