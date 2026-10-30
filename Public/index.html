@@ -1286,6 +1286,14 @@ window.autoClasificarTipoTubo = function(espesor){
 };
 
 async function save(keys){
+  // --- CANDADO DE SEGURIDAD ---
+  if ((!STATE.clientes || STATE.clientes.length === 0) && (!STATE.presupuestos || STATE.presupuestos.length === 0)) {
+    console.warn('GUARDADO ABORTADO: Se intentó guardar un estado vacío.');
+    if (typeof toast === 'function') toast('ERROR: No se guardó porque los datos están vacíos.', 'err');
+    return; 
+  }
+  // ----------------------------
+  
   if (!SESSION_TOKEN) return;
   savingLocally = true;
   try {
