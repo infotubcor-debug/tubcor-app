@@ -2363,8 +2363,9 @@ function recalcular(){
     if (__sinDatos) {
       $('rMargenInfo').textContent = '';
     } else {
-      const mr = margenMostrado;
-      const g = precioKgEfectivo - costoTotalKgActual;
+      const __precioEfectivo = coefAplicado + (pesoUnitKg > 0 ? (adicionalCNC / pesoUnitKg) : 0);
+      const mr = __precioEfectivo > 0 ? (1 - costoTotalKgActual / __precioEfectivo) * 100 : 0;
+      const g = __precioEfectivo - costoTotalKgActual;
       $('rMargenInfo').textContent = (mr >= 0 ? 'Margen: +' + mr.toFixed(1) + '% - Ganancia: +' + money(g) + '/kg' : 'Margen Neto: ' + mr.toFixed(1) + '% (c/ gastos fijos)');
       $('rMargenInfo').style.color = mr >= 0 ? '#15803d' : '#b45309';
     }
