@@ -6,6 +6,10 @@ on:
     - cron: '0 6 * * 1'
   workflow_dispatch:
 
+# Permiso necesario para que el bot pueda hacer "git push"
+permissions:
+  contents: write
+
 jobs:
   backup:
     runs-on: ubuntu-latest
@@ -40,6 +44,8 @@ jobs:
         run: |
           git config user.name "TUBCOR Bot"
           git config user.email "bot@tubcor.local"
-          git add backups/
+          # El -f (force) es para que ignore el .gitignore y suba la carpeta backups
+          git add -f backups/
           git diff --staged --quiet || git commit -m "Backup automatico $(date +%Y-%m-%d)"
+          git pull --rebase origin main
           git push
