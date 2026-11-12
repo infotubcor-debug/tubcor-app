@@ -546,7 +546,7 @@ table tbody tr:hover{background:#f8fafc}
           <div><label>Espesor real (mm)</label><input id="calEspR" type="number" step="0.01" value=""/></div>
           <div><label>Peso real del tubo (g)</label><input id="calPeso" type="number" step="0.1" value="" title="Peso unitario. Si pesaste varios, poné el total y el sistema divide por la cantidad."/></div>
         </div>
-        <button class="btn btn-primary w-full" onclick="registrarPesaje()"><i class="fa-solid fa-plus"></i> Registrar pesaje</button>
+        <button id="btnRegistrarPesaje" class="btn btn-primary w-full" onclick="registrarPesaje()"><i class="fa-solid fa-plus"></i> Registrar pesaje</button>
         <div id="tablaEspesoresCal" style="margin-top:14px;padding-top:12px;border-top:1px dashed #cbd5e1">
           <button type="button" onclick="window.toggleTablaEspesoresCal()" style="background:transparent;border:0;padding:0;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:space-between">
             <div style="font-size:11px;font-weight:800;color:#334155;text-transform:uppercase;letter-spacing:.4px">Espesor por gramaje (mm)</div>
@@ -2667,7 +2667,57 @@ window.cargarTuboDesdeCatalogo = function(){
     toast('Tubo cargado desde el catálogo', 'ok');
   };
 
-  function registrarPesaje(){
+  window.cargarPesajeEnFormulario = function(id) {
+  const p = STATE.pesajes.find(x => x.id === id);
+  if (!p) return;
+
+  if ($('calRef')) $('calRef').value = p.referencia || '';
+  if ($('calDiam')) $('calDiam').value = p.diametro || '';
+  if ($('calLong')) $('calLong').value = p.longitud || '';
+  if ($('calCant')) $('calCant').value = p.cantidad || 1;
+
+  if ($('calPA')) $('calPA').value = p.pa || '';
+  if ($('calPG')) $('calPG').value = p.pg || '';
+  if ($('calPC')) $('calPC').value = p.pc || 'Marrón';
+
+  const rs = (p.rellenos && p.rellenos.length > 0) ? p.rellenos : [{cant:p.rc||0, ancho:p.ra, gramaje:p.rg}];
+  
+  if ($('calRC')) $('calRC').value = rs[0].cant || '';
+  if ($('calRA')) $('calRA').value = rs[0].ancho || '';
+  if ($('calRG')) $('calRG').value = rs[0].gramaje || '';
+
+  for (let i = 2; i <= 4; i++) {
+    if ($('calRC'+i)) $('calRC'+i).value = '';
+    if ($('calRA'+i)) $('calRA'+i).value = '';
+    if ($('calRG'+i)) $('calRG'+i).value = '';
+  }
+  if (rs.length > 1) {
+    if ($('gruposRellenoExtrasCal')) $('gruposRellenoExtrasCal').style.display = 'block';
+    rs.forEach((r, idx) => {
+      if (idx === 0) return;
+      const i = idx + 1;
+      if ($('calRC'+i)) $('calRC'+i).value = r.cant || '';
+      if ($('calRA'+i)) $('calRA'+i).value = r.ancho || '';
+      if ($('calRG'+i)) $('calRG'+i).value = r.gramaje || '';
+    });
+  } else {
+    if ($('gruposRellenoExtrasCal')) $('gruposRellenoExtrasCal').style.display = 'none';
+  }
+
+  if ($('calTA')) $('calTA').value = p.ta || '';
+  if ($('calTG')) $('calTG').value = p.tg || '';
+  if ($('calTC')) $('calTC').value = p.tc || 'Marrón';
+
+  if ($('calEspR')) $('calEspR').value = p.espesorReal || '';
+  if ($('calPeso')) $('calPeso').value = p.pesoReal * (p.cantidad||1) || '';
+
+  window.__pesajeEditandoId = id;
+  if ($('btnRegistrarPesaje')) $('btnRegistrarPesaje').innerHTML = '<i class="fa-solid fa-pen"></i> Actualizar pesaje';
+
+  toast('Pesaje cargado para editar', 'ok');
+};
+
+function registrarPesaje(){
   const pesoTotal = N($('calPeso').value);
   const cantidadPesada = Math.max(1, parseInt($('calCant').value)||1);
   const pesoReal = pesoTotal / cantidadPesada;
@@ -2678,8 +2728,13 @@ window.cargarTuboDesdeCatalogo = function(){
     {gramaje:N($('calTG').value), cantidad:1}
   ];
   if (!capas.some(c=>c.gramaje>0)) return toast('Faltan gramajes de fajas','err');
-  STATE.pesajes.push({
-    id: uid('peso'), fecha: today(),
+  const __isEditing = !!window.__pesajeEditandoId;
+  const __idActual = window.__pesajeEditandoId || uid('peso');
+  const __pesajeOriginal = __isEditing ? STATE.pesajes.find(x=>x.id===__idActual) : null;
+
+  const __newObj = {
+    id: __idActual, 
+    fecha: __pesajeOriginal ? __pesajeOriginal.fecha : today(),
     referencia: $('calRef').value || 'Sin referencia',
     diametro: N($('calDiam').value), longitud: N($('calLong').value),
     cantidad: Math.max(1, parseInt($('calCant').value)||1),
@@ -2699,7 +2754,18 @@ window.cargarTuboDesdeCatalogo = function(){
       }
       return arr;
     })()
-  });
+  };
+
+  if (__isEditing) {
+    const __idx = STATE.pesajes.findIndex(x=>x.id===__idActual);
+    if (__idx >= 0) STATE.pesajes[__idx] = __newObj;
+    window.__pesajeEditandoId = null;
+    if ($('btnRegistrarPesaje')) $('btnRegistrarPesaje').innerHTML = '<i class="fa-solid fa-plus"></i> Registrar pesaje';
+    toast('Pesaje actualizado', 'ok');
+  } else {
+    STATE.pesajes.push(__newObj);
+    toast('Pesaje registrado · factor recalibrado','ok');
+  }
   save(['pesajes']);
   
   const selCat = $('calSelectCat') ? $('calSelectCat').value : '';
@@ -2715,7 +2781,6 @@ window.cargarTuboDesdeCatalogo = function(){
 
   try { limpiarCalibrador(); } catch(_){} /* registrarPesaje */
   recalcularFactorProceso(); recalcularFactoresPorSegmento(); renderCalibrador(); recalcular();
-  toast('Pesaje registrado · factor recalibrado','ok');
 }
 function eliminarPesaje(id){
   confirmar('¿Eliminar este pesaje?').then(ok=>{
@@ -2782,7 +2847,7 @@ function renderCalibrador(){
       <td>${p.pesoReal.toFixed(1)} g</td>
       <td>${teorico.toFixed(1)} g</td>
       <td style="color:${Math.abs(desv)>3?'#d97706':'#15803d'};font-weight:700">${desv>0?'+':''}${desv.toFixed(2)}%</td>
-      <td><button class="btn btn-danger btn-sm" onclick="eliminarPesaje('${p.id}')"><i class="fa-solid fa-trash"></i></button></td>
+      <td><div style="display:flex;gap:4px;justify-content:center"><button class="btn btn-secondary btn-sm" onclick="cargarPesajeEnFormulario('${p.id}')" title="Editar"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarPesaje('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></td>
     </tr>`;
   }).join('');
   $('calDesvio').textContent = (suma/list.length).toFixed(2)+' %';
