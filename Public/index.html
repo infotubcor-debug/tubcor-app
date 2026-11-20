@@ -2801,7 +2801,7 @@ function renderCalibrador(){
     try {
       if ($('calSelectCat')) {
         const cur = $('calSelectCat').value;
-        $('calSelectCat').innerHTML = '<option value="">— Seleccionar tubo —</option>' + 
+        $('calSelectCat').innerHTML = '<option value="">— Seleccionar tubo —</option>' +
           (STATE.catalogo||[]).map(c => '<option value="' + c.codigo + '">' + c.codigo + ' (Ø' + c.diametro + 'x' + c.longitud + ')</option>').join('');
         if (cur && (STATE.catalogo||[]).some(x => x.codigo === cur)) $('calSelectCat').value = cur;
       }
@@ -2817,7 +2817,8 @@ function renderCalibrador(){
   const pctInt = (N($('pctAdhSeco').value) || 15)/100;
   const pctTap = (N($('pctAdhTapa').value) || 8)/100;
   let suma = 0;
-  tb.innerHTML = list.map(p=>{
+  
+  const items = list.map(p => {
     const __relP = (p.rellenos && p.rellenos.length > 0) ? p.rellenos : [{cant:p.rc||0, ancho:p.ra, gramaje:p.rg}];
     const capas = [{gramaje:p.pg, cantidad:1, tipo:'Principal'}];
     __relP.filter(r=>r.cant>0 && r.gramaje>0).forEach((r, i) => {
@@ -2837,21 +2838,63 @@ function renderCalibrador(){
     const teorico = papel + adhSeco;
     const desv = p.pesoReal>0 ? ((teorico - p.pesoReal)/p.pesoReal)*100 : 0;
     suma += Math.abs(desv);
-    const espRealTxt = p.espesorReal > 0 ? p.espesorReal.toFixed(2) + ' mm' : '\u2014';
-    const fajasHtml = __relP.filter(r=>r.cant>0).map((r, i) => (__relP.filter(x=>x.cant>0).length > 1 ? 'R' + (i+1) + ': ' + r.cant + '\u00d7 ' + r.ancho + '/' + r.gramaje : 'R: ' + r.cant + '\u00d7 ' + r.ancho + '/' + r.gramaje)).join('<br>');
-    return `<tr>
-      <td><b>${esc(p.referencia)}</b><div class="hint">${esc(p.fecha)}</div></td>
-      <td>Ø${p.diametro} × ${p.longitud}</td>
-      <td><div class="hint">P: ${p.pa}/${p.pg}<br>${fajasHtml}<br>T: ${p.ta}/${p.tg}</div></td>
-      <td>${espRealTxt}</td>
-      <td>${p.pesoReal.toFixed(1)} g</td>
-      <td>${teorico.toFixed(1)} g</td>
-      <td style="color:${Math.abs(desv)>3?'#d97706':'#15803d'};font-weight:700">${desv>0?'+':''}${desv.toFixed(2)}%</td>
-      <td><div style="display:flex;gap:4px;justify-content:center"><button class="btn btn-secondary btn-sm" onclick="cargarPesajeEnFormulario('${p.id}')" title="Editar"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarPesaje('${p.id}')"><i class="fa-solid fa-trash"></i></button></div></td>
-    </tr>`;
-  }).join('');
+    const espRealTxt = p.espesorReal > 0 ? p.espesorReal.toFixed(2) + ' mm' : '—';
+    const fajasHtml = __relP.filter(r=>r.cant>0).map((r, i) => (__relP.filter(x=>x.cant>0).length > 1 ? 'R' + (i+1) + ': ' + r.cant + '× ' + r.ancho + '/' + r.gramaje : 'R: ' + r.cant + '× ' + r.ancho + '/' + r.gramaje)).join('<br>');
+    return { p, espRealTxt, fajasHtml, teorico, desv };
+  });
+  
   $('calDesvio').textContent = (suma/list.length).toFixed(2)+' %';
-}
+
+  const grupos = {};
+  items.forEach(item => {
+    const diam = Number(item.p.diametro) || 0;
+    if (!grupos[diam]) grupos[diam] = [];
+    grupos[diam].push(item);
+  });
+
+  const diametros = Object.keys(grupos).sort((a,b) => Number(a) - Number(b));
+  let htmlFinal = '';
+
+  diametros.forEach(diam => {
+    const pesajes = grupos[diam];
+    let isOpen = true;
+    if (window.__calibradoresAbiertos && typeof window.__calibradoresAbiertos[diam] !== 'undefined') {
+      isOpen = window.__calibradoresAbiertos[diam];
+    }
+    const chevron = isOpen ? '▼' : '▶';
+
+    htmlFinal += '<tr style="background:#f1f5f9; cursor:pointer;" onclick="toggleGrupoCalibrador(\'' + diam + '\')">' +
+      '<td colspan="8" style="text-align:left; font-weight:800; color:#1e293b; padding:8px 12px; border-bottom:2px solid #cbd5e1;">' +
+        '<span style="font-size:10px; margin-right:8px; color:#64748b;">' + chevron + '</span> ' +
+        'Ø ' + diam + ' mm <span style="font-size:10px; font-weight:600; color:#64748b; margin-left:8px;">(' + pesajes.length + ' pesajes)</span>' +
+      '</td>' +
+    '</tr>';
+
+    pesajes.forEach(item => {
+      const p = item.p;
+      htmlFinal += '<tr class="fila-grupo-cal-' + diam + '" style="display: ' + (isOpen ? 'table-row' : 'none') + ';">' +
+        '<td><b>' + esc(p.referencia) + '</b><div class="hint">' + esc(p.fecha) + '</div></td>' +
+        '<td>Ø' + p.diametro + ' × ' + p.longitud + '</td>' +
+        '<td><div class="hint">P: ' + p.pa + '/' + p.pg + '<br>' + item.fajasHtml + '<br>T: ' + p.ta + '/' + p.tg + '</div></td>' +
+        '<td>' + item.espRealTxt + '</td>' +
+        '<td>' + p.pesoReal.toFixed(1) + ' g</td>' +
+        '<td>' + item.teorico.toFixed(1) + ' g</td>' +
+        '<td style="color:' + (Math.abs(item.desv)>3?'#d97706':'#15803d') + ';font-weight:700">' + (item.desv>0?'+':'') + item.desv.toFixed(2) + '%</td>' +
+        '<td><div style="display:flex;gap:4px;justify-content:center"><button class="btn btn-secondary btn-sm" onclick="cargarPesajeEnFormulario(\'' + p.id + '\')" title="Editar"><i class="fa-solid fa-pen"></i></button><button class="btn btn-danger btn-sm" onclick="eliminarPesaje(\'' + p.id + '\')"><i class="fa-solid fa-trash"></i></button></div></td>' +
+      '</tr>';
+    });
+  });
+
+  tb.innerHTML = htmlFinal;
+};
+
+window.toggleGrupoCalibrador = function(diam) {
+  if (!window.__calibradoresAbiertos) window.__calibradoresAbiertos = {};
+  let current = true;
+  if (typeof window.__calibradoresAbiertos[diam] !== 'undefined') current = window.__calibradoresAbiertos[diam];
+  window.__calibradoresAbiertos[diam] = !current;
+  renderCalibrador();
+};
 
 function renderClientes(){
   const q = ($('cliBuscar').value||'').toLowerCase().trim();
