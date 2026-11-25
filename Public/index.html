@@ -3737,26 +3737,35 @@ function renderPaperOF(p){
     <div class="paper-footer">TUBCOR S.A.S. · Orden interna de fabricación · www.tubcor.com.ar</div>
   </div>`;
 }
-function editarPresupuesto(){
+window.editarPresupuesto = function(){
   const p = STATE.presupuestos.find(x=>x.id===STATE.config.ultimoPresupuestoId);
-  if (!p) return;
-  const razon = prompt('Cliente:', p.clienteRazonSocial); if (razon===null) return;
-  const pago = prompt('Condición de pago:', p.condicionPago||''); if (pago===null) return;
-  for (const it of p.items){
-    const cant = prompt(`Cantidad del tubo Ø${it.diametro} × ${it.longitud} (actual: ${it.cantidad}):`, it.cantidad);
-    if (cant===null) return;
-    const pu = prompt(`Precio unitario neto (actual: ${it.precioVentaUnitario.toFixed(2)}):`, it.precioVentaUnitario.toFixed(2));
-    if (pu===null) return;
-    it.cantidad = Math.max(1, parseInt(cant)||it.cantidad);
-    it.precioVentaUnitario = Math.max(0, N(pu));
-    it.precioVentaTotal = it.cantidad * it.precioVentaUnitario;
-  }
-  p.clienteRazonSocial = razon.trim()||p.clienteRazonSocial;
-  p.condicionPago = pago.trim();
-  save(['presupuestos']); renderPreviewPresupuesto();
-  try { renderTotalesMesOF(); } catch(_){} /* refresh-totales-editar */
-  toast('Presupuesto actualizado','ok');
-}
+  if (!p) return toast('Seleccioná un presupuesto de la lista','err');
+
+  if (!confirm('¿Querés editar este presupuesto?\n\nSe ARCHIVARÁ la versión actual y los tubos se cargarán en Ingeniería para que modifiques la lista.')) return;
+
+  // 1. Cargar los tubos del presupuesto viejo a la lista de pendientes
+  STATE.pendientes = JSON.parse(JSON.stringify(p.items));
+
+  // 2. Archivar el presupuesto actual (para que quede guardado en el histórico)
+  p.archivado = true;
+  p.ofArchivada = true;
+
+  // 3. Limpiar la selección actual para que no se mezcle
+  STATE.config.ultimoPresupuestoId = null;
+
+  // 4. Guardar los cambios
+  save(['presupuestos', 'pendientes', 'config']);
+  
+  // 5. Refrescar las pantallas
+  renderPresupuestos();
+  try { renderOF(); } catch(_){}
+  renderPendientes();
+
+  // 6. Viajar a Ingeniería
+  if (typeof switchTab === 'function') switchTab('ingenieria');
+  
+  toast('Presupuesto archivado. Modificá la lista y generá un presupuesto nuevo.', 'ok');
+};
 
 function eliminarPresupuesto(){
   const id = STATE.config.ultimoPresupuestoId; if (!id) return;
