@@ -693,7 +693,8 @@ table tbody tr:hover{background:#f8fafc}
             <th>Fórmula (Fajas / Fábricas)</th>
             <th>Peso Teórico</th>
             <th>Peso Real</th>
-            <th style="width:80px">Acción</th>
+            <th>Precio Lista</th>
+            <th style="width:110px">Acciones</th>
           </tr>
         </thead>
         <tbody id="catLista"><tr><td colspan="6" class="empty">Cargá tubos en Ingeniería para que aparezcan aquí.</td></tr></tbody>
@@ -2802,7 +2803,7 @@ function renderCalibrador(){
       if ($('calSelectCat')) {
         const cur = $('calSelectCat').value;
         $('calSelectCat').innerHTML = '<option value="">— Seleccionar tubo —</option>' +
-          (STATE.catalogo||[]).map(c => '<option value="' + c.codigo + '">' + c.codigo + ' (Ø' + c.diametro + 'x' + c.longitud + ')</option>').join('');
+          (STATE.catalogo||[]).map(c => '<option value="' + c.codigo + '">' + c.codigo + ' (Ø' + c.diametro + 'x' + c.longitud + ' - Esp: ' + (c.espesor ? Number(c.espesor).toFixed(2) : '?') + ' mm)</option>').join('');
         if (cur && (STATE.catalogo||[]).some(x => x.codigo === cur)) $('calSelectCat').value = cur;
       }
     } catch(_){}
@@ -5737,9 +5738,14 @@ window.editarTuboCatalogo = function(busqueda){
   if (nuevoPeso !== null && !isNaN(parseFloat(nuevoPeso))) {
     const pesoLimpio = Math.round(parseFloat(nuevoPeso));
     const nuevoCodigo = c.diametro + '-' + c.longitud + '-' + pesoLimpio;
-    
-    if (pesoLimpio !== c.pesoRealG) {
-      const check = confirm('⚠️ CONFIRMAR CAMBIO:\n\n¿Estás seguro de cambiar el peso de ' + c.pesoRealG + ' g a ' + pesoLimpio + ' g?\n\nEl código del tubo cambiará de:\n' + c.codigo + '\n\nA:\n' + nuevoCodigo);
+
+    const nuevoPrecio = prompt('Precio de Lista ($/kg):', c.coefLista || 0);
+    if (nuevoPrecio !== null && !isNaN(parseFloat(nuevoPrecio))) {
+      c.coefLista = parseFloat(nuevoPrecio);
+    }
+
+    if (pesoLimpio !== c.pesoRealG || c.codigo !== nuevoCodigo) {
+      const check = confirm('⚠️ CONFIRMAR CAMBIO:\n\nPeso: ' + c.pesoRealG + 'g -> ' + pesoLimpio + 'g\nCódigo: ' + c.codigo + ' -> ' + nuevoCodigo);
       if (!check) return;
     }
 
@@ -5749,7 +5755,7 @@ window.editarTuboCatalogo = function(busqueda){
     renderCatalogo();
     toast('Tubo actualizado en catálogo', 'ok');
   }
-};
+};;
 
 window.renderPresupuestosCliente = function(){
   const panel = $('cliPresPanel');
