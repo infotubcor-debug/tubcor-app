@@ -110,7 +110,7 @@ table tbody tr:hover{background:#f8fafc}
     </div>
     <nav class="tabs ml-auto">
       <button class="tab active" data-tab="ingenieria"><i class="fa-solid fa-calculator"></i> Ingeniería</button>
-      <button class="tab" data-tab="calibrador"><i class="fa-solid fa-scale-balanced"></i> Calibrador</button>
+      <button class="tab" data-tab="calibrador" style="display:none"><i class="fa-solid fa-scale-balanced"></i> Calibrador</button>
       <button class="tab" data-tab="clientes"><i class="fa-solid fa-address-book"></i> Clientes</button>
       <button class="tab" data-tab="catalogo"><i class="fa-solid fa-book"></i> Catálogo</button>
       <button class="tab" data-tab="presupuestos"><i class="fa-solid fa-file-invoice-dollar"></i> Presupuestos</button>
@@ -473,9 +473,23 @@ table tbody tr:hover{background:#f8fafc}
       <textarea id="obsPresupuesto" rows="2" placeholder="Observaciones que aparecerán al final del presupuesto..." onchange="guardarObsDefault()"></textarea>
     </div>
   </div>
+<div class="card mt-3">
+  <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">
+    <i class="fa-solid fa-sliders" style="color:#16a34a"></i> Factor de proceso por segmento
+  </div>
+  <div class="hint" style="margin-bottom:8px;text-align:left">El factor corrige el modelo teórico según el Peso Real cargado en el Catálogo. Cada segmento tiene su propio factor porque los tubos son distintos. Se actualiza automáticamente al guardar el Peso Real de un tubo en el Catálogo.</div>
+  <div class="grid grid-cols-3 gap-2">
+    <div><label>Tubo liviano</label><input id="factorLiviano" type="number" step="0.001" min="0.5" max="1.8" readonly style="background:#f8fafc;color:#15803d;font-weight:bold"/></div>
+    <div><label>Tubo semipesado</label><input id="factorSemipesado" type="number" step="0.001" min="0.5" max="1.8" readonly style="background:#f8fafc;color:#15803d;font-weight:bold"/></div>
+    <div><label>Tubo pesado</label><input id="factorPesado" type="number" step="0.001" min="0.5" max="1.8" readonly style="background:#f8fafc;color:#15803d;font-weight:bold"/></div>
+  </div>
+  <div class="hint" id="factorInfoExt" style="margin-top:8px"></div>
+  
+</div>
+
 </section>
 
-<section class="section" id="tab-calibrador">
+<section class="section" id="tab-calibrador" style="display:none">
   <div class="grid grid-cols-1 lg:grid-cols-3 gap-3">
     <div class="card">
       <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200"><i class="fa-solid fa-weight-scale" style="color:#16a34a"></i> Registro de pesaje real</div>
@@ -592,21 +606,6 @@ table tbody tr:hover{background:#f8fafc}
       <div class="flex justify-end mt-2"><button class="btn btn-danger btn-sm" onclick="limpiarPesajes()">Limpiar historial de balanza</button></div>
     </div>
   </div>
-<div class="card mt-3">
-  <div class="text-[12px] font-extrabold text-slate-800 uppercase tracking-wide mb-2 pb-2 border-b border-slate-200">
-    <i class="fa-solid fa-sliders" style="color:#16a34a"></i> Factor de proceso por segmento
-  </div>
-  <div class="hint" style="margin-bottom:8px;text-align:left">El factor corrige el modelo teorico segun el peso real medido en balanza. Cada segmento tiene su propio factor porque los tubos son distintos. Se actualiza automaticamente al cargar o eliminar un pesaje.</div>
-  <div class="grid grid-cols-3 gap-2">
-    <div><label>Tubo liviano</label><input id="factorLiviano" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('liviano')"/></div>
-    <div><label>Tubo semipesado</label><input id="factorSemipesado" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('semipesado')"/></div>
-    <div><label>Tubo pesado</label><input id="factorPesado" type="number" step="0.001" min="0.5" max="1.8" oninput="guardarFactorSegmento('pesado')"/></div>
-  </div>
-  <div class="hint" id="factorInfoExt" style="margin-top:8px"></div>
-  <div class="flex justify-end mt-2">
-    <button type="button" class="btn btn-secondary btn-sm" onclick="recalcularFactoresPorSegmento()"><i class="fa-solid fa-refresh"></i> Recalcular desde historial</button>
-  </div>
-</div>
 </section>
 
 <section class="section" id="tab-clientes">
@@ -2508,21 +2507,23 @@ function limpiarCalibrador(){
 }
 
 function recalcularFactoresPorSegmento(){
-  if (!STATE.pesajes || !STATE.pesajes.length) return;
+  if (!STATE.catalogo || !STATE.catalogo.length) return;
   const solidos = Math.max(0.10, Math.min(0.90, (N($('solidosAdh').value) || 41)/100));
   const pctInt = (N($('pctAdhSeco').value) || 15)/100;
   const pctTap = (N($('pctAdhTapa').value) || 8)/100;
 
   const porSegmento = { liviano: [], semipesado: [], pesado: [] };
 
-  STATE.pesajes.forEach(p => {
+  STATE.catalogo.forEach(c => {
+    if (!c.pesoRealG || c.pesoRealG <= 0) return;
     const capas = [
-      {gramaje:p.pg, cantidad:1, tipo:'Principal'},
-      ...((p.rellenos && p.rellenos.length > 0 ? p.rellenos : [{cant:p.rc||0, ancho:p.ra, gramaje:p.rg}]).filter(r=>r.cant>0 && r.gramaje>0).map((r,i) => ({gramaje:r.gramaje, cantidad:r.cant, tipo:'Relleno', grupoIdx:i+1}))),
-      {gramaje:p.tg, cantidad:1, tipo:'Tapa'}
-    ].filter(c=>c.gramaje>0 && c.cantidad>0);
+      {gramaje:c.gramajePrinc, cantidad:1, tipo:'Principal'},
+      ...(c.rellenos || []).filter(r=>r.cant>0 && r.gramaje>0).map((r,i) => ({gramaje:r.gramaje, cantidad:r.cant, tipo:'Relleno', grupoIdx:i+1})),
+      {gramaje:c.gramajeTapa, cantidad:1, tipo:'Tapa'}
+    ].filter(cap=>cap.gramaje>0 && cap.cantidad>0);
+    
     if (!capas.length) return;
-    const m = modeloFisico({diametroInterno:p.diametro, longitud:p.longitud, capas});
+    const m = modeloFisico({diametroInterno:c.diametro, longitud:c.longitud, capas});
     if (!(m.espesor > 0)) return;
 
     let seg;
@@ -2539,26 +2540,22 @@ function recalcularFactoresPorSegmento(){
     const papel = gP+gR+gT;
     const adhSeco = (gP+gR)*pctInt + gT*pctTap;
     const tb = papel + adhSeco;
-    const ratio = tb > 0 ? p.pesoReal / tb : null;
+    const ratio = tb > 0 ? c.pesoRealG / tb : null;
     if (!Number.isFinite(ratio) || ratio <= 0) return;
     porSegmento[seg].push(ratio);
   });
 
   STATE.config.factorProcesoPorSegmento = STATE.config.factorProcesoPorSegmento || { liviano: 0.822, semipesado: 1.000, pesado: 1.000 };
-
   STATE.config.factorEditadoManualmente = STATE.config.factorEditadoManualmente || {};
 
   ['liviano', 'semipesado', 'pesado'].forEach(seg => {
     const ratios = porSegmento[seg];
-    /* reset a 1.000 si no hay pesajes */
     if (!ratios.length) {
-      // Si el usuario nunca editó a mano este factor → resetear a 1.000
       if (!STATE.config.factorEditadoManualmente[seg]) {
         STATE.config.factorProcesoPorSegmento[seg] = 1.000;
       }
       return;
     }
-    // Hay pesajes: calcular y marcar como "no editado a mano" (viene de datos reales)
     ratios.sort((a,b) => a-b);
     let muestra = ratios;
     if (ratios.length >= 5){
@@ -2576,7 +2573,7 @@ function recalcularFactoresPorSegmento(){
   if ($('factorLiviano') && document.activeElement !== $('factorLiviano')) $('factorLiviano').value = N(f.liviano || 0.822).toFixed(3);
   if ($('factorSemipesado') && document.activeElement !== $('factorSemipesado')) $('factorSemipesado').value = N(f.semipesado || 1.000).toFixed(3);
   if ($('factorPesado') && document.activeElement !== $('factorPesado')) $('factorPesado').value = N(f.pesado || 1.000).toFixed(3);
-  if ($('factorInfoExt')){
+  if ($('factorInfoExt')) {
     $('factorInfoExt').textContent = 'Liviano: ' + N(f.liviano || 0).toFixed(3) + ' | Semipesado: ' + N(f.semipesado || 0).toFixed(3) + ' | Pesado: ' + N(f.pesado || 0).toFixed(3);
   }
   try { recalcular(); } catch(_){}
@@ -5753,6 +5750,7 @@ window.editarTuboCatalogo = function(busqueda){
     c.codigo = nuevoCodigo;
     save(['catalogo']);
     renderCatalogo();
+    try { recalcularFactoresPorSegmento(); } catch(_){}
     toast('Tubo actualizado en catálogo', 'ok');
   }
 };;
