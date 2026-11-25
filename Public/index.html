@@ -3746,26 +3746,82 @@ window.editarPresupuesto = function(){
   // 1. Cargar los tubos del presupuesto viejo a la lista de pendientes
   STATE.pendientes = JSON.parse(JSON.stringify(p.items));
 
-  // 2. Archivar el presupuesto actual (para que quede guardado en el histórico)
+  // 2. Archivar el presupuesto actual
   p.archivado = true;
   p.ofArchivada = true;
-
-  // 3. Limpiar la selección actual para que no se mezcle
   STATE.config.ultimoPresupuestoId = null;
 
-  // 4. Guardar los cambios
+  // 3. Restaurar Cliente y Observaciones
+  if (p.clienteId && $('ingCliente')) $('ingCliente').value = p.clienteId;
+  if (p.observacionesPresupuesto !== undefined && $('obsPresupuesto')) $('obsPresupuesto').value = p.observacionesPresupuesto;
+
+  // 4. Cargar el primer tubo en el formulario para que la vista no quede en blanco
+  if (p.items && p.items.length > 0) {
+    const it = p.items[0];
+    if ($('ingDiam')) $('ingDiam').value = it.diametro || '';
+    if ($('ingLong')) $('ingLong').value = it.longitud || '';
+    if ($('ingCant')) $('ingCant').value = it.cantidad || 1;
+    
+    if ($('ingPrincAncho')) $('ingPrincAncho').value = it.anchoPrinc || '';
+    if ($('ingPrincGram')) $('ingPrincGram').value = it.gramajePrinc || '';
+    if ($('ingPrincFab')) $('ingPrincFab').value = it.fabPrinc || '';
+
+    // Limpiar rellenos anteriores
+    for (let i = 1; i <= 4; i++) {
+      const suf = i === 1 ? '' : i;
+      if ($('ingRell' + suf + 'Cant')) $('ingRell' + suf + 'Cant').value = '';
+      if ($('ingRell' + suf + 'Ancho')) $('ingRell' + suf + 'Ancho').value = '';
+      if ($('ingRell' + suf + 'Gram')) $('ingRell' + suf + 'Gram').value = '';
+      if ($('ingRell' + suf + 'Fab')) $('ingRell' + suf + 'Fab').value = '';
+    }
+
+    // Cargar rellenos
+    if (it.rellenos && it.rellenos.length > 0) {
+      it.rellenos.forEach((r, i) => {
+        if (i < 4) {
+          const suf = i === 0 ? '' : (i + 1);
+          if ($('ingRell' + suf + 'Cant')) $('ingRell' + suf + 'Cant').value = r.cant;
+          if ($('ingRell' + suf + 'Ancho')) $('ingRell' + suf + 'Ancho').value = r.ancho;
+          if ($('ingRell' + suf + 'Gram')) $('ingRell' + suf + 'Gram').value = r.gramaje;
+          if ($('ingRell' + suf + 'Fab')) $('ingRell' + suf + 'Fab').value = r.fab || '';
+        }
+      });
+      if (it.rellenos.length > 1 && $('gruposRellenoExtras')) {
+        $('gruposRellenoExtras').style.display = 'block';
+        if ($('gruposRellenoExtrasChevron')) $('gruposRellenoExtrasChevron').textContent = '-';
+      }
+    }
+
+    if ($('ingTapaAncho')) $('ingTapaAncho').value = it.anchoTapa || '';
+    if ($('ingTapaGram')) $('ingTapaGram').value = it.gramajeTapa || '';
+    if ($('ingTapaFab')) $('ingTapaFab').value = it.fabTapa || '';
+
+    // Restaurar Coeficiente
+    if (it.coefAplicado) {
+      if ($('ingCoefManual')) $('ingCoefManual').value = it.coefAplicado;
+      window.__tubcorCoefManual = it.coefAplicado;
+    } else {
+      if ($('ingCoefManual')) $('ingCoefManual').value = '';
+      window.__tubcorCoefManual = null;
+    }
+  }
+
+  // 5. Guardar cambios
   save(['presupuestos', 'pendientes', 'config']);
   
-  // 5. Refrescar las pantallas
+  // 6. Refrescar pantallas
   renderPresupuestos();
   try { renderOF(); } catch(_){}
   renderPendientes();
 
-  // 6. Viajar a Ingeniería
+  // 7. Recalcular con los valores de HOY (fijos y costos actuales)
+  try { recalcular(); } catch(_){}
+
+  // 8. Viajar a Ingeniería
   if (typeof switchTab === 'function') switchTab('ingenieria');
   
-  toast('Presupuesto archivado. Modificá la lista y generá un presupuesto nuevo.', 'ok');
-};
+  toast('Presupuesto archivado y contexto restaurado', 'ok');
+};;
 
 function eliminarPresupuesto(){
   const id = STATE.config.ultimoPresupuestoId; if (!id) return;
