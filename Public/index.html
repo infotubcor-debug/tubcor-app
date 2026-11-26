@@ -2175,7 +2175,10 @@ function recalcular(){
   const pastaHumedaInterno = adhSecoInterno / solidos;
   const pastaHumedaTapa = adhSecoTapa;
   const pastaTotal = pastaHumedaInterno + pastaHumedaTapa;
-  const pesoUnitG = (papelTotal + adhSecoTotal) * fp;
+  let pesoUnitG = (papelTotal + adhSecoTotal) * fp;
+  if (window.__pesoRealForzado && window.__pesoRealForzado > 0) {
+    pesoUnitG = window.__pesoRealForzado;
+  }
   const pesoUnitKg = pesoUnitG / 1000;
   const pesoLoteKg = pesoUnitKg * cant;
       
@@ -3800,6 +3803,7 @@ window.editarPresupuesto = function(){
     if (it.coefAplicado) {
       if ($('ingCoefManual')) $('ingCoefManual').value = it.coefAplicado;
       window.__tubcorCoefManual = it.coefAplicado;
+      window.__pesoRealForzado = it.pesoUnitG || null;
     } else {
       if ($('ingCoefManual')) $('ingCoefManual').value = '';
       window.__tubcorCoefManual = null;
@@ -3816,6 +3820,7 @@ window.editarPresupuesto = function(){
 
   // 7. Recalcular con los valores de HOY (fijos y costos actuales)
   try { recalcular(); } catch(_){}
+  window.__pesoRealForzado = null;
 
   // 8. Viajar a Ingeniería
   if (typeof switchTab === 'function') switchTab('ingenieria');
@@ -5830,8 +5835,15 @@ window.cargarTuboEnIngenieria = function(codigo) {
       window.__tubcorCoefManual = c.coefLista;
     }
 
+    // Forzar el peso real guardado
+    window.__pesoRealForzado = c.pesoRealG || null;
+    
     // Recalcular todo
     try { recalcular(); } catch(_) {}
+    
+    // Limpiar la variable para que si edita algo, vuelva al teórico
+    window.__pesoRealForzado = null;
+    
     toast('Tubo cargado desde el Catálogo', 'ok');
   }, 150); // 150ms para asegurar que la pestaña se dibujó
 };
