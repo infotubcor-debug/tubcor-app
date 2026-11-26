@@ -5677,7 +5677,7 @@ window.renderCatalogo = function(){
   window.__catOpenLen = window.__catOpenLen || {};
 
   diametros.forEach(d => {
-    const isDiamOpen = window.__catOpenDiam[d] !== false;
+    const isDiamOpen = window.__catOpenDiam[d] === true;
     const chevronD = isDiamOpen ? '▼' : '▶';
     const totalTubos = Object.values(tree[d]).reduce((s, arr) => s + arr.length, 0);
     
@@ -5696,7 +5696,7 @@ window.renderCatalogo = function(){
     
     largos.forEach(l => {
       const lenKey = d + '_' + l;
-      const isLenOpen = window.__catOpenLen[lenKey] !== false;
+      const isLenOpen = window.__catOpenLen[lenKey] === true;
       const chevronL = isLenOpen ? '▼' : '▶';
       const tubos = tree[d][l];
       tubos.sort((a,b) => (a.codigo||'').localeCompare(b.codigo||''));
@@ -5738,14 +5738,14 @@ window.renderCatalogo = function(){
 
 window.toggleDiamCat = function(d) {
   window.__catOpenDiam = window.__catOpenDiam || {};
-  window.__catOpenDiam[d] = window.__catOpenDiam[d] === false ? true : false;
+  window.__catOpenDiam[d] = !window.__catOpenDiam[d];
   renderCatalogo();
 };
 
 window.toggleLenCat = function(d, l) {
   window.__catOpenLen = window.__catOpenLen || {};
   const key = d + '_' + l;
-  window.__catOpenLen[key] = window.__catOpenLen[key] === false ? true : false;
+  window.__catOpenLen[key] = !window.__catOpenLen[key];
   renderCatalogo();
 };;
 
