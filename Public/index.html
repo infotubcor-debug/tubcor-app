@@ -2989,23 +2989,53 @@ function agregarItemPendiente(){
   if (!r || !r.pesoUnitKg) return toast('Revisá los datos del tubo','err');
   const pesoReal = Math.round(r.pesoUnitG);
   const codigoBase = r.diam + '-' + r.long + '-' + pesoReal;
-  
+
+  const fabPrincNuevo = $('ingPrincFab') ? $('ingPrincFab').value : '';
+  const fabTapaNuevo = $('ingTapaFab') ? $('ingTapaFab').value : '';
+  const rellenosNuevos = (function(){
+    const arr = [];
+    const c1 = Math.max(0, parseInt($('ingRellCant').value)||0);
+    if (c1 > 0) arr.push({ cant: c1, ancho: N($('ingRellAncho').value), gramaje: N($('ingRellGram').value), fab: $('ingRellFab') ? $('ingRellFab').value : '' });
+    for (let i = 2; i <= 4; i++) {
+      const cEl = $('ingRell'+i+'Cant');
+      if (!cEl) continue;
+      const cc = Math.max(0, parseInt(cEl.value)||0);
+      if (cc > 0) arr.push({ cant: cc, ancho: N($('ingRell'+i+'Ancho').value), gramaje: N($('ingRell'+i+'Gram').value), fab: $('ingRell'+i+'Fab') ? $('ingRell'+i+'Fab').value : '' });
+    }
+    return arr;
+  })();
+
+  function mismosRellenos(a, b){
+    a = a || []; b = b || [];
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++){
+      if (N(a[i].cant) !== N(b[i].cant)) return false;
+      if (N(a[i].ancho) !== N(b[i].ancho)) return false;
+      if (N(a[i].gramaje) !== N(b[i].gramaje)) return false;
+      if ((a[i].fab||'') !== (b[i].fab||'')) return false;
+    }
+    return true;
+  }
+
   STATE.catalogo = STATE.catalogo || [];
-  let existing = STATE.catalogo.find(c => 
-    c.diametro === r.diam && 
-    c.longitud === r.long && 
+  let existing = STATE.catalogo.find(c =>
+    c.diametro === r.diam &&
+    c.longitud === r.long &&
     c.anchoPrinc === N($('ingPrincAncho').value) &&
-    c.gramajePrinc === N($('ingPrincGram').value)
+    c.gramajePrinc === N($('ingPrincGram').value) &&
+    (c.fabPrinc||'') === fabPrincNuevo &&
+    (c.fabTapa||'') === fabTapaNuevo &&
+    mismosRellenos(c.rellenos, rellenosNuevos)
   );
-  
+
   let codigoFinal = existing ? existing.codigo : codigoBase;
 
   const item = {
     itemId: uid('it'),
     codigo: codigoFinal,
-    fabPrinc: $('ingPrincFab') ? $('ingPrincFab').value : '',
+    fabPrinc: fabPrincNuevo,
     fabRell: $('ingRellFab') ? $('ingRellFab').value : '',
-    fabTapa: $('ingTapaFab') ? $('ingTapaFab').value : '',
+    fabTapa: fabTapaNuevo,
     clienteId: cli.id, clienteRazonSocial: cli.razonSocial,
     clienteCUIT: cli.cuit, clienteCondicionIVA: cli.condicionIVA,
     clienteDomicilio: cli.domicilio, clienteLocalidad: cli.localidad,
@@ -3016,19 +3046,7 @@ function agregarItemPendiente(){
     anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), colorPrinc: $('ingPrincColor').value,
     cantRelleno: Math.max(0, parseInt($('ingRellCant').value)||0),
     anchoRell: N($('ingRellAncho').value), gramajeRell: N($('ingRellGram').value),
-    /* rellenos array */
-    rellenos: (function(){
-      const arr = [];
-      const c1 = Math.max(0, parseInt($('ingRellCant').value)||0);
-      if (c1 > 0) arr.push({ cant: c1, ancho: N($('ingRellAncho').value), gramaje: N($('ingRellGram').value), fab: $('ingRellFab') ? $('ingRellFab').value : '' });
-      for (let i = 2; i <= 4; i++) {
-        const cEl = $('ingRell'+i+'Cant');
-        if (!cEl) continue;
-        const cc = Math.max(0, parseInt(cEl.value)||0);
-        if (cc > 0) arr.push({ cant: cc, ancho: N($('ingRell'+i+'Ancho').value), gramaje: N($('ingRell'+i+'Gram').value), fab: $('ingRell'+i+'Fab') ? $('ingRell'+i+'Fab').value : '' });
-      }
-      return arr;
-    })(),
+    rellenos: rellenosNuevos,
     anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), colorTapa: $('ingTapaColor').value,
     pesoUnitG: r.pesoUnitG, pesoUnitKg: r.pesoUnitKg, pesoLoteKg: r.pesoLoteKg,
     papelKg: r.papelTotalG/1000, adhSecoKg: r.adhSecoG/1000, pastaTotalKg: r.pastaTotalG/1000,
@@ -3053,9 +3071,9 @@ function agregarItemPendiente(){
       espesor: r.espesor,
       pesoTeoricoG: pesoReal,
       pesoRealG: pesoReal,
-      anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), fabPrinc: item.fabPrinc,
-      rellenos: item.rellenos,
-      anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), fabTapa: item.fabTapa
+      anchoPrinc: N($('ingPrincAncho').value), gramajePrinc: N($('ingPrincGram').value), fabPrinc: fabPrincNuevo,
+      rellenos: rellenosNuevos,
+      anchoTapa: N($('ingTapaAncho').value), gramajeTapa: N($('ingTapaGram').value), fabTapa: fabTapaNuevo
     });
     save(['catalogo']);
   }
