@@ -2175,6 +2175,22 @@ function recalcular(){
   const pastaHumedaInterno = adhSecoInterno / solidos;
   const pastaHumedaTapa = adhSecoTapa;
   const pastaTotal = pastaHumedaInterno + pastaHumedaTapa;
+  // Si el usuario está editando medidas o fajas, se descarta el peso real
+  if (window.__pesoRealForzado) {
+    const activeId = document.activeElement ? document.activeElement.id : '';
+    const physicalInputs = [
+      'ingDiam', 'ingLong', 'ingCant', 'ingPrincAncho', 'ingPrincGram',
+      'ingRellCant', 'ingRellAncho', 'ingRellGram',
+      'ingRell2Cant', 'ingRell2Ancho', 'ingRell2Gram',
+      'ingRell3Cant', 'ingRell3Ancho', 'ingRell3Gram',
+      'ingRell4Cant', 'ingRell4Ancho', 'ingRell4Gram',
+      'ingTapaAncho', 'ingTapaGram'
+    ];
+    if (physicalInputs.includes(activeId)) {
+      window.__pesoRealForzado = null; // Se editó la fórmula, vuelve al teórico
+    }
+  }
+
   let pesoUnitG = (papelTotal + adhSecoTotal) * fp;
   if (window.__pesoRealForzado && window.__pesoRealForzado > 0) {
     pesoUnitG = window.__pesoRealForzado;
@@ -3820,7 +3836,7 @@ window.editarPresupuesto = function(){
 
   // 7. Recalcular con los valores de HOY (fijos y costos actuales)
   try { recalcular(); } catch(_){}
-  window.__pesoRealForzado = null;
+  // window.__pesoRealForzado = null;
 
   // 8. Viajar a Ingeniería
   if (typeof switchTab === 'function') switchTab('ingenieria');
@@ -5841,8 +5857,8 @@ window.cargarTuboEnIngenieria = function(codigo) {
     // Recalcular todo
     try { recalcular(); } catch(_) {}
     
-    // Limpiar la variable para que si edita algo, vuelva al teórico
-    window.__pesoRealForzado = null;
+    // Mantener la variable para que no se pierda al cambiar costos
+    // window.__pesoRealForzado = null;
     
     toast('Tubo cargado desde el Catálogo', 'ok');
   }, 150); // 150ms para asegurar que la pestaña se dibujó
